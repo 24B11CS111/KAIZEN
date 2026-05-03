@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#050505" />
+  <title>KAIZEN</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #050505; color: #fff;
+      font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased; }
+    .center { min-height: 100vh; display: grid; place-items: center; padding: 24px; text-align: center; }
+    .brand { font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.55); }
+    h1 { margin: 8px 0 6px; font-size: 26px; font-weight: 600; letter-spacing: -0.01em; }
+    p { margin: 0; font-size: 14px; color: rgba(255,255,255,0.6); max-width: 280px; line-height: 1.5; }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+      background: #d00000; box-shadow: 0 0 12px rgba(208,0,0,0.7); margin-right: 8px; vertical-align: middle;
+      animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+  </style>
+</head>
+<body>
+  <div class="center">
+    <div>
+      <div class="brand"><span class="dot"></span>KAIZEN</div>
+      <h1>Reconnecting...</h1>
+      <p>The dojo will load once you're back online.</p>
+    </div>
+  </div>
+  <script>
+    // If we recover network before Capacitor swaps to server.url, retry.
+    window.addEventListener("online", () => location.reload());
+  </script>
+</body>
+</html>

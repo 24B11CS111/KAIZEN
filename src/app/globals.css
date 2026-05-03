@@ -1,0 +1,242 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #050505;
+  --bg-elev: #0a0a0a;
+  --accent: #d00000;
+  --text: #ffffff;
+  --muted: rgba(255, 255, 255, 0.6);
+  --border: rgba(255, 255, 255, 0.08);
+  --font-sans: ui-sans-serif, system-ui, "Inter", -apple-system, sans-serif;
+  --font-display: ui-sans-serif, system-ui, "Inter", -apple-system, sans-serif;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+body {
+  /* Single subtle top glow - not overwhelming */
+  background-image: radial-gradient(
+    1200px 500px at 50% -200px,
+    rgba(208, 0, 0, 0.10),
+    transparent 70%
+  );
+  background-attachment: fixed;
+}
+
+/* Selection */
+::selection { background: rgba(208, 0, 0, 0.35); color: #fff; }
+
+/* Scrollbar - dark, subtle */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #050505; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.15); }
+
+@layer components {
+  .container-page {
+    @apply max-w-6xl mx-auto px-6;
+  }
+
+  .card {
+    @apply rounded-xl border border-white/10 bg-white/[0.02];
+    transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+  }
+  .card-hover:hover {
+    border-color: rgba(208, 0, 0, 0.45);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px -12px rgba(208, 0, 0, 0.25);
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-md
+           px-5 py-2.5 text-sm font-medium
+           bg-blood-500 text-white
+           hover:bg-blood-600 transition-colors
+           focus:outline-none focus:ring-2 focus:ring-blood-500/40 focus:ring-offset-2 focus:ring-offset-obsidian;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-md
+           px-5 py-2.5 text-sm font-medium
+           border border-white/15 text-white
+           bg-transparent hover:border-white/30 hover:bg-white/5 transition-colors
+           focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-obsidian;
+  }
+  .btn-sm {
+    @apply px-4 py-2 text-xs;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-white/55;
+  }
+
+  .pill-tag {
+    @apply inline-flex items-center rounded-md px-2.5 py-1
+           text-xs font-medium
+           border border-white/10 bg-white/[0.03] text-white/85
+           hover:border-blood-500/40 hover:text-white transition-colors;
+  }
+
+  .section {
+    @apply py-20 md:py-24;
+  }
+  .section-tight {
+    @apply py-16 md:py-20;
+  }
+
+  .h1 {
+    @apply text-4xl md:text-6xl font-semibold tracking-tight leading-[1.05];
+  }
+  .h2 {
+    @apply text-3xl md:text-4xl font-semibold tracking-tight leading-tight;
+  }
+  .h3 {
+    @apply text-lg md:text-xl font-semibold tracking-tight;
+  }
+  .lead {
+    @apply text-base md:text-lg text-white/65 leading-relaxed;
+  }
+}
+
+/* Restrained pulse for the brand dot */
+@keyframes softPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.pulse-dot {
+  animation: softPulse 2s ease-in-out infinite;
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(255,255,255,0.10) 40%,
+    rgba(255,255,255,0.04) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+  border-radius: 0.5rem;
+}
+
+/* Button tap feedback */
+.btn-primary, .btn-secondary {
+  transition: transform 120ms ease, box-shadow 200ms ease, background-color 200ms ease, border-color 200ms ease;
+}
+.btn-primary:active, .btn-secondary:active {
+  transform: scale(0.96);
+}
+.btn-primary:active {
+  box-shadow: 0 0 22px -4px rgba(208, 0, 0, 0.55);
+}
+
+/* Subtle CTA arrow nudge */
+@keyframes nudgeRight {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(2px); }
+}
+.cta-nudge {
+  display: inline-block;
+  animation: nudgeRight 1.6s ease-in-out infinite;
+}
+
+/* ============================================================
+   MOBILE-FIRST ADDITIONS - safe areas, app-like behaviors
+   ============================================================ */
+
+html {
+  scroll-behavior: smooth;
+  /* Prevent iOS rubber-band white flash */
+  background: var(--bg);
+  /* No horizontal scroll, ever */
+  overflow-x: hidden;
+  /* Better mobile font rendering */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  /* No horizontal scroll, ever */
+  overflow-x: hidden;
+  /* iOS safe-area aware default padding */
+  padding-bottom: env(safe-area-inset-bottom);
+  /* Disable pull-to-refresh / overscroll bounce */
+  overscroll-behavior-y: none;
+  /* Better tap responsiveness */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Disable text selection on UI chrome (buttons, nav, etc) */
+button, [role="button"], nav, header, footer, .no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Tap-target compliance: minimum 44px */
+@media (hover: none) and (pointer: coarse) {
+  button, [role="button"], a.btn-primary, a.btn-secondary, .pill-tag {
+    min-height: 44px;
+  }
+}
+
+@layer components {
+  /* Container that feels app-like on mobile, web-like on desktop */
+  .container-app {
+    @apply mx-auto px-4 md:px-6 max-w-6xl;
+    /* respect notch on iPhone */
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  /* Bottom-nav-aware bottom padding for scrollable content */
+  .pb-bottom-nav {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+
+  /* Tap card - subtle scale-down on press */
+  .tap-card {
+    @apply transition-transform duration-150 ease-out;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tap-card:active {
+    transform: scale(0.97);
+  }
+}
+
+/* ============================================================
+   Mobile input behavior (iOS zoom prevention + smooth scroll)
+   ============================================================ */
+input, textarea, select {
+  /* 16px+ font prevents iOS Safari from zooming in on focus */
+  font-size: 16px;
+  /* Native iOS-style smooth scroll inside scrollable inputs */
+  -webkit-overflow-scrolling: touch;
+}
+@media (min-width: 768px) {
+  /* On desktop, restore tighter form font sizing */
+  input, textarea, select {
+    font-size: 14px;
+  }
+}
+
+/* Smooth scroll containers */
+.scroll-y {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}

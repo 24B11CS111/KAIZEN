@@ -1,0 +1,5 @@
+Replace this stub with a real QR PNG named `upi-qr.png` in this folder.
+The enrollment screen renders /upi-qr.png as a static image.
+
+Generate one easily at https://upiqrcode.in/ or with `qrencode`:
+  qrencode -o public/upi-qr.png "upi://pay?pa=YOUR_UPI_ID&pn=KAIZEN.SYS&cu=INR"

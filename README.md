@@ -187,3 +187,4 @@ kaizen-sys/
 - [ ] Wire a WhatsApp notifier (e.g. Twilio) in the `approve_utr` callback to ping warriors when their gate opens.
 - [ ] Add an SEO `robots.txt` + `sitemap.xml`.
 - [ ] Configure Supabase Auth → Email templates with the Bushido voice.
+# KAIZEN

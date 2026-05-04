@@ -3,6 +3,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdminPanel } from "@/components/AdminPanel";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/lib/adminEmail";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export default async function SenseiPage({
     .select("role,email")
     .eq("id", user.id)
     .maybeSingle();
-  if (!me || me.role !== "admin" || me.email.toLowerCase() !== process.env.ADMIN_EMAIL?.toLowerCase()) {
+  if (!me || (me as any).role !== "admin" || !isAdminEmail((me as any).email)) {
     redirect("/");
   }
 

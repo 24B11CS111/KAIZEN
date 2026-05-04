@@ -62,6 +62,7 @@ export function RegistrationFlow() {
   const [pay, setPay] = useState({ whatsapp: "", utr_number: "" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (step === 4 && !pay.whatsapp && account.whatsapp) {
@@ -84,6 +85,7 @@ export function RegistrationFlow() {
   // STEP 1 -> STEP 2: signup directly via Supabase, then explicitly create profile
   const signup = async () => {
     setError(null);
+    setNotice(null);
     const parsed = RegisterAccountSchema.safeParse(account);
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Invalid input");
@@ -171,8 +173,8 @@ export function RegistrationFlow() {
           console.error("[register] profile upsert error:", profErr);
           // Non-fatal - the user is authenticated. Surface as a soft notice
           // but DO NOT block them from continuing the registration flow.
-          setError(
-            "Account created. We will finish setting up your profile in the next step."
+          setNotice(
+            "Account created. Profile setup will finalize as you continue."
           );
         }
       }
@@ -181,9 +183,11 @@ export function RegistrationFlow() {
       //    - session ready  -> user is logged in, normal flow
       //    - no session     -> show inline notice but advance to step 2 so the
       //                        UI doesn't stall on a confirmation gate
-      if (!session) {
-        setError(
-          "Account created. We sent a confirmation email - opening it will sign you in. You can keep going for now."
+      if (session) {
+        setNotice("Account created. You're signed in.");
+      } else {
+        setNotice(
+          "Account created. A confirmation email has been sent - opening it signs you in. Keep going."
         );
       }
       setStep(2);
@@ -300,6 +304,7 @@ export function RegistrationFlow() {
                   onChange={(v) => setAccount({ ...account, password: v })}
                   placeholder="At least 8 chars, 1 upper, 1 digit" />
                 {error && <Err msg={error} />}
+                {notice && <Ok msg={notice} />}
               </div>
               <div className="mt-7 flex justify-between items-center">
                 <Link href="/auth/login" className="text-xs text-white/55 hover:text-white">
@@ -329,6 +334,7 @@ export function RegistrationFlow() {
                   price="₹99 / month" icon={Cpu} recommended />
               </div>
               {error && <Err msg={error} />}
+                {notice && <Ok msg={notice} />}
               <div className="mt-7 flex justify-between">
                 <button onClick={() => setStep(1)} className="btn-secondary">
                   <ArrowLeft className="h-4 w-4" /> Back
@@ -375,6 +381,7 @@ export function RegistrationFlow() {
                 ))}
               </div>
               {error && <Err msg={error} />}
+                {notice && <Ok msg={notice} />}
               <div className="mt-7 flex justify-between">
                 <button onClick={() => setStep(2)} className="btn-secondary">
                   <ArrowLeft className="h-4 w-4" /> Back
@@ -421,6 +428,7 @@ export function RegistrationFlow() {
                 </div>
               </div>
               {error && <Err msg={error} />}
+                {notice && <Ok msg={notice} />}
               <div className="mt-7 flex justify-between">
                 <button onClick={() => setStep(3)} className="btn-secondary">
                   <ArrowLeft className="h-4 w-4" /> Back
@@ -472,6 +480,19 @@ function Err({ msg }: { msg: string }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
       className="text-xs text-blood-500 mt-3 px-3 py-2 rounded-md bg-blood-500/10 border border-blood-500/30 leading-relaxed"
+    >
+      {msg}
+    </motion.div>
+  );
+}
+
+function Ok({ msg }: { msg: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className="text-xs text-emerald-300 mt-3 px-3 py-2 rounded-md bg-emerald-300/5 border border-emerald-300/30 leading-relaxed"
     >
       {msg}
     </motion.div>
@@ -544,66 +565,70 @@ function Stepper({ step }: { step: Step }) {
   );
 }
 
-function PathCard({
-  selected, onClick, title, subtitle, price, icon: Icon, recommended
-}: {
-  selected: boolean; onClick: () => void;
-  title: string; subtitle: string; price: string;
-  icon: typeof GraduationCap; recommended?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={
-        "card p-5 text-left transition-all relative " +
-        (selected ? "border-blood-500/70 bg-blood-500/[0.06]" : "card-hover")
-      }
-    >
-      {recommended && (
-        <span className="absolute -top-2.5 right-4 text-[10px] font-semibold uppercase tracking-[0.18em] px-2 py-0.5 rounded bg-blood-500 text-white">
-          Recommended
-        </span>
-      )}
-      <div className="flex items-center gap-2.5">
-        <span className="grid place-items-center h-9 w-9 rounded-md bg-blood-500/10 border border-blood-500/30">
-          <Icon className="h-5 w-5 text-blood-500" />
-        </span>
-        <div>
-          <div className="text-base font-semibold">{title}</div>
-          <div className="text-xs text-white/55 mt-0.5">{subtitle}</div>
-        </div>
-      </div>
-      <div className="text-sm text-white/80 mt-4">{price}</div>
-    </button>
-  );
-}
-
-function Field({
-  label, value, onChange, placeholder, type = "text", inputMode, icon: Icon
-}: {
+interface FieldProps {
   label: string;
   value: string;
   onChange: (v: string) => void;
-  placeholder?: string;
   type?: string;
-  inputMode?: "text" | "tel" | "numeric" | "email";
-  icon?: typeof Mail;
-}) {
+  inputMode?: "text" | "email" | "tel" | "url" | "numeric" | "decimal" | "search";
+  placeholder?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  autoComplete?: string;
+}
+
+function Field({ label, value, onChange, type = "text", inputMode, placeholder, icon: Icon, autoComplete }: FieldProps) {
   return (
     <label className="block">
       <span className="text-[10px] uppercase tracking-[0.18em] text-white/55">{label}</span>
-      <div className="mt-1.5 flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.02] px-3 py-2 transition-all focus-within:border-blood-500/55 focus-within:shadow-[0_0_0_4px_rgba(208,0,0,0.08)]">
-        {Icon && <Icon className="h-4 w-4 text-white/40" />}
+      <div className="mt-1.5 flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.02] px-3 py-2.5 focus-within:border-blood-500/60 transition-colors">
+        {Icon && <Icon className="h-4 w-4 text-white/45 shrink-0" />}
         <input
           type={type}
           inputMode={inputMode}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="bg-transparent outline-none w-full text-sm placeholder-white/30"
-          autoComplete={type === "password" ? "new-password" : undefined}
+          autoComplete={autoComplete}
+          className="bg-transparent outline-none w-full text-sm text-white placeholder-white/30"
         />
       </div>
     </label>
+  );
+}
+
+interface PathCardProps {
+  selected: boolean;
+  onClick: () => void;
+  title: string;
+  subtitle: string;
+  price: string;
+  icon: React.ComponentType<{ className?: string }>;
+  recommended?: boolean;
+}
+
+function PathCard({ selected, onClick, title, subtitle, price, icon: Icon, recommended }: PathCardProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        "tap-card text-left rounded-xl border p-4 transition-all relative " +
+        (selected
+          ? "border-blood-500/70 bg-blood-500/10"
+          : "border-white/10 bg-white/[0.02] hover:border-blood-500/40")
+      }
+    >
+      {recommended && (
+        <span className="absolute top-2 right-2 text-[9px] uppercase tracking-[0.18em] text-blood-500">
+          Recommended
+        </span>
+      )}
+      <span className="grid place-items-center h-9 w-9 rounded-md bg-blood-500/15 border border-blood-500/40 mb-3">
+        <Icon className="h-5 w-5 text-blood-500" />
+      </span>
+      <div className="text-sm font-semibold">{title}</div>
+      <div className="text-xs text-white/55 mt-0.5">{subtitle}</div>
+      <div className="text-xs text-blood-500 font-semibold mt-2">{price}</div>
+    </button>
   );
 }

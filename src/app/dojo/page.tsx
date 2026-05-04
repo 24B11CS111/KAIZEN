@@ -42,7 +42,7 @@ async function DojoStateRouter({ profile }: { profile: any }) {
     return <LockedScreen reason="rejected" />;
   }
   if (profile.subscription_status === "pending") {
-    return <SenseiVerifying name={profile.full_name} />;
+    return <SenseiVerifying name={profile.full_name} initialStatus={profile.subscription_status} />;
   }
   if (profile.subscription_status === "expired") {
     return <LockedScreen reason="expired" />;
@@ -50,7 +50,6 @@ async function DojoStateRouter({ profile }: { profile: any }) {
   if (profile.subscription_status === "active") {
     const supabase = createSupabaseServerClient();
 
-    // Run stale-streak reset, then read progress + streak in parallel.
     const reset = await resetStaleStreak(supabase as any).catch(() => ({
       was_reset: false, current_streak: 0, longest_streak: 0
     }));
@@ -94,5 +93,5 @@ async function DojoStateRouter({ profile }: { profile: any }) {
       />
     );
   }
-  return <SenseiVerifying name={profile.full_name} />;
+  return <SenseiVerifying name={profile.full_name} initialStatus={profile.subscription_status} />;
 }

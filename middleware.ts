@@ -1,17 +1,22 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getUserFromRequest } from "@/lib/supabase/middleware";
+import { isAdminEmail } from "@/lib/adminEmail";
 
 /**
  * Route protection:
- *   /dojo   -> requires logged-in user with subscription_status='active' AND expiry_date > now()
- *   /sensei -> requires logged-in user with role='admin' AND email == ADMIN_EMAIL
+ *   /dojo       -> requires logged-in user; dashboard handles status states
+ *   /sensei     -> requires admin
+ *   /admin      -> requires admin
+ *   /dashboard  -> alias that bounces to /dojo (server-side redirect happens
+ *                  in src/app/dashboard/page.tsx; middleware just lets it through)
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isDojo = pathname.startsWith("/dojo");
   const isSensei = pathname.startsWith("/sensei");
+  const isAdmin = pathname.startsWith("/admin");
 
-  if (!isDojo && !isSensei) return NextResponse.next();
+  if (!isDojo && !isSensei && !isAdmin) return NextResponse.next();
 
   const { response, supabase, user } = await getUserFromRequest(request);
 
@@ -34,12 +39,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (isSensei) {
-    const adminEmail = process.env.ADMIN_EMAIL;
-    const ok =
-      profile.role === "admin" &&
-      adminEmail &&
-      profile.email.toLowerCase() === adminEmail.toLowerCase();
+  const p: any = profile;
+
+  if (isSensei || isAdmin) {
+    const ok = p.role === "admin" && isAdminEmail(user.email);
     if (!ok) {
       const url = request.nextUrl.clone();
       url.pathname = "/";
@@ -49,23 +52,14 @@ export async function middleware(request: NextRequest) {
   }
 
   if (isDojo) {
-    const expired =
-      !profile.expiry_date || new Date(profile.expiry_date).getTime() <= Date.now();
     const blocked =
-      profile.subscription_status === "banned" ||
-      profile.subscription_status === "rejected";
-
-    // Allow render: dashboard handles state-rendering (pending/active/expired)
-    // But block hard if banned.
+      p.subscription_status === "banned" ||
+      p.subscription_status === "rejected";
     if (blocked) {
       const url = request.nextUrl.clone();
       url.pathname = "/";
       return NextResponse.redirect(url);
     }
-
-    // If status is "active" but expiry has passed, the page itself shows the
-    // EXPIRED state and the next read will flip the row via touch_expiry().
-    void expired;
     return response;
   }
 
@@ -73,5 +67,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dojo/:path*", "/sensei/:path*"]
+  matcher: ["/dojo/:path*", "/sensei/:path*", "/admin/:path*"]
 };

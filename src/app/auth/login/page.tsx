@@ -1,15 +1,36 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Mail, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const search = useSearchParams();
+  const next = search.get("next") || "/dojo";
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Auto-redirect when a session already exists - signup just authenticated
+  // them, OAuth callback finished, or returning user with a valid cookie.
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled && data.session) router.replace(next);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) router.replace(next);
+    });
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
+  }, [router, next]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +41,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${location.origin}/auth/callback?next=/dojo`
+          emailRedirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}`
         }
       });
       if (error) throw error;
@@ -40,7 +61,7 @@ export default function LoginPage() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="glass rounded-2xl p-8 w-full max-w-md"
       >
-        <Link href="/" className="label-mono">← Return to gate</Link>
+        <Link href="/" className="label-mono">- Return to gate</Link>
         <h1 className="heading text-3xl mt-4">Enter the dojo.</h1>
         <p className="mt-2 text-white/60 text-sm">
           A magic-link will be dispatched to your email. No passwords. No clutter.
@@ -71,7 +92,7 @@ export default function LoginPage() {
             </label>
             {error && <p className="text-blood-400 text-xs">{error}</p>}
             <button type="submit" disabled={loading} className="btn-blood w-full">
-              {loading ? "Forging…" : "Dispatch link"} <ArrowRight className="h-4 w-4" />
+              {loading ? "Forging..." : "Dispatch link"} <ArrowRight className="h-4 w-4" />
             </button>
           </form>
         )}

@@ -53,14 +53,14 @@ export function LockedScreen({ reason = "expired" }: { reason?: "expired" | "rej
         </div>
         <div className="label-mono mt-5 inline-flex items-center gap-2 text-blood-500 animate-flicker">
           <AlertTriangle className="h-3 w-3" />
-          {reason === "rejected" ? "Offering refused" : "Gate sealed"}
+          {reason === "rejected" ? "Payment rejected" : "Gate sealed"}
         </div>
         <h1 className="heading text-3xl mt-3">
-          {reason === "rejected" ? "The offering was refused." : "Your path has closed."}
+          {reason === "rejected" ? "Payment rejected." : "Your path has closed."}
         </h1>
         <p className="text-white/60 mt-3 text-sm">
           {reason === "rejected"
-            ? "The Sensei could not verify your UTR. Re-submit with a valid 12-digit reference."
+            ? "We could not verify your UTR. Re-submit with a valid 12-digit reference to try again."
             : "30 days have passed. To continue, begin a new cycle. The clock resets, the discipline does not."}
         </p>
         <Link href="/enroll" className="btn-blood mt-6 w-full">

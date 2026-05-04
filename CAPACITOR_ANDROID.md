@@ -170,7 +170,6 @@ Optional: handle deep back-button behavior manually:
 
 ```ts
 // somewhere in a top-level client component
-import { App } from "@capacitor/app";
 useEffect(() => {
   const sub = App.addListener("backButton", ({ canGoBack }) => {
     if (canGoBack) window.history.back();

@@ -1,26 +1,41 @@
-import type { CapacitorConfig } from "@capacitor/cli";
-
 /**
- * KAIZEN - Capacitor Android shell.
+ * KAIZEN - Capacitor config (TS form, kept in sync with capacitor.config.json).
  *
- * The Next.js app runs on a server (Vercel/etc); this shell loads it
- * inside a WebView. To switch to a static-export build, remove the
- * `server` block and point `webDir` at `out/`.
+ * This file does NOT import from @capacitor/cli, because that package is
+ * a dev-only dependency installed locally when you actually scaffold the
+ * Android project. Vercel does not install it, and pulling its types in
+ * would break `next build`.
+ *
+ * Capacitor CLI accepts .ts, .js, or .json - we keep both this stub and
+ * capacitor.config.json. capacitor.config.json is the source of truth
+ * if Capacitor CLI ever skips the .ts.
  */
-const config: CapacitorConfig = {
+
+interface CapacitorConfigShape {
+  appId: string;
+  appName: string;
+  webDir: string;
+  server?: {
+    url?: string;
+    cleartext?: boolean;
+    allowNavigation?: string[];
+  };
+  android?: {
+    allowMixedContent?: boolean;
+    captureInput?: boolean;
+    webContentsDebuggingEnabled?: boolean;
+    backgroundColor?: string;
+  };
+  plugins?: Record<string, unknown>;
+}
+
+const config: CapacitorConfigShape = {
   appId: "com.kaizen.sys",
   appName: "KAIZEN",
-  // Required by Capacitor even when using a remote `server.url`.
-  // Holds the offline shell + splash; create it via `mkdir public-shell`
-  // and place an index.html "Reconnect..." page there.
   webDir: "public-shell",
-
   server: {
-    // Production web URL the WebView loads. Replace before building.
     url: "https://your-kaizen-domain.com",
-    // Allows http during local dev; remove for production builds.
     cleartext: false,
-    // Domains the WebView is permitted to navigate to.
     allowNavigation: [
       "your-kaizen-domain.com",
       "*.your-kaizen-domain.com",
@@ -28,14 +43,12 @@ const config: CapacitorConfig = {
       "*.supabase.in"
     ]
   },
-
   android: {
     allowMixedContent: false,
     captureInput: true,
-    webContentsDebuggingEnabled: false, // flip to true for `chrome://inspect`
+    webContentsDebuggingEnabled: false,
     backgroundColor: "#050505"
   },
-
   plugins: {
     SplashScreen: {
       launchShowDuration: 1200,

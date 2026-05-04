@@ -1,0 +1,41 @@
+{
+  "appId": "com.kaizen.sys",
+  "appName": "KAIZEN",
+  "webDir": "public-shell",
+  "server": {
+    "url": "https://your-kaizen-domain.com",
+    "cleartext": false,
+    "allowNavigation": [
+      "your-kaizen-domain.com",
+      "*.your-kaizen-domain.com",
+      "*.supabase.co",
+      "*.supabase.in"
+    ]
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false,
+    "backgroundColor": "#050505"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "launchAutoHide": true,
+      "backgroundColor": "#050505",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#050505",
+      "overlaysWebView": false
+    },
+    "App": {
+      "launchUrl": ""
+    }
+  }
+}

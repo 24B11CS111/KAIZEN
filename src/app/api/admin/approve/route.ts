@@ -14,7 +14,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "utr_id required" }, { status: 400 });
   }
 
-  const { error } = await supabase.rpc("approve_utr", { p_utr_id: parsed.data.utr_id });
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+const { error } = await supabase.rpc("approve_utr", {
+  p_utr_id: parsed.data.utr_id,
+} as any);  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true });
 }

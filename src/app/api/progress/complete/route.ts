@@ -23,14 +23,11 @@ export async function POST(request: Request) {
     );
   }
 
-  // complete_day RPC now accepts an optional notes string and returns
-  // { current_streak, longest_streak, current_day } from the maintained
-  // user_progress summary row.
   const { data, error } = await supabase
     .rpc("complete_day", {
       p_day:   parsed.data.day,
       p_notes: parsed.data.notes ?? null
-    } as any)
+    })
     .single();
 
   if (error) {

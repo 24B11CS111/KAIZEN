@@ -84,13 +84,13 @@ export async function POST(request: Request) {
   const nextVersion = ((lastRow as any)?.version ?? 0) + 1;
 
   const { error: insErr } = await admin.from("ai_plans").insert({
-    user_id:     user.id,
+    user_id:        user.id,
     track_id:       plan.track_id,
-    track_label: plan.track_label,
-    generated_plan:        plan.days,
-    source:      plan.source,
-    version:     nextVersion
-  } as any);
+    track_label:    plan.track_label,
+    generated_plan: plan.days,
+    source:         plan.source,
+    version:        nextVersion
+  });
 
   if (insErr) {
     return NextResponse.json(

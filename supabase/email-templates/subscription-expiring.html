@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark only" />
+  <title>KAIZEN.SYS — Your access is expiring</title>
+</head>
+<body style="margin:0;padding:0;background-color:#050505;color:#ffffff;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+
+  <!--
+    Sent transactionally 3 days before subscription expires.
+    Variables: {{name}}, {{days_remaining}}, {{renew_url}}, {{streak_count}}.
+  -->
+
+  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;visibility:hidden;">
+    {{days_remaining}} days until your KAIZEN access expires. Renew to keep your streak alive.
+  </div>
+
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#050505;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:520px;background:linear-gradient(180deg,#0a0a0a 0%,#050505 100%);border:1px solid rgba(208,0,0,0.35);border-radius:14px;">
+
+          <tr>
+            <td align="center" style="padding:36px 28px 6px 28px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="background:rgba(208,0,0,0.12);border:1px solid rgba(208,0,0,0.45);border-radius:6px;width:28px;height:28px;text-align:center;vertical-align:middle;">
+                    <div style="width:6px;height:6px;background:#D00000;border-radius:999px;margin:0 auto;"></div>
+                  </td>
+                  <td style="padding-left:10px;font-size:14px;letter-spacing:0.10em;font-weight:600;color:#ffffff;">
+                    KAIZEN<span style="color:#D00000;">.</span>SYS
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding:32px 28px 6px 28px;">
+              <p style="margin:0 0 10px 0;font-size:10px;letter-spacing:0.20em;text-transform:uppercase;color:#D00000;font-weight:600;">
+                {{days_remaining}} days remain
+              </p>
+              <h1 style="margin:0;font-size:23px;line-height:1.28;font-weight:600;color:#ffffff;letter-spacing:-0.01em;">
+                Your access is expiring, {{name}}.
+              </h1>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding:12px 28px 0 28px;">
+              <p style="margin:0;font-size:14px;line-height:1.65;color:rgba(255,255,255,0.65);">
+                Your KAIZEN.SYS subscription ends in {{days_remaining}} days. Renew now to keep your <span style="color:#D00000;font-weight:500;">{{streak_count}}-day streak</span> alive and your personalized 30-day path intact.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding:28px 28px 0 28px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="background:#D00000;border-radius:10px;">
+                    <a href="{{renew_url}}"
+                       style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.02em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      Renew &amp; continue ascent &nbsp;&rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:32px 28px 0 28px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="height:1px;line-height:1px;font-size:1px;background:linear-gradient(90deg,transparent 0%,rgba(208,0,0,0.35) 50%,transparent 100%);">&nbsp;</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding:22px 28px 36px 28px;">
+              <p style="margin:0;font-size:11px;line-height:1.6;color:rgba(255,255,255,0.45);">
+                If your access lapses, your progress is preserved — but your daily missions lock until renewal.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:520px;margin-top:16px;">
+          <tr>
+            <td align="center" style="padding:0 16px;">
+              <p style="margin:0;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.30);">
+                KAIZEN.SYS &middot; Discipline builds your future
+              </p>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

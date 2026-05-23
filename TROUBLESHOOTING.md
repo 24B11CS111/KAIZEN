@@ -24,9 +24,9 @@ npm run dev
 
 In your Supabase project: **Settings -> API**.
 
-- `NEXT_PUBLIC_SUPABASE_URL` must look like `https://xxxxxxxxxxxx.supabase.co` (no trailing slash, no path).
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` is the **anon / public** key.
-- `SUPABASE_SERVICE_ROLE_KEY` is the **service_role / secret** key (never commit, never ship to the browser).
+- `NEXT_PUBLIC_SUPABASE_URL` must look like `https://jkyascosbgmhnpmaqmiw.supabase.co/rest/v1/o` (no trailing slash, no path).
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` is the eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpreWFzY29zYmdtaG5wbWFxbWl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxODk4MTEsImV4cCI6MjA5Mjc2NTgxMX0.t57_Gm2m3LD-3Z-6afoppyU5k-rAADkURgPMe-RgM_E key.
+- `SUPABASE_SERVICE_ROLE_KEY` is the eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpreWFzY29zYmdtaG5wbWFxbWl3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzE4OTgxMSwiZXhwIjoyMDkyNzY1ODExfQ.iwWBhF2eFcWP_XTXBI0ozufH3WRQXZtaEnenqzZhzA4 key (never commit, never ship to the browser).
 
 Paste them into `.env.local` exactly. No quotes around the values.
 

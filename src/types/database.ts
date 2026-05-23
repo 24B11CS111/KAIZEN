@@ -42,6 +42,14 @@ export interface ProgressLog {
   completed_at: string | null;
 }
 
+export interface UserProgress {
+  id: string;
+  user_id: string;
+  day: number;
+  completed: boolean;
+  completed_at: string;
+}
+
 export interface Streak {
   user_id: string;
   current_streak: number;
@@ -50,13 +58,87 @@ export interface Streak {
   updated_at: string;
 }
 
+/**
+ * Full Supabase Database type. Includes Tables, Views, Functions, Enums,
+ * and CompositeTypes - the typed client (@supabase/supabase-js v2.45+)
+ * requires this full shape, otherwise queries collapse to `never` and
+ * RPCs reject their args as `undefined`.
+ */
 export interface Database {
   public: {
     Tables: {
-      profiles: { Row: Profile; Insert: Partial<Profile>; Update: Partial<Profile> };
-      utr_logs: { Row: UtrLog; Insert: Partial<UtrLog>; Update: Partial<UtrLog> };
-      progress_logs: { Row: ProgressLog; Insert: Partial<ProgressLog>; Update: Partial<ProgressLog> };
-      streaks: { Row: Streak; Insert: Partial<Streak>; Update: Partial<Streak> };
+      profiles: {
+        Row: Profile;
+        Insert: Partial<Profile> & { id: string; email: string };
+        Update: Partial<Profile>;
+        Relationships: [];
+      };
+      utr_logs: {
+        Row: UtrLog;
+        Insert: Partial<UtrLog>;
+        Update: Partial<UtrLog>;
+        Relationships: [];
+      };
+      progress_logs: {
+        Row: ProgressLog;
+        Insert: Partial<ProgressLog>;
+        Update: Partial<ProgressLog>;
+        Relationships: [];
+      };
+      user_progress: {
+        Row: UserProgress;
+        Insert: Partial<UserProgress>;
+        Update: Partial<UserProgress>;
+        Relationships: [];
+      };
+      streaks: {
+        Row: Streak;
+        Insert: Partial<Streak>;
+        Update: Partial<Streak>;
+        Relationships: [];
+      };
     };
+    Views: Record<string, never>;
+    Functions: {
+      approve_utr: {
+        Args: { p_utr_id: string };
+        Returns: void;
+      };
+      reject_utr: {
+        Args: { p_utr_id: string };
+        Returns: void;
+      };
+      ban_user: {
+        Args: { p_user_id: string };
+        Returns: void;
+      };
+      reset_progress: {
+        Args: { p_user_id: string };
+        Returns: void;
+      };
+      complete_day: {
+        Args: { p_day: number };
+        Returns: { current_streak: number; longest_streak: number };
+      };
+      reset_stale_streak: {
+        Args: Record<string, never>;
+        Returns: { was_reset: boolean; current_streak: number; longest_streak: number };
+      };
+      touch_expiry: {
+        Args: { uid: string };
+        Returns: void;
+      };
+      is_admin: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+    };
+    Enums: {
+      subscription_status_t: SubscriptionStatus;
+      utr_status_t: UtrStatus;
+      user_role_t: UserRole;
+      path_type_t: PathType;
+    };
+    CompositeTypes: Record<string, never>;
   };
 }

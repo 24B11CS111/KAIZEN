@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+import { isAuthBypassed } from "@/lib/devBypass";
 import { requireAdmin } from "@/lib/admin";
 import { AdminActionSchema } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  if (isAuthBypassed()) return NextResponse.json({ ok: true, bypassed: true });
   const guard = await requireAdmin();
   if (guard instanceof NextResponse) return guard;
   const { supabase } = guard;

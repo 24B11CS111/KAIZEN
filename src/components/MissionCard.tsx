@@ -1,8 +1,8 @@
 "use client";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Target, FlaskConical, Package, Flame, ArrowUpRight, Lock, Sparkles } from "lucide-react";
-import type { CseDay } from "@/data/cse-days";
+import { Target, FlaskConical, Package, Flame, ArrowUpRight, Lock, Sparkles, BookOpen } from "lucide-react";
+import type { BranchDay } from "@/data/days";
 
 const item = {
   hidden: { opacity: 0, y: 12 },
@@ -16,26 +16,22 @@ const item = {
 interface Props {
   day: number;
   branch: string | null;
-  data?: CseDay;
+  data?: BranchDay;
   locked?: boolean;
   lockReason?: "plan" | "cycle";
   upgradeHref?: string;
 }
 
 export function MissionCard({
-  day,
-  branch,
-  data,
-  locked,
-  lockReason = "plan",
-  upgradeHref = "/enroll"
+  day, branch, data, locked,
+  lockReason = "plan", upgradeHref = "/enroll"
 }: Props) {
   const sections = [
     {
       key: "learn",
       icon: Target,
-      label: "Learn",
-      desc: data ? "Concept primer (video)" : "Today's concept primer",
+      label: "Resource",
+      desc: data ? "Concept primer (video)" : "Today\'s concept primer",
       href: data?.learn,
       kind: "link" as const
     },
@@ -67,7 +63,7 @@ export function MissionCard({
 
   return (
     <div
-      className={"card p-5 mt-5 relative overflow-hidden " + (locked ? "select-none" : "")}
+      className={"card p-4 sm:p-5 mt-5 relative overflow-hidden " + (locked ? "select-none" : "")}
       style={{ boxShadow: "0 0 28px -10px rgba(208,0,0,0.25)" }}
     >
       {locked && (
@@ -101,14 +97,15 @@ export function MissionCard({
         </div>
       )}
 
-      <div className="flex items-end justify-between mb-4 gap-2">
+      {/* Header: Day N - Title */}
+      <div className="flex items-end justify-between mb-3 gap-2">
         <div className="min-w-0 flex-1">
           <div className="text-[10px] uppercase tracking-[0.18em] text-white/55">
             Today&apos;s mission
           </div>
           <div className="text-base sm:text-lg font-semibold mt-0.5 truncate">
             Day {day}
-            {data?.title && <span className="text-white/65"> - {data.title}</span>}
+            {data?.title && <span className="text-white/75"> - {data.title}</span>}
             {!data?.title && branch && <span className="text-white/45"> - {branch}</span>}
           </div>
         </div>
@@ -117,6 +114,28 @@ export function MissionCard({
         </span>
       </div>
 
+      {/* Concept + Prepare blocks (mobile-first, condensed) */}
+      {data?.concept && (
+        <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3 mb-2.5">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-blood-500 font-semibold mb-1">
+            Concept
+          </div>
+          <p className="text-xs sm:text-sm text-white/85 leading-relaxed">
+            {data.concept}
+          </p>
+        </div>
+      )}
+      {data?.prepare && (
+        <div className="flex items-start gap-2 mb-3 px-1">
+          <BookOpen className="h-3.5 w-3.5 text-blood-500 shrink-0 mt-0.5" />
+          <p className="text-[11px] sm:text-xs text-white/65 leading-relaxed">
+            <span className="text-white/55">Prepare today: </span>
+            {data.prepare}
+          </p>
+        </div>
+      )}
+
+      {/* 4 action rows */}
       <ul className="space-y-2.5">
         {sections.map((s, i) => {
           const isLink = s.kind === "link" && !!s.href && !locked;

@@ -1,6 +1,10 @@
 /**
  * KAIZEN.SYS - Daily tracking helpers.
- * Centralized Supabase queries against the user_progress table.
+ *
+ * Reads from the persistence layer (post-0006 migration):
+ *   - user_progress         (summary, one row per user)
+ *   - user_progress_days    (per-day log, legacy / analytics)
+ *   - streaks               (kept for back-compat; mirrored in user_progress)
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -14,13 +18,13 @@ export interface UserProgressRow {
   completed_at: string;
 }
 
-/** Pull all of a user's completion records, ordered by day. */
+/** Pull all of a user's per-day completion records, ordered by day. */
 export async function fetchUserProgress(
   supabase: SupabaseClient,
   userId: string
 ): Promise<UserProgressRow[]> {
   const { data, error } = await supabase
-    .from("user_progress")
+    .from("user_progress_days")
     .select("id, user_id, day, completed, completed_at")
     .eq("user_id", userId)
     .order("day", { ascending: true });
@@ -50,7 +54,21 @@ export function hasCompletedToday(rows: UserProgressRow[]): boolean {
   );
 }
 
-/** Streak record pulled from the streaks table. */
+/**
+ * Summary-table shape (one row per user) from the new user_progress table.
+ * Provides everything the dashboard needs for fast first-paint.
+ */
+export interface UserProgressSummary {
+  user_id: string;
+  current_day: number;
+  completed_days: number[];
+  streak: number;
+  longest_streak: number;
+  last_completed_date: string | null;
+  updated_at: string;
+}
+
+/** Streak record pulled from the streaks table (back-compat). */
 export interface StreakRow {
   user_id: string;
   current_streak: number;
@@ -78,6 +96,17 @@ export function isStreakBroken(streak: StreakRow | null | undefined): boolean {
   if (!streak.last_completed_date) return false;
   if ((streak.longest_streak ?? 0) === 0) return false;
   return daysSince(streak.last_completed_date) > 1;
+}
+
+/**
+ * Number of full calendar days since the user's last sealed day.
+ * 0 = sealed today, 1 = sealed yesterday, 2+ = missed days. -1 = never.
+ */
+export function daysSinceLastCompletion(
+  lastDate: string | null | undefined
+): number {
+  if (!lastDate) return -1;
+  return daysSince(lastDate);
 }
 
 export type StreakStatus = "active" | "broken" | "fresh";

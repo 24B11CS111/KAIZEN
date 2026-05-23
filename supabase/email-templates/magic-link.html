@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark only" />
+  <meta name="supported-color-schemes" content="dark only" />
+  <title>KAIZEN.SYS — Enter the dojo</title>
+  <!--[if mso]>
+  <style type="text/css">
+    body, table, td { font-family: Arial, sans-serif !important; }
+  </style>
+  <![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#050505;color:#ffffff;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+
+  <!-- Preheader: previewed inbox text, hidden in body -->
+  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;visibility:hidden;">
+    Your gateway is prepared. Enter KAIZEN.SYS securely. Code: {{ .Token }}
+  </div>
+
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#050505;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+
+        <!-- Outer card -->
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:520px;background:linear-gradient(180deg,#0a0a0a 0%,#050505 100%);border:1px solid rgba(255,255,255,0.06);border-radius:14px;">
+
+          <!-- Brand mark -->
+          <tr>
+            <td align="center" style="padding:36px 28px 8px 28px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="background:rgba(208,0,0,0.12);border:1px solid rgba(208,0,0,0.45);border-radius:6px;width:28px;height:28px;text-align:center;vertical-align:middle;">
+                    <div style="width:6px;height:6px;background:#D00000;border-radius:999px;margin:0 auto;box-shadow:0 0 8px rgba(208,0,0,0.7);"></div>
+                  </td>
+                  <td style="padding-left:10px;font-size:14px;letter-spacing:0.10em;font-weight:600;color:#ffffff;">
+                    KAIZEN<span style="color:#D00000;">.</span>SYS
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Headline -->
+          <tr>
+            <td align="center" style="padding:28px 28px 6px 28px;">
+              <h1 style="margin:0;font-size:22px;line-height:1.25;font-weight:600;color:#ffffff;letter-spacing:-0.01em;">
+                Your gateway is prepared.
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Subhead -->
+          <tr>
+            <td align="center" style="padding:8px 28px 0 28px;">
+              <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(255,255,255,0.65);">
+                Enter KAIZEN.SYS securely. This message was sent because someone — likely you — requested access to {{ .Email }}.
+              </p>
+            </td>
+          </tr>
+
+          <!-- OTP CODE -->
+          <tr>
+            <td align="center" style="padding:28px 28px 8px 28px;">
+              <p style="margin:0;font-size:10px;letter-spacing:0.20em;text-transform:uppercase;color:rgba(255,255,255,0.45);">
+                Your verification code
+              </p>
+              <div style="margin-top:12px;display:inline-block;padding:14px 24px;background:rgba(208,0,0,0.06);border:1px solid rgba(208,0,0,0.35);border-radius:10px;">
+                <span style="font-family:'SF Mono','Menlo','Consolas',monospace;font-size:32px;font-weight:600;letter-spacing:0.32em;color:#ffffff;">
+                  {{ .Token }}
+                </span>
+              </div>
+              <p style="margin:14px 0 0 0;font-size:11px;line-height:1.5;color:rgba(255,255,255,0.45);">
+                This code expires in 10 minutes.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding:28px 28px 4px 28px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="height:1px;line-height:1px;font-size:1px;background:linear-gradient(90deg,transparent 0%,rgba(208,0,0,0.35) 50%,transparent 100%);">&nbsp;</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- OR — single-tap link -->
+          <tr>
+            <td align="center" style="padding:18px 28px 0 28px;">
+              <p style="margin:0 0 14px 0;font-size:11px;letter-spacing:0.20em;text-transform:uppercase;color:rgba(255,255,255,0.45);">
+                or enter with one tap
+              </p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="background:#D00000;border-radius:10px;">
+                    <a href="{{ .ConfirmationURL }}"
+                       style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.02em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      Enter KAIZEN &nbsp;&rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Fallback URL -->
+          <tr>
+            <td align="center" style="padding:18px 28px 8px 28px;">
+              <p style="margin:0;font-size:11px;line-height:1.55;color:rgba(255,255,255,0.40);">
+                If the button doesn't work, paste this into your browser:<br />
+                <a href="{{ .ConfirmationURL }}" style="color:rgba(208,0,0,0.85);word-break:break-all;text-decoration:none;">
+                  {{ .ConfirmationURL }}
+                </a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Tagline -->
+          <tr>
+            <td align="center" style="padding:24px 28px 36px 28px;">
+              <p style="margin:0;font-size:11px;letter-spacing:0.32em;text-transform:uppercase;color:rgba(255,255,255,0.55);">
+                Continue your ascent.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Security note -->
+          <tr>
+            <td align="center" style="padding:0 28px 28px 28px;">
+              <p style="margin:0;font-size:10.5px;line-height:1.6;color:rgba(255,255,255,0.32);">
+                You weren't expecting this email? Safely ignore it. The code expires on its own and your account stays sealed.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+        <!-- Footer outside the card -->
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:520px;margin-top:16px;">
+          <tr>
+            <td align="center" style="padding:0 16px;">
+              <p style="margin:0;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.30);">
+                KAIZEN.SYS &middot; Discipline builds your future
+              </p>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

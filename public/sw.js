@@ -6,7 +6,9 @@
  *   - API and Supabase -> never cached (always fresh)
  */
 
-const CACHE_VERSION = "kaizen-v3";
+// IMPORTANT: bump this whenever auth/dashboard markup changes so that
+// previously cached HTML can't hydrate against the new client bundle.
+const CACHE_VERSION = "kaizen-v4";
 const STATIC_CACHE  = CACHE_VERSION + "-static";
 const RUNTIME_CACHE = CACHE_VERSION + "-runtime";
 

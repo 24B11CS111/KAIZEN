@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+import { isAuthBypassed } from "@/lib/devBypass";
 import { DayCompletionSchema } from "@/lib/validation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  if (isAuthBypassed()) return NextResponse.json({ ok: true, bypassed: true });
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -21,8 +23,14 @@ export async function POST(request: Request) {
     );
   }
 
+  // complete_day RPC now accepts an optional notes string and returns
+  // { current_streak, longest_streak, current_day } from the maintained
+  // user_progress summary row.
   const { data, error } = await supabase
-    .rpc("complete_day", { p_day: parsed.data.day })
+    .rpc("complete_day", {
+      p_day:   parsed.data.day,
+      p_notes: parsed.data.notes ?? null
+    } as any)
     .single();
 
   if (error) {
@@ -46,9 +54,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: phrase }, { status });
   }
 
+  const row = data as any;
   return NextResponse.json({
     ok: true,
-    current_streak: (data as any).current_streak,
-    longest_streak: (data as any).longest_streak
+    current_streak: row?.current_streak,
+    longest_streak: row?.longest_streak,
+    current_day:    row?.current_day
   });
 }

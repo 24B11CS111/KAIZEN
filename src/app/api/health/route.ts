@@ -4,28 +4,30 @@ import { createClient } from "@supabase/supabase-js";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/**
- * Diagnostic endpoint. Hit /api/health to see exactly what's wrong.
- *
- * Returns a JSON object with the result of every check we can run:
- *   - env: are all required env vars defined?
- *   - supabase_anon: can the anon key talk to Supabase auth?
- *   - supabase_service: can the service key reach the DB?
- *   - profiles_table: does the profiles table exist (i.e. did the migration run)?
- *   - path_branch_columns: did migration 0002 also run?
- *
- * Fields with "ok": false include a "hint" telling you how to fix it.
- */
-export async function GET() {
-  const out: Record<string, unknown> = { ts: new Date().toISOString() };
+interface CheckResult {
+  ok: boolean;
+  detail?: any;
+  hint?: string;
+}
 
-  // 1. ENV CHECK
-  const requiredEnv = [
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    "SUPABASE_SERVICE_ROLE_KEY",
-    "ADMIN_EMAIL"
-  ];
+interface HealthOut {
+  env: CheckResult;
+  url_shape?: CheckResult;
+  supabase_anon?: CheckResult;
+  profiles_table?: CheckResult;
+  path_branch_columns?: CheckResult;
+}
+
+const requiredEnv = [
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  "SUPABASE_SERVICE_ROLE_KEY"
+] as const;
+
+export async function GET() {
+  const out: HealthOut = { env: { ok: false } };
+
+  // 1) ENV check
   const envStatus: Record<string, boolean> = {};
   const missing: string[] = [];
   for (const k of requiredEnv) {
@@ -52,95 +54,78 @@ export async function GET() {
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   const service = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-  // 1.5  shape-check the URL (catches typos like "https//" and trailing slashes)
-  let urlOk = false;
-  try {
-    const u = new URL(url);
-    urlOk = u.protocol === "https:" && u.host.endsWith(".supabase.co");
-  } catch { urlOk = false; }
+  // 2) URL shape check
+  const validShape = /^https:\/\/[a-z0-9-]+\.supabase\.(co|in)\/?$/i.test(url);
   out.url_shape = {
-    ok: urlOk,
-    value: url,
-    ...(urlOk
-      ? {}
-      : { hint: "URL must look like https://xxxxx.supabase.co (no trailing slash, no path)." })
+    ok: validShape,
+    detail: { url },
+    ...(!validShape && {
+      hint:
+        "NEXT_PUBLIC_SUPABASE_URL should look like https://xxxxx.supabase.co (no trailing path)."
+    })
   };
-  if (!urlOk) return NextResponse.json(out, { status: 200 });
 
-  // 2. ANON CONNECT - hit auth health
+  // 3) Anon key check - simple sanity ping
   try {
-    const anonClient = createClient(url, anon, {
-      auth: { persistSession: false, autoRefreshToken: false }
-    });
+    const anonClient = createClient(url, anon, { auth: { persistSession: false } });
     const { error } = await anonClient.auth.getSession();
     out.supabase_anon = error
-      ? { ok: false, error: error.message, hint: "Anon key may be wrong or project paused." }
+      ? { ok: false, detail: error.message }
       : { ok: true };
-  } catch (e) {
+  } catch (e: any) {
     out.supabase_anon = {
       ok: false,
-      error: e instanceof Error ? e.message : String(e),
-      hint: "Could not reach Supabase. Check the URL and your network."
+      detail: e?.message ?? String(e),
+      hint: "Supabase client could not initialize. Check the URL + anon key."
     };
   }
 
-  // 3. SERVICE ROLE -> DB query
+  // 4) Profiles table reachable via service role
+  let admin;
   try {
-    const admin = createClient(url, service, {
-      auth: { persistSession: false, autoRefreshToken: false }
-    });
-    const { data, error } = await admin
-      .from("profiles")
-      .select("id")
-      .limit(1);
-    if (error) {
-      const isMissingTable =
-        error.message.includes("relation") ||
-        error.message.includes("does not exist") ||
-        error.code === "42P01";
-      out.profiles_table = {
-        ok: false,
-        error: error.message,
-        hint: isMissingTable
-          ? "The profiles table doesn't exist. Run supabase/migrations/0001_initial.sql in your Supabase SQL editor."
-          : "Service role key may be wrong, or RLS is blocking the service role (it shouldn't)."
-      };
-    } else {
-      out.profiles_table = { ok: true, sample_count: data?.length ?? 0 };
-
-      // 4. Does migration 0002 columns exist?
-      const { error: colErr } = await admin
-        .from("profiles")
-        .select("path_type, branch")
-        .limit(1);
-      out.path_branch_columns = colErr
-        ? {
-            ok: false,
-            error: colErr.message,
-            hint:
-              "Migration 0002 not applied. Run supabase/migrations/0002_path_branch.sql in Supabase SQL editor."
-          }
-        : { ok: true };
-    }
-  } catch (e) {
+    admin = createClient(url, service, { auth: { persistSession: false } });
+  } catch (e: any) {
     out.profiles_table = {
       ok: false,
-      error: e instanceof Error ? e.message : String(e),
-      hint: "Service role connection failed entirely."
+      detail: e?.message ?? String(e),
+      hint: "Service role client failed to init."
+    };
+    return NextResponse.json(out, { status: 200 });
+  }
+
+  try {
+    const { error } = await admin.from("profiles").select("id").limit(1);
+    out.profiles_table = error
+      ? {
+          ok: false,
+          detail: error.message,
+          hint: "Run supabase/migrations/0001_initial.sql in the Supabase SQL editor."
+        }
+      : { ok: true };
+  } catch (e: any) {
+    out.profiles_table = {
+      ok: false,
+      detail: e?.message ?? String(e),
+      hint: "Could not query profiles table."
     };
   }
 
-  // 5. SUMMARY
-  const allOk =
-    (out.env as { ok: boolean }).ok &&
-    (out.url_shape as { ok: boolean }).ok &&
-    (out.supabase_anon as { ok: boolean }).ok &&
-    (out.profiles_table as { ok: boolean }).ok &&
-    ((out.path_branch_columns as { ok: boolean })?.ok ?? false);
-
-  out.summary = allOk
-    ? { ok: true, message: "All systems green. Registration should work." }
-    : { ok: false, message: "Fix the entries flagged ok:false above (each has a 'hint')." };
+  // 5) path_type / branch columns from migration 0002
+  try {
+    const { error } = await admin.from("profiles").select("path_type, branch").limit(1);
+    out.path_branch_columns = error
+      ? {
+          ok: false,
+          detail: error.message,
+          hint: "Run supabase/migrations/0002_path_branch.sql in the Supabase SQL editor."
+        }
+      : { ok: true };
+  } catch (e: any) {
+    out.path_branch_columns = {
+      ok: false,
+      detail: e?.message ?? String(e)
+    };
+  }
 
   return NextResponse.json(out, { status: 200 });
 }

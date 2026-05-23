@@ -2,10 +2,13 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  typescript: { ignoreBuildErrors: false },
+  eslint: { ignoreDuringBuilds: false },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "prod.spline.design" },
-      { protocol: "https", hostname: "**.supabase.co" }
+      { protocol: "https", hostname: "**.supabase.co" },
+      { protocol: "https", hostname: "res.cloudinary.com" }
     ]
   },
   async headers() {

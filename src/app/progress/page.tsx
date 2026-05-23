@@ -12,17 +12,18 @@ export default async function ProgressPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login?next=/progress");
 
-  const [{ data: progress }, { data: streak }] = await Promise.all([
-    supabase.from("user_progress").select("day, completed").eq("user_id", user.id),
-    supabase.from("streaks").select("*").eq("user_id", user.id).maybeSingle()
-  ]);
+  // Single-query read from the persistence summary — no per-day fetch.
+  const { data: summary } = await supabase
+    .from("user_progress")
+    .select("current_day, completed_days, streak, longest_streak")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-  const completedDays = new Set(
-    (progress ?? []).filter((p: any) => p.completed).map((p: any) => p.day)
-  );
+  const s: any = summary;
+  const completedDays = new Set<number>((s?.completed_days ?? []) as number[]);
   const completedCount = completedDays.size;
   const pct = Math.round((completedCount / TOTAL_DAYS) * 100);
-  const currentStreak = streak?.current_streak ?? 0;
+  const currentStreak: number = s?.streak ?? 0;
   const dayNumbers = Array.from({ length: TOTAL_DAYS }, (_, i) => i + 1);
 
   return (

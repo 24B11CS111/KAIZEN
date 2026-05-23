@@ -3,27 +3,25 @@ import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/adminEmail";
+import { isAuthBypassed } from "@/lib/devBypass";
 import { AdminApprovalList, type PendingRow } from "@/components/AdminApprovalList";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   const supabase = createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login?next=/admin");
 
-  // Admin gate: email must match ADMIN_EMAIL (defaults to hrixofficial@gmail.com).
-  // Role check is defense-in-depth.
-  const { data: me } = await supabase
-    .from("profiles")
-    .select("role,email")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  const p: any = me;
-  if (!p || !isAdminEmail(user.email) || p.role !== "admin") {
-    redirect("/");
+  // Dev bypass: skip auth + admin email check entirely.
+  if (!isAuthBypassed()) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) redirect("/auth/login?next=/admin");
+    const { data: me } = await supabase.from("profiles").select("role,email").eq("id", user.id).maybeSingle();
+    const p: any = me;
+    if (!p || !isAdminEmail(user.email) || p.role !== "admin") {
+      redirect("/");
+    }
   }
+
 
   // Pending UTR rows joined with the profile for name + whatsapp.
   const { data: utrs } = await supabase

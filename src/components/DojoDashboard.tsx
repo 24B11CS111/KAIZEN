@@ -1,14 +1,31 @@
 "use client";
 import { memo, useCallback, useMemo, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Check, Lock, Flame, Trophy, Sparkles, FlameKindling } from "lucide-react";
+import { ArrowRight, Check, Lock, Sparkles, Trophy, FlameKindling } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { GateOpening } from "./GateOpening";
 import { MissionCard } from "./MissionCard";
+import { HeroStatusPanel } from "./HeroStatusPanel";
+import { AnalyticsRings } from "./AnalyticsRings";
+import { AIGuidancePanel } from "./AIGuidancePanel";
+import { YouVsYou } from "./YouVsYou";
+import { AchievementGrid, buildAchievements } from "./AchievementGrid";
+import { CompletionBurst } from "./CompletionBurst";
+import { EngagementMount } from "./EngagementMount";
+import type { EngagementInput } from "@/lib/engagement";
+import { WorkoutMissionCard } from "./WorkoutMissionCard";
+import { generateWorkout, workoutInputFromProfile } from "@/lib/workout";
+import { DailyMissionBoard } from "./DailyMissionBoard";
+import { assembleDailyMission } from "@/lib/missions";
+import type { PlanDay } from "@/lib/ai-plan/types";
+import { PersonalizedWelcome } from "./PersonalizedWelcome";
+import { useRealtimeTracking } from "@/lib/useRealtimeTracking";
 import { daysRemaining } from "@/lib/utils";
-import { cseDays } from "@/data/cse-days";
+import { getCurriculumForBranch, type BranchDay } from "@/data/days";
 import { mapDailyTrackingError } from "@/lib/dailyTracking";
-import { getMilestone, motivationLine, isMilestoneJustReached } from "@/lib/milestones";
+import { computeXpState, aiStatusMessage, TOTAL_DAYS } from "@/lib/ranking";
+import { getMilestone } from "@/lib/milestones";
 import type { Profile, ProgressLog, Streak } from "@/types/database";
 
 interface Props {
@@ -18,12 +35,28 @@ interface Props {
   showGate: boolean;
   sealedToday?: boolean;
   streakBroken?: boolean;
+  /**
+   * Optional AI-generated 30-day plan, pre-mapped to the BranchDay shape.
+   * When present, it overrides the static branch curriculum.
+   */
+  aiCurriculum?: BranchDay[] | null;
+  /** Human-readable label for the AI plan track (e.g. "DSA + Placements"). */
+  aiTrackLabel?: string | null;
+  /** Raw PlanDay[] from ai_plans.generated_plan (for unified mission board). */
+  aiPlanDays?: PlanDay[] | null;
+  /** Full calendar days since the last sealed day (0 = today, -1 = never). */
+  missedDays?: number;
 }
 
-const TOTAL_DAYS = 30;
 const FREE_LIMIT = 3;
 
-export function DojoDashboard({ profile, progress, streak, showGate, sealedToday = false, streakBroken = false }: Props) {
+export function DojoDashboard({
+  profile, progress, streak, showGate,
+  sealedToday = false, streakBroken = false,
+  aiCurriculum = null, aiTrackLabel = null,
+  aiPlanDays = null,
+  missedDays = -1
+}: Props) {
   const [gateDone, setGateDone] = useState(!showGate);
   const [completed, setCompleted] = useState<Set<number>>(
     () => new Set(progress.filter((p) => p.completed).map((p) => p.day_number))
@@ -36,6 +69,7 @@ export function DojoDashboard({ profile, progress, streak, showGate, sealedToday
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const [sealedTodayLocal, setSealedTodayLocal] = useState<boolean>(sealedToday);
   const [streakBrokenLocal, setStreakBrokenLocal] = useState<boolean>(streakBroken);
+  const [showBurst, setShowBurst] = useState(false);
 
   const isPaid = (profile.plan_amount ?? 0) > 0;
   const planMaxDay = isPaid ? TOTAL_DAYS : FREE_LIMIT;
@@ -44,8 +78,6 @@ export function DojoDashboard({ profile, progress, streak, showGate, sealedToday
   const completedCount = completed.size;
   const pct = Math.round((completedCount / TOTAL_DAYS) * 100);
   const noProgress = completedCount === 0;
-  const milestone = getMilestone(completedCount);
-  const milestoneJust = isMilestoneJustReached(completedCount);
 
   const cycleDay = useMemo(() => {
     if (!profile.start_date) return 1;
@@ -62,11 +94,49 @@ export function DojoDashboard({ profile, progress, streak, showGate, sealedToday
 
   const unlockedCeiling = Math.min(cycleDay, planMaxDay);
   const displayDay = Math.min(currentDay, planMaxDay);
-  const dayData = useMemo(() => cseDays.find((d) => d.day === displayDay), [displayDay]);
+  // Prefer the user's AI-generated 30-day plan when one exists; otherwise
+  // fall back to the static branch curriculum so nothing breaks for users
+  // who haven't gone through the new onboarding yet.
+  const curriculum = useMemo(
+    () => (aiCurriculum && aiCurriculum.length > 0
+      ? aiCurriculum
+      : getCurriculumForBranch(profile.branch)),
+    [aiCurriculum, profile.branch]
+  );
+  const dayData = useMemo(() => curriculum.find((d) => d.day === displayDay), [curriculum, displayDay]);
   const allDone = completedCount >= TOTAL_DAYS;
   const planLocked = currentDay > planMaxDay && !allDone;
   const cycleLocked = currentDay > cycleDay && !planLocked && !allDone;
   const cardLocked = (planLocked || cycleLocked) && !allDone;
+
+  // Gamification
+  const xp = useMemo(() => computeXpState(completedCount, streakState.current), [completedCount, streakState.current]);
+  const todayProgressPct = sealedTodayLocal || completed.has(displayDay) ? 100 : 0;
+  const aiMsg = useMemo(
+    () => aiStatusMessage({
+      completedCount, streak: streakState.current,
+      sealedToday: sealedTodayLocal, streakBroken: streakBrokenLocal,
+      missedDays
+    }),
+    [completedCount, streakState.current, sealedTodayLocal, streakBrokenLocal, missedDays]
+  );
+  const milestone = getMilestone(completedCount);
+  const achievements = useMemo(
+    () => buildAchievements({
+      completed: completedCount,
+      longestStreak: streakState.longest,
+      currentStreak: streakState.current
+    }),
+    [completedCount, streakState.longest, streakState.current]
+  );
+
+  // Realtime - bump key whenever any of this user's data changes server-side
+  const router = useRouter();
+  const [refreshKey, setRefreshKey] = useState(0);
+  useRealtimeTracking({
+    userId: profile.id,
+    onChange: () => { setRefreshKey((k) => k + 1); router.refresh(); }
+  });
 
   const completeDay = useCallback(
     (day: number) => {
@@ -83,12 +153,11 @@ export function DojoDashboard({ profile, progress, streak, showGate, sealedToday
           if (!res.ok) throw new Error(json.error ?? "complete_failed");
           setCompleted((prev) => new Set(prev).add(day));
           setSealedTodayLocal(true);
+          setShowBurst(true);
+          setTimeout(() => setShowBurst(false), 750);
           setStreakBrokenLocal(false);
           if (json.current_streak !== undefined) {
-            setStreakState({
-              current: json.current_streak,
-              longest: json.longest_streak
-            });
+            setStreakState({ current: json.current_streak, longest: json.longest_streak });
           }
         } catch (e: any) {
           console.error(e);
@@ -103,6 +172,53 @@ export function DojoDashboard({ profile, progress, streak, showGate, sealedToday
 
   const firstName = profile.full_name ? profile.full_name.split(" ")[0] : "Warrior";
 
+  // Workout mission for today — kept for legacy WorkoutMissionCard surface.
+  const workoutMission = useMemo(
+    () => generateWorkout(workoutInputFromProfile(profile, displayDay)),
+    [profile, displayDay]
+  );
+
+  // Unified DailyMission — pulls study/practice/build from the user's
+  // personalized AI plan day, workout from the workout module, recovery
+  // from a deterministic per-day rotation, and discipline from the plan.
+  const planDayObject: PlanDay | null = useMemo(() => {
+    if (!aiPlanDays || aiPlanDays.length === 0) return null;
+    return aiPlanDays.find((d) => d.day === displayDay) ?? null;
+  }, [aiPlanDays, displayDay]);
+
+  const dailyMission = useMemo(
+    () => (planDayObject
+      ? assembleDailyMission({
+          profile,
+          planDay: planDayObject,
+          trackLabel: aiTrackLabel,
+          dayNumber: displayDay
+        })
+      : null),
+    [profile, planDayObject, aiTrackLabel, displayDay]
+  );
+
+  // Engagement input — derived from the same data already in props, so
+  // no extra fetches. Refreshes whenever local progress/streak changes.
+  const engagementInput: EngagementInput = useMemo(
+    () => ({
+      full_name:            profile.full_name ?? null,
+      expiry_date:          profile.expiry_date ?? null,
+      subscription_status:  profile.subscription_status ?? null,
+      streak:               streakState.current,
+      longest_streak:       streakState.longest,
+      current_day:          currentDay,
+      completed_count:      completedCount,
+      sealed_today:         sealedTodayLocal,
+      missed_days:          missedDays
+    }),
+    [
+      profile.full_name, profile.expiry_date, profile.subscription_status,
+      streakState.current, streakState.longest, currentDay,
+      completedCount, sealedTodayLocal, missedDays
+    ]
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -114,114 +230,133 @@ export function DojoDashboard({ profile, progress, streak, showGate, sealedToday
         {!gateDone && <GateOpening onComplete={() => setGateDone(true)} />}
       </AnimatePresence>
 
-      <main className="container-app pt-6 pb-bottom-nav">
-        <header className="pt-2 pb-4">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-white/55">
-            Welcome back
-          </p>
-          <h1 className="text-xl sm:text-2xl font-semibold mt-0.5 truncate">{firstName}</h1>
-        </header>
+      {/* Sub-screen burst fires from the dashboard center on day completion */}
+      <div className="fixed inset-0 pointer-events-none z-50 grid place-items-center">
+        <CompletionBurst show={showBurst} />
+      </div>
+
+      <main className="container-app pt-4 sm:pt-6 pb-bottom-nav space-y-5">
+        <PersonalizedWelcome
+          firstName={firstName}
+          currentDay={displayDay}
+          goal={(profile as any).main_goal ?? null}
+          branch={profile.branch ?? null}
+          streak={streakState.current}
+          longestStreak={streakState.longest}
+          sealedToday={sealedTodayLocal}
+          missedDays={missedDays}
+        />
+
+        <EngagementMount input={engagementInput} />
+
+        <HeroStatusPanel
+          firstName={firstName}
+          xp={xp}
+          currentStreak={streakState.current}
+          todayProgressPct={todayProgressPct}
+          aiMessage={aiMsg}
+        />
 
         {streakBrokenLocal && (
           <motion.div
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="card p-3 mb-3 border-blood-500/40 flex items-center gap-3"
+            initial={{ opacity: 0, y: -8, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="relative overflow-hidden rounded-xl border border-blood-500/45 bg-gradient-to-br from-blood-500/[0.08] via-blood-500/[0.04] to-transparent p-4 sm:p-5"
+            style={{ boxShadow: "0 0 36px -12px rgba(208,0,0,0.55)" }}
           >
-            <span className="grid place-items-center h-9 w-9 rounded-md bg-blood-500/15 border border-blood-500/40 shrink-0">
-              <FlameKindling className="h-4 w-4 text-blood-500" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-semibold">Streak broken</div>
-              <div className="text-xs text-white/60 mt-0.5">
-                Restart discipline. Best streak: {streakState.longest} {streakState.longest === 1 ? "day" : "days"}.
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 opacity-40"
+              style={{
+                background:
+                  "radial-gradient(120% 80% at 10% 0%, rgba(208,0,0,0.18), transparent 60%)"
+              }}
+            />
+            <div className="relative flex items-start gap-3">
+              <span className="grid place-items-center h-10 w-10 rounded-md bg-blood-500/20 border border-blood-500/55 shrink-0 animate-pulse">
+                <FlameKindling className="h-5 w-5 text-blood-500" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-blood-500 font-semibold">
+                  Discipline broken
+                </div>
+                <p className="mt-1.5 text-[14px] sm:text-[15px] text-white leading-snug font-semibold">
+                  You missed a day.
+                </p>
+                <p className="mt-1 text-[12.5px] text-white/70 leading-relaxed">
+                  Discipline weakens when consistency breaks. Return and continue your ascent.
+                </p>
+                <div className="mt-3 text-[11px] text-white/45">
+                  Best streak: {streakState.longest} {streakState.longest === 1 ? "day" : "days"} — your floor, not your ceiling.
+                </div>
               </div>
             </div>
           </motion.div>
         )}
 
-        <section className="grid grid-cols-3 gap-2.5 sm:gap-3">
-          <StatCard label="Day" value={String(displayDay)} sub={"of " + TOTAL_DAYS} />
-          <StatCard
-            label="Streak"
-            value={String(streakState.current)}
-            sub={streakState.current === 1 ? "day" : "days"}
-            icon={<Flame className="h-3.5 w-3.5 text-blood-500" />}
-          />
-          <StatCard label="Progress" value={pct + "%"} sub={completedCount + " sealed"} />
-        </section>
+        <AnalyticsRings
+          completedDays={completedCount}
+          totalDays={TOTAL_DAYS}
+          cycleDay={cycleDay}
+          longestStreak={streakState.longest}
+          studyHoursEstimate={completedCount * 1.5}
+        />
 
-        <div className="mt-4 px-1">
-          <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: pct + "%" }}
-              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-              className="h-full bg-blood-500"
-              style={{ boxShadow: "0 0 12px rgba(208,0,0,0.6)" }}
-            />
-          </div>
-          <div className="mt-2 flex items-center justify-between text-[11px] text-white/45">
-            <span>{Math.max(0, remaining)} days remain</span>
-            <span className="inline-flex items-center gap-1">
-              <Trophy className="h-3 w-3" /> Best {streakState.longest}
+        <div className="flex items-center justify-between text-[11px] text-white/45 px-1">
+          <span>{Math.max(0, remaining)} days remain in cycle</span>
+          {milestone.tier > 0 && (
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-blood-500" style={{ boxShadow: "0 0 6px rgba(208,0,0,0.7)" }} />
+              {milestone.label}
             </span>
-          </div>
+          )}
         </div>
-
-        {milestone.tier > 0 && (
-          <motion.div
-            key={milestone.tier}
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35 }}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-blood-500/40 bg-blood-500/10 px-2.5 py-1 text-[11px] font-medium text-white/85"
-          >
-            <span
-              className="h-1.5 w-1.5 rounded-full bg-blood-500"
-              style={{ boxShadow: "0 0 6px rgba(208,0,0,0.7)" }}
-            />
-            {milestone.label}
-            {milestoneJust && (
-              <span className="ml-1 text-white/55 font-normal">- {milestone.message}</span>
-            )}
-          </motion.div>
-        )}
 
         {noProgress && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.05 }}
-            className="card p-4 mt-4 border-blood-500/30 flex items-center gap-3"
+            className="card p-4 border-blood-500/30 flex items-center gap-3"
           >
             <span className="grid place-items-center h-9 w-9 rounded-md bg-blood-500/15 border border-blood-500/40 shrink-0">
               <Sparkles className="h-4 w-4 text-blood-500" />
             </span>
             <div className="min-w-0">
-              <div className="text-sm font-semibold">Start your journey</div>
-              <div className="text-xs text-white/60 mt-0.5">Complete Day 1 to begin your streak.</div>
+              <div className="text-sm font-semibold">Every master was once untrained</div>
+              <div className="text-xs text-white/60 mt-0.5">Begin Day 1. The path opens with the first step.</div>
             </div>
           </motion.div>
         )}
-
         {!isPaid && !noProgress && (
-          <div className="mt-4 card p-3 border-blood-500/30 text-xs text-white/80 flex items-center gap-2">
+          <div className="card p-3 border-blood-500/30 text-xs text-white/80 flex items-center gap-2">
             <Lock className="h-3.5 w-3.5 text-blood-500 shrink-0" />
             <span className="flex-1">Free preview - first {FREE_LIMIT} days unlocked.</span>
             <Link href="/enroll" className="text-blood-500 font-semibold whitespace-nowrap">Upgrade</Link>
           </div>
         )}
 
-        <MissionCard
-          day={displayDay}
-          branch={profile.branch}
-          data={dayData}
-          locked={cardLocked}
-          lockReason={planLocked ? "plan" : "cycle"}
-          upgradeHref="/enroll"
-        />
+        {/* Locked days keep the existing upgrade overlay. Unlocked days
+            use the new unified 6-category board (Study · Practice · Build
+            · Workout · Discipline · Recovery). When no AI plan exists
+            yet (rare — auto-generation runs server-side) we fall back to
+            the legacy MissionCard so the dashboard never goes blank. */}
+        {cardLocked || !dailyMission ? (
+          <>
+            <MissionCard
+              day={displayDay}
+              branch={aiTrackLabel ?? profile.branch}
+              data={dayData as any}
+              locked={cardLocked}
+              lockReason={planLocked ? "plan" : "cycle"}
+              upgradeHref="/enroll"
+            />
+            {!cardLocked && <WorkoutMissionCard mission={workoutMission} />}
+          </>
+        ) : (
+          <DailyMissionBoard mission={dailyMission} />
+        )}
 
         {!allDone && !cardLocked && !completed.has(displayDay) && !sealedTodayLocal && (
           <motion.button
@@ -230,11 +365,9 @@ export function DojoDashboard({ profile, progress, streak, showGate, sealedToday
             transition={{ delay: 0.12, duration: 0.3 }}
             onClick={() => completeDay(displayDay)}
             disabled={pending}
-            className="btn-primary w-full mt-4 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+            className="btn-primary w-full disabled:opacity-50 inline-flex items-center justify-center gap-2"
           >
-            {pending ? (
-              "Sealing..."
-            ) : (
+            {pending ? "Sealing..." : (
               <>
                 Complete Day {displayDay}
                 <ArrowRight className="h-4 w-4 cta-nudge" />
@@ -242,43 +375,40 @@ export function DojoDashboard({ profile, progress, streak, showGate, sealedToday
             )}
           </motion.button>
         )}
-
         {!allDone && !cardLocked && !completed.has(displayDay) && sealedTodayLocal && (
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            className="card mt-4 p-4 flex items-center gap-3 border-blood-500/40"
+            className="card p-4 flex items-center gap-3 border-blood-500/40"
           >
             <span className="grid place-items-center h-9 w-9 rounded-md bg-blood-500/15 border border-blood-500/40">
               <Check className="h-4 w-4 text-blood-500" />
             </span>
             <div>
-              <div className="text-sm font-semibold">Day sealed for today.</div>
+              <div className="text-sm font-semibold">Day completed. Continue your ascent.</div>
               <div className="text-xs text-white/55">Return tomorrow to unlock Day {displayDay}.</div>
             </div>
           </motion.div>
         )}
-
         {!allDone && !cardLocked && completed.has(displayDay) && (
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            className="card mt-4 p-4 flex items-center gap-3 border-blood-500/40"
+            className="card p-4 flex items-center gap-3 border-blood-500/40"
           >
             <span className="grid place-items-center h-9 w-9 rounded-md bg-blood-500/15 border border-blood-500/40">
               <Check className="h-4 w-4 text-blood-500" />
             </span>
             <div>
               <div className="text-sm font-semibold">Day {displayDay} sealed.</div>
-              <div className="text-xs text-white/55">{motivationLine(completedCount)}</div>
+              <div className="text-xs text-white/55">The fire steadies.</div>
             </div>
           </motion.div>
         )}
-
         {allDone && (
-          <div className="card mt-4 p-4 flex items-center gap-3 border-blood-500/40">
+          <div className="card p-4 flex items-center gap-3 border-blood-500/40">
             <span className="grid place-items-center h-9 w-9 rounded-md bg-blood-500/15 border border-blood-500/40">
               <Trophy className="h-4 w-4 text-blood-500" />
             </span>
@@ -288,17 +418,27 @@ export function DojoDashboard({ profile, progress, streak, showGate, sealedToday
             </div>
           </div>
         )}
-
         {errMsg && (
-          <div className="mt-3 card p-3 border-blood-500/40 text-xs text-blood-500">{errMsg}</div>
+          <div className="card p-3 border-blood-500/40 text-xs text-blood-500">{errMsg}</div>
         )}
 
-        <section className="mt-8">
+        <AIGuidancePanel
+          recommendation={dayData?.concept ? dayData.concept : "Take ten quiet minutes before you begin."}
+          focusArea={dayData?.title || (profile.branch ?? "Discipline")}
+          estimatedMinutes={45}
+        />
+
+        <YouVsYou refreshKey={refreshKey} />
+        <AchievementGrid items={achievements} />
+
+        <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold">30-Day Path</h2>
-            <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">
-              Drip - Month 1
-            </span>
+            {(aiTrackLabel || profile.branch) && (
+              <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">
+                {aiTrackLabel ?? profile.branch} · Month 1
+              </span>
+            )}
           </div>
           <div className="grid grid-cols-6 sm:grid-cols-10 gap-1.5">
             {Array.from({ length: TOTAL_DAYS }, (_, i) => i + 1).map((day) => {
@@ -325,17 +465,13 @@ export function DojoDashboard({ profile, progress, streak, showGate, sealedToday
               return (
                 <div
                   key={day}
-                  className={"aspect-square rounded-md border grid place-items-center text-[11px] font-medium transition-shadow " + cls}
+                  className={
+                    "h-8 rounded-md border grid place-items-center text-[10px] font-medium tap-card transition-colors " +
+                    cls
+                  }
                   title={tip}
-                  style={done ? { boxShadow: "0 0 8px -2px rgba(208,0,0,0.55)" } : undefined}
                 >
-                  {planLockedCell || cycleLockedCell ? (
-                    <Lock className="h-3 w-3" />
-                  ) : done ? (
-                    <Check className="h-3.5 w-3.5 text-blood-500" />
-                  ) : (
-                    <span>{day}</span>
-                  )}
+                  {done ? <Check className="h-3 w-3" /> : day}
                 </div>
               );
             })}
@@ -346,16 +482,4 @@ export function DojoDashboard({ profile, progress, streak, showGate, sealedToday
   );
 }
 
-const StatCard = memo(function StatCard({
-  label, value, sub, icon
-}: { label: string; value: string; sub?: string; icon?: React.ReactNode }) {
-  return (
-    <div className="card p-3 text-center">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-white/55 inline-flex items-center gap-1 justify-center">
-        {icon} {label}
-      </div>
-      <div className="text-xl sm:text-2xl font-semibold mt-1 leading-none">{value}</div>
-      {sub && <div className="text-[10px] text-white/45 mt-1">{sub}</div>}
-    </div>
-  );
-});
+export default memo(DojoDashboard);

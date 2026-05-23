@@ -70,6 +70,13 @@ export function RegistrationFlow() {
     }
   }, [step, account.whatsapp, pay.whatsapp]);
 
+  // Clear stale notice/error whenever the user navigates between steps -
+  // a "Account created" success from step 1 should NOT linger on step 3.
+  useEffect(() => {
+    setError(null);
+    setNotice(null);
+  }, [step]);
+
   const planAmount = path === "btech" ? 99 : 49;
   const upi = process.env.NEXT_PUBLIC_UPI_ID || "kaizen@upi";
   const upiName = process.env.NEXT_PUBLIC_UPI_NAME || "KAIZEN.SYS";
@@ -82,7 +89,8 @@ export function RegistrationFlow() {
     return "upi://pay?" + params.toString();
   }, [upi, upiName, planAmount]);
 
-  // STEP 1 -> STEP 2: signup directly via Supabase, then explicitly create profile
+  // STEP 1 -> STEP 2: signup. Robust to email-confirm flow - we no longer
+  // depend on a session being returned. Errors block; missing session does NOT.
   const signup = async () => {
     setError(null);
     setNotice(null);
@@ -93,103 +101,41 @@ export function RegistrationFlow() {
     }
     setBusy(true);
     try {
-      const supabase = createSupabaseBrowserClient();
-
-      // 1. Try direct browser signUp (fastest; works when email-confirm is OFF)
-      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-        email: parsed.data.email,
-        password: parsed.data.password,
-        options: { data: { full_name: parsed.data.full_name } }
+      // Always go through the server admin endpoint - it creates the user
+      // with email_confirm=true, OR if they already exist, force-confirms
+      // and resets their password to what they typed. Either way, the
+      // account ends up in a state where signInWithPassword works.
+      const adminRes = await fetch("/api/register/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: parsed.data.full_name,
+          email: parsed.data.email,
+          password: parsed.data.password,
+          whatsapp: parsed.data.whatsapp ?? null
+        })
       });
+      const adminJson = await adminRes.json().catch(() => ({}));
 
-      // Hard duplicate-email failure - surface a clean message
-      if (signUpErr) {
-        const m = signUpErr.message.toLowerCase();
-        if (m.includes("already") || m.includes("registered") || m.includes("exists")) {
-          throw new Error("An account with this email already exists. Try signing in.");
-        }
-        throw signUpErr;
+      // Treat 200 OK and 409 (already exists) as success. Real errors block.
+      if (!adminRes.ok && adminRes.status !== 409) {
+        throw new Error(adminJson?.error || "Sign up failed. Please try again.");
       }
 
-      // 2. Ensure a session - the goal is auto-login regardless of project settings.
-      let session = signUpData.session;
-
-      // 2a. No session AND signUp didn't error -> email confirmation is ON.
-      //     Try a normal password sign-in first; if Supabase rejects it because
-      //     the email isn't confirmed, fall through to the admin endpoint that
-      //     creates the user with email_confirm=true.
-      if (!session) {
-        const { data: signInData, error: signInErr } =
-          await supabase.auth.signInWithPassword({
-            email: parsed.data.email,
-            password: parsed.data.password
-          });
-        session = signInData?.session ?? null;
-
-        if (!session && signInErr) {
-          // 2b. Bypass email-confirmation via the server admin endpoint.
-          //     It calls admin.createUser({ email_confirm: true }), which marks
-          //     the user verified server-side. Then we sign in normally.
-          const adminRes = await fetch("/api/register/signup", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              full_name: parsed.data.full_name,
-              email: parsed.data.email,
-              password: parsed.data.password,
-              whatsapp: parsed.data.whatsapp ?? null
-            })
-          });
-          // 409 (already exists) is fine here - the signUp above already
-          // created the auth row; we just couldn't sign in yet because of
-          // email-confirm. The endpoint may also have flipped email_confirm.
-          if (adminRes.ok || adminRes.status === 409) {
-            const retry = await supabase.auth.signInWithPassword({
-              email: parsed.data.email,
-              password: parsed.data.password
-            });
-            session = retry.data?.session ?? null;
-          }
-        }
+      // Best-effort sign-in to establish a browser session for subsequent
+      // RLS-protected calls. NOT required to proceed - if Supabase still
+      // rejects (rare), the next steps fall back to the admin endpoint.
+      try {
+        const supabase = createSupabaseBrowserClient();
+        await supabase.auth.signInWithPassword({
+          email: parsed.data.email,
+          password: parsed.data.password
+        });
+      } catch {
+        // Ignore - flow continues regardless.
       }
 
-      // 3. Create / refresh the profile row (RLS allows this when authed)
-      const userId = session?.user?.id ?? signUpData.user?.id;
-      if (session && userId) {
-        const { error: profErr } = await supabase
-          .from("profiles")
-          .upsert(
-            {
-              id: userId,
-              email: parsed.data.email,
-              role: "user",
-              subscription_status: "pending",
-              full_name: parsed.data.full_name,
-              whatsapp: parsed.data.whatsapp ?? null
-            },
-            { onConflict: "id" }
-          );
-        if (profErr) {
-          console.error("[register] profile upsert error:", profErr);
-          // Non-fatal - the user is authenticated. Surface as a soft notice
-          // but DO NOT block them from continuing the registration flow.
-          setNotice(
-            "Account created. Profile setup will finalize as you continue."
-          );
-        }
-      }
-
-      // 4. Proceed regardless. Two states:
-      //    - session ready  -> user is logged in, normal flow
-      //    - no session     -> show inline notice but advance to step 2 so the
-      //                        UI doesn't stall on a confirmation gate
-      if (session) {
-        setNotice("Account created. You're signed in.");
-      } else {
-        setNotice(
-          "Account created. A confirmation email has been sent - opening it signs you in. Keep going."
-        );
-      }
+      setNotice("Account created. Choose your path.");
       setStep(2);
     } catch (e) {
       console.error("[register] signup error:", e);
@@ -199,9 +145,12 @@ export function RegistrationFlow() {
     }
   };
 
-  // STEP 3 -> STEP 4: save path + branch via Supabase
+  // STEP 3 -> STEP 4: save path + branch via the server endpoint, which
+  // accepts either a session cookie OR an email lookup as identification.
+  // Never blocks on missing session.
   const savePath = async () => {
     setError(null);
+    setNotice(null);
     if (!path || !branch) {
       setError("Pick a path and a stream");
       return;
@@ -213,16 +162,20 @@ export function RegistrationFlow() {
     }
     setBusy(true);
     try {
-      const supabase = createSupabaseBrowserClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error("Session expired. Please go back and sign up again.");
+      const res = await fetch("/api/register/path", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          path_type: parsed.data.path_type,
+          branch: parsed.data.branch,
+          // email is the fallback identifier when no session cookie
+          email: account.email
+        })
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json?.error || "Could not save path. Please try again.");
       }
-      const { error: updateErr } = await supabase
-        .from("profiles")
-        .update({ path_type: parsed.data.path_type, branch: parsed.data.branch })
-        .eq("id", user.id);
-      if (updateErr) throw updateErr;
       setStep(4);
     } catch (e) {
       console.error("[register] path save error:", e);

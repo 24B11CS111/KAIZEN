@@ -78,10 +78,80 @@ export const EnrollmentSchema = z.object({
 export type EnrollmentInput = z.infer<typeof EnrollmentSchema>;
 
 export const DayCompletionSchema = z.object({
-  day: z.number().int().min(1).max(30)
+  day: z.number().int().min(1).max(30),
+  notes: z.string().max(2000, "Notes too long").optional().nullable()
 });
 
 export const AdminActionSchema = z.object({
   utr_id: z.string().uuid().optional(),
   user_id: z.string().uuid().optional()
 });
+
+// =============================================================
+// ONBOARDING
+// =============================================================
+
+export const SignupSchema = z.object({
+  email: EmailSchema,
+  password: PasswordSchema
+});
+export type SignupInput = z.infer<typeof SignupSchema>;
+
+export const GenderSchema = z.enum([
+  "male", "female", "non_binary", "prefer_not_to_say"
+]);
+
+export const OccupationSchema = z.enum([
+  "school_student",
+  "intermediate_student",
+  "college_student",
+  "working_professional",
+  "job_seeker",
+  "self_employed",
+  "other"
+]);
+
+export const SkillLevelSchema = z.enum([
+  "beginner", "intermediate", "advanced"
+]);
+
+export const MainGoalSchema = z.enum([
+  "crack_placements",
+  "full_stack_dev",
+  "improve_discipline",
+  "aiml_mastery",
+  "build_projects",
+  "learn_programming",
+  "prepare_exams",
+  "other"
+]);
+
+export const AgeSchema = z
+  .number({ invalid_type_error: "Age must be a number" })
+  .int("Age must be a whole number")
+  .min(10, "You must be at least 10")
+  .max(120, "Enter a valid age");
+
+export const DailyTimeSchema = z
+  .number({ invalid_type_error: "Pick a time commitment" })
+  .int()
+  .min(15, "At least 15 minutes a day")
+  .max(600, "Be realistic, warrior");
+
+export const FieldOfStudySchema = z
+  .string()
+  .min(2, "Tell us your field of study")
+  .max(80, "Too long");
+
+export const OnboardingSchema = z.object({
+  full_name: NameSchema,
+  age: AgeSchema,
+  gender: GenderSchema,
+  occupation: OccupationSchema,
+  field_of_study: FieldOfStudySchema,
+  daily_time_min: DailyTimeSchema,
+  skill_level: SkillLevelSchema,
+  main_goal: MainGoalSchema,
+  main_goal_other: z.string().max(120).optional().nullable()
+});
+export type OnboardingInput = z.infer<typeof OnboardingSchema>;

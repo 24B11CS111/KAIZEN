@@ -25,7 +25,7 @@ import { Menu, X } from "lucide-react";
 import { useAuthSession } from "@/lib/useAuthSession";
 import { ProfileMenu } from "./ProfileMenu";
 
-const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1777189231/e5717fae-28ad-4eb7-9ec8-cb953b5cc353.png";
+const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1779649962/image-removebg-preview_i3duhi.png";
 
 const GUEST_LINKS = [
   { href: "/",          label: "Home" },
@@ -81,16 +81,14 @@ export function Navbar() {
           href={isAuthed ? "/dojo" : "/"}
           className="flex items-center gap-2 group shrink-0 btn-tap"
         >
-          <span
-            className="relative grid place-items-center h-8 w-8 rounded-md overflow-hidden transition-all duration-300 group-hover:shadow-[0_0_18px_rgba(208,0,0,0.5)]"
-            style={{ background: "#050505" }}
-          >
+          <span className="relative grid place-items-center h-8 w-8 transition-all duration-300">
             <Image
               src={KAIZEN_LOGO}
               alt="KAIZEN.SYS"
               width={32}
               height={32}
-              className="object-contain w-full h-full p-0.5"
+              className="object-contain w-full h-full"
+              style={{ filter: "drop-shadow(0 0 0px rgba(208,0,0,0))", transition: "filter 0.3s" }}
               priority
             />
           </span>

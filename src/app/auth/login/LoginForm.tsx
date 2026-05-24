@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1777189231/e5717fae-28ad-4eb7-9ec8-cb953b5cc353.png";
+const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1779649962/image-removebg-preview_i3duhi.png";
 
 type Mode = "password" | "magic" | "phone";
 

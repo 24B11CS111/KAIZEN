@@ -6,12 +6,14 @@ import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { DevBypassBanner } from "@/components/DevBypassBanner";
 
-// KAIZEN.SYS brand logo served via Cloudinary CDN with on-the-fly resize transforms.
-// Using JS variables avoids TypeScript JSX parser issues with long URLs in attribute strings.
-const CDN = "https://res.cloudinary.com/dzqfrwizz/image/upload";
-const LOGO_ID = "v1777189231/e5717fae-28ad-4eb7-9ec8-cb953b5cc353.png";
-const ICON_16  = CDN + "/w_16,h_16,c_pad,b_rgb:050505/" + LOGO_ID;
-const ICON_32  = CDN + "/w_32,h_32,c_pad,b_rgb:050505/" + LOGO_ID;
+// KAIZEN.SYS brand — new transparent logo served via Cloudinary CDN with
+// on-the-fly resize + obsidian background fills for browser icons/favicons.
+// The raw transparent URL is used for in-app rendering (IntroLoader, auth pages, etc).
+const CDN     = "https://res.cloudinary.com/dzqfrwizz/image/upload";
+const LOGO_ID = "v1779649962/image-removebg-preview_i3duhi.png";
+// Padded on obsidian for crisp favicon & apple-touch-icon at every size
+const ICON_16  = CDN + "/w_16,h_16,c_pad,b_rgb:050505/"   + LOGO_ID;
+const ICON_32  = CDN + "/w_32,h_32,c_pad,b_rgb:050505/"   + LOGO_ID;
 const ICON_180 = CDN + "/w_180,h_180,c_pad,b_rgb:050505/" + LOGO_ID;
 
 export const metadata: Metadata = {

@@ -15,7 +15,7 @@ import {
   Twitter, Github, Linkedin, Instagram, Mail, ArrowUpRight
 } from "lucide-react";
 
-const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1777189231/e5717fae-28ad-4eb7-9ec8-cb953b5cc353.png";
+const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1779649962/image-removebg-preview_i3duhi.png";
 
 const PRODUCT = [
   { href: "/dojo",     label: "Dashboard" },
@@ -64,16 +64,13 @@ export function Footer() {
           {/* Brand block — spans 2 cols on mobile */}
           <div className="col-span-2 sm:col-span-1">
             <Link href="/" className="inline-flex items-center gap-2 group btn-tap">
-              <span
-                className="relative grid place-items-center h-8 w-8 rounded-md overflow-hidden transition-all duration-300 group-hover:shadow-[0_0_18px_rgba(208,0,0,0.5)]"
-                style={{ background: "#050505" }}
-              >
+              <span className="relative grid place-items-center h-8 w-8 transition-all duration-300">
                 <Image
                   src={KAIZEN_LOGO}
                   alt="KAIZEN.SYS"
                   width={32}
                   height={32}
-                  className="object-contain w-full h-full p-0.5"
+                  className="object-contain w-full h-full transition-all duration-300 group-hover:[filter:drop-shadow(0_0_10px_rgba(208,0,0,0.7))]"
                 />
               </span>
               <span className="text-[15px] font-semibold tracking-wide">

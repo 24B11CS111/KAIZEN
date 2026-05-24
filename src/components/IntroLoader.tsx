@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
+
+const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1777189231/e5717fae-28ad-4eb7-9ec8-cb953b5cc353.png";
 
 type Phase = "brand" | "tagline" | "done";
 
@@ -8,17 +11,10 @@ type Phase = "brand" | "tagline" | "done";
  * KAIZEN.SYS cinematic boot.
  *
  * Lifecycle:
- *   t=0     mount, phase = "brand"     (red pulse + "KAIZEN.SYS")
+ *   t=0     mount, phase = "brand"     (logo + "KAIZEN.SYS")
  *   t=1.0s  phase -> "tagline"         ("DISCIPLINE. PRECISION. ASCENSION.")
  *   t=2.5s  phase -> "done"            (overlay fades + scales out)
  *   t=3.0s  HARD FAILSAFE -> "done"    (no matter what, overlay must clear)
- *
- * Critical: useEffect runs ONCE (empty deps). Earlier version listed [phase],
- * which re-created all timers every transition and ping-ponged 1<->2 forever.
- *
- * Once phase === "done" the overlay is unmounted by AnimatePresence and the
- * main UI underneath becomes interactive. While exiting, pointer-events are
- * disabled so any straggler frame can't swallow clicks.
  */
 export function IntroLoader() {
   const [phase, setPhase] = useState<Phase>(() => {
@@ -34,7 +30,6 @@ export function IntroLoader() {
       setPhase("done");
       try { sessionStorage.setItem("kaizen.intro.shown", "1"); } catch {}
     }, 2500);
-    // Failsafe: regardless of any animation hiccup, the intro MUST clear.
     const failsafe = window.setTimeout(() => {
       setPhase("done");
       try { sessionStorage.setItem("kaizen.intro.shown", "1"); } catch {}
@@ -46,7 +41,7 @@ export function IntroLoader() {
       clearTimeout(failsafe);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // <-- run ONCE only. Do not depend on phase.
+  }, []);
 
   return (
     <AnimatePresence mode="wait">
@@ -86,8 +81,28 @@ export function IntroLoader() {
             style={{ boxShadow: "0 0 40px rgba(208,0,0,0.5)" }}
           />
 
-          {/* Text layer */}
-          <div className="relative z-10 text-center select-none px-6">
+          {/* Logo + Text layer */}
+          <div className="relative z-10 flex flex-col items-center gap-6 text-center select-none px-6">
+            {/* Logo — always visible during intro, fades in with glow */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.75, filter: "blur(12px)" }}
+              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+              exit={{ opacity: 0, scale: 1.05, filter: "blur(8px)" }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              style={{
+                filter: "drop-shadow(0 0 28px rgba(208,0,0,0.55)) drop-shadow(0 0 60px rgba(208,0,0,0.2))"
+              }}
+            >
+              <Image
+                src={KAIZEN_LOGO}
+                alt="KAIZEN.SYS"
+                width={120}
+                height={120}
+                className="object-contain"
+                priority
+              />
+            </motion.div>
+
             <AnimatePresence mode="wait">
               {phase === "brand" && (
                 <motion.div

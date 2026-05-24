@@ -18,11 +18,14 @@
  */
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useAuthSession } from "@/lib/useAuthSession";
 import { ProfileMenu } from "./ProfileMenu";
+
+const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1777189231/e5717fae-28ad-4eb7-9ec8-cb953b5cc353.png";
 
 const GUEST_LINKS = [
   { href: "/",          label: "Home" },
@@ -78,8 +81,18 @@ export function Navbar() {
           href={isAuthed ? "/dojo" : "/"}
           className="flex items-center gap-2 group shrink-0 btn-tap"
         >
-          <span className="grid place-items-center h-7 w-7 rounded-md bg-blood-500/15 border border-blood-500/40 transition-shadow group-hover:shadow-[0_0_14px_rgba(208,0,0,0.45)]">
-            <span className="h-1.5 w-1.5 rounded-full bg-blood-500 pulse-dot" />
+          <span
+            className="relative grid place-items-center h-8 w-8 rounded-md overflow-hidden transition-all duration-300 group-hover:shadow-[0_0_18px_rgba(208,0,0,0.5)]"
+            style={{ background: "#050505" }}
+          >
+            <Image
+              src={KAIZEN_LOGO}
+              alt="KAIZEN.SYS"
+              width={32}
+              height={32}
+              className="object-contain w-full h-full p-0.5"
+              priority
+            />
           </span>
           <span className="text-sm font-semibold tracking-wide">
             KAIZEN<span className="text-blood-500">.</span>SYS

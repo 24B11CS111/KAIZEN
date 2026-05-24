@@ -5,15 +5,17 @@
  *
  * Minimal, cinematic, disciplined.
  * Mobile-first 1-col → 4-col on desktop. Subtle gradient divider,
- * blood-accent brand mark, hairline borders. Social placeholders
- * use stub hrefs ("#") so links exist visually without dead nav.
+ * blood-accent brand mark, hairline borders.
  */
 
 import Link from "next/link";
+import Image from "next/image";
 import { useAuthSession } from "@/lib/useAuthSession";
 import {
   Twitter, Github, Linkedin, Instagram, Mail, ArrowUpRight
 } from "lucide-react";
+
+const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1777189231/e5717fae-28ad-4eb7-9ec8-cb953b5cc353.png";
 
 const PRODUCT = [
   { href: "/dojo",     label: "Dashboard" },
@@ -62,8 +64,17 @@ export function Footer() {
           {/* Brand block — spans 2 cols on mobile */}
           <div className="col-span-2 sm:col-span-1">
             <Link href="/" className="inline-flex items-center gap-2 group btn-tap">
-              <span className="grid place-items-center h-8 w-8 rounded-md bg-blood-500/15 border border-blood-500/40 transition-shadow group-hover:shadow-[0_0_18px_rgba(208,0,0,0.45)]">
-                <span className="h-2 w-2 rounded-full bg-blood-500 pulse-dot" />
+              <span
+                className="relative grid place-items-center h-8 w-8 rounded-md overflow-hidden transition-all duration-300 group-hover:shadow-[0_0_18px_rgba(208,0,0,0.5)]"
+                style={{ background: "#050505" }}
+              >
+                <Image
+                  src={KAIZEN_LOGO}
+                  alt="KAIZEN.SYS"
+                  width={32}
+                  height={32}
+                  className="object-contain w-full h-full p-0.5"
+                />
               </span>
               <span className="text-[15px] font-semibold tracking-wide">
                 KAIZEN<span className="text-blood-500">.</span>SYS

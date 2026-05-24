@@ -3,12 +3,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Mail, KeyRound, ArrowRight, Loader2, AlertTriangle,
   Eye, EyeOff, ShieldCheck
 } from "lucide-react";
 import { useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+
+const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1777189231/e5717fae-28ad-4eb7-9ec8-cb953b5cc353.png";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -126,7 +129,14 @@ export function SignupForm() {
   if (bootChecking) {
     return (
       <main className="min-h-[100svh] grid place-items-center px-6">
-        <Loader2 className="h-6 w-6 text-blood-500 animate-spin" />
+        <div className="flex flex-col items-center gap-4">
+          <span
+            className="animate-pulse"
+            style={{ filter: "drop-shadow(0 0 14px rgba(208,0,0,0.5))" }}
+          >
+            <Image src={KAIZEN_LOGO} alt="KAIZEN.SYS" width={48} height={48} className="object-contain" priority />
+          </span>
+        </div>
       </main>
     );
   }
@@ -139,6 +149,16 @@ export function SignupForm() {
         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
         className="w-full max-w-md"
       >
+        {/* Brand header */}
+        <div className="flex flex-col items-center gap-3 mb-6">
+          <span style={{ filter: "drop-shadow(0 0 16px rgba(208,0,0,0.45))" }}>
+            <Image src={KAIZEN_LOGO} alt="KAIZEN.SYS" width={56} height={56} className="object-contain" priority />
+          </span>
+          <span className="text-[10px] uppercase tracking-[0.28em] text-white/50">
+            KAIZEN<span className="text-blood-500">.</span>SYS
+          </span>
+        </div>
+
         <Link
           href="/"
           className="text-[10px] uppercase tracking-[0.18em] text-white/55 hover:text-white"

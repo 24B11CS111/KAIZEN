@@ -6,6 +6,14 @@ import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { DevBypassBanner } from "@/components/DevBypassBanner";
 
+// KAIZEN.SYS brand logo served via Cloudinary CDN with on-the-fly resize transforms.
+// Using JS variables avoids TypeScript JSX parser issues with long URLs in attribute strings.
+const CDN = "https://res.cloudinary.com/dzqfrwizz/image/upload";
+const LOGO_ID = "v1777189231/e5717fae-28ad-4eb7-9ec8-cb953b5cc353.png";
+const ICON_16  = CDN + "/w_16,h_16,c_pad,b_rgb:050505/" + LOGO_ID;
+const ICON_32  = CDN + "/w_32,h_32,c_pad,b_rgb:050505/" + LOGO_ID;
+const ICON_180 = CDN + "/w_180,h_180,c_pad,b_rgb:050505/" + LOGO_ID;
+
 export const metadata: Metadata = {
   title: "KAIZEN - Discipline builds your future",
   description:
@@ -30,7 +38,9 @@ export const metadata: Metadata = {
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icon-512.png", sizes: "512x512", type: "image/png" }
     ],
-    apple: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }]
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }
+    ]
   },
   openGraph: {
     title: "KAIZEN",
@@ -62,7 +72,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="HandheldFriendly" content="true" />
         <meta name="MobileOptimized" content="320" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href={ICON_180} />
+        <link rel="icon" type="image/png" sizes="32x32" href={ICON_32} />
+        <link rel="icon" type="image/png" sizes="16x16" href={ICON_16} />
       </head>
       <body className="min-h-screen bg-obsidian text-white antialiased">
         <DevBypassBanner />

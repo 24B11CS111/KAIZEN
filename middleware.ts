@@ -3,35 +3,50 @@ import { getUserFromRequest } from "@/lib/supabase/middleware";
 import { isAdminEmail } from "@/lib/adminEmail";
 
 /**
- * Route protection — defensive edition.
+ * Route protection — defensive, cookie-propagating edition.
  *
- * Critical invariants (post-refresh blank-screen fix):
+ * Critical invariants:
  *
- *   1. NEVER throw. Any unexpected error (missing column, network blip)
- *      results in `NextResponse.next()` — we'd rather render the page
- *      and let the server component / client handle the auth boundary
+ *   1. NEVER throw. Any unexpected error results in `NextResponse.next()` so
+ *      we'd rather render the page and let the server component handle auth
  *      than show a blank 500.
  *
- *   2. NEVER infinite-redirect. If the profile lookup fails we don't
- *      redirect — we let the request through and the page itself
- *      decides what to render.
+ *   2. NEVER infinite-redirect. Profile lookup failures fall through.
  *
- *   3. Tolerant of un-migrated schema. If `onboarded_at` doesn't exist
- *      we use a defensive select with fewer columns + fallback.
+ *   3. ALWAYS carry refreshed cookies on every response — including redirects.
+ *      `getUserFromRequest` may have refreshed the access token (if it was
+ *      expiring). The new Set-Cookie headers live on `response`. If we return
+ *      a brand-new `NextResponse.redirect()` we LOSE those headers, meaning
+ *      the next request arrives with a stale/expired token and Supabase
+ *      refuses it → infinite redirect loop in production.
+ *
+ *      Fix: `withAuthCookies(response, redirect)` copies the Set-Cookie
+ *      header from the auth-aware response onto every redirect we return.
  */
+
+/** Copy refreshed-session Set-Cookie headers from `src` into `dst`. */
+function withAuthCookies(src: NextResponse, dst: NextResponse): NextResponse {
+  const setCookie = src.headers.get("set-cookie");
+  if (setCookie) {
+    dst.headers.set("set-cookie", setCookie);
+  }
+  return dst;
+}
+
 export async function middleware(request: NextRequest) {
   if (process.env.NEXT_PUBLIC_BYPASS_AUTH === "1") {
     return NextResponse.next();
   }
 
   const { pathname } = request.nextUrl;
-  const isDojo = pathname.startsWith("/dojo");
-  const isSensei = pathname.startsWith("/sensei");
-  const isAdmin = pathname.startsWith("/admin");
+  const isDojo       = pathname.startsWith("/dojo");
+  const isSensei     = pathname.startsWith("/sensei");
+  const isAdmin      = pathname.startsWith("/admin");
   const isOnboarding = pathname.startsWith("/onboarding");
-  const isProfile = pathname.startsWith("/profile");
+  const isProfile    = pathname.startsWith("/profile");
+  const isProgress   = pathname.startsWith("/progress");
 
-  if (!isDojo && !isSensei && !isAdmin && !isOnboarding && !isProfile) {
+  if (!isDojo && !isSensei && !isAdmin && !isOnboarding && !isProfile && !isProgress) {
     return NextResponse.next();
   }
 
@@ -40,13 +55,13 @@ export async function middleware(request: NextRequest) {
     ctx = await getUserFromRequest(request);
   } catch (e) {
     console.error("[middleware] auth fetch failed:", e);
-    // If we can't even reach Supabase, let the page render — the server
-    // component will handle unauth and redirect cleanly instead of us
-    // returning a 500.
+    // If we can't reach Supabase, let the page render — the server component
+    // handles unauth and will redirect cleanly instead of giving a 500.
     return NextResponse.next();
   }
   const { response, supabase, user } = ctx;
 
+  // Unauthenticated: redirect to login, no cookies to carry.
   if (!user) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
@@ -57,7 +72,6 @@ export async function middleware(request: NextRequest) {
   // Defensive profile fetch — try the rich shape first, fall back to
   // a minimal one if the schema hasn't been migrated yet.
   let profileRow: any = null;
-  let profileFetchErr: any = null;
   try {
     const res = await supabase
       .from("profiles")
@@ -65,63 +79,61 @@ export async function middleware(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
     profileRow = res.data;
-    profileFetchErr = res.error;
-    if (profileFetchErr) {
-      // Most likely the onboarded_at column doesn't exist yet. Retry
-      // without it so the rest of the gates still work.
+
+    if (res.error) {
+      // Likely `onboarded_at` column doesn't exist yet — retry without it.
       const fb = await supabase
         .from("profiles")
         .select("role,email,subscription_status,expiry_date")
         .eq("id", user.id)
         .maybeSingle();
       profileRow = fb.data;
-      profileFetchErr = fb.error;
     }
   } catch (e) {
     console.error("[middleware] profile fetch threw:", e);
-    profileFetchErr = e;
   }
 
-  // If we couldn't load a profile at all, let the page render. The
-  // server component for that route can decide whether to redirect.
+  // If we couldn't load a profile at all, let the page render.
   if (!profileRow) {
     return response;
   }
 
   const p: any = profileRow;
 
+  // --- Admin / Sensei gate ---
   if (isSensei || isAdmin) {
     const ok = p.role === "admin" && isAdminEmail(user.email);
     if (!ok) {
       const url = request.nextUrl.clone();
       url.pathname = "/";
-      return NextResponse.redirect(url);
+      return withAuthCookies(response, NextResponse.redirect(url));
     }
     return response;
   }
 
-  // /onboarding: only logged-in users. If already onboarded, send them on.
+  // --- Onboarding gate ---
+  // Only logged-in users reach here. If already onboarded, send them on.
   // If the column doesn't exist, treat as "not onboarded" and allow.
   if (isOnboarding) {
     if (p.onboarded_at) {
       const url = request.nextUrl.clone();
       url.pathname = "/dojo";
-      return NextResponse.redirect(url);
+      return withAuthCookies(response, NextResponse.redirect(url));
     }
     return response;
   }
 
-  // Pages below this point assume the user must have onboarded first
-  // — BUT only redirect if the column actually exists and is null. If
-  // the column is `undefined` (not yet migrated), skip the gate so old
-  // accounts can still reach their dashboard.
+  // --- Onboarding required gate (dojo / profile / progress) ---
+  // Only redirect if the column exists and is null. If it's `undefined`
+  // (not yet migrated), skip so old accounts can reach their dashboard.
   const onboardedAtPresent = Object.prototype.hasOwnProperty.call(p, "onboarded_at");
   if (onboardedAtPresent && !p.onboarded_at) {
     const url = request.nextUrl.clone();
     url.pathname = "/onboarding";
-    return NextResponse.redirect(url);
+    return withAuthCookies(response, NextResponse.redirect(url));
   }
 
+  // --- Dojo ban gate ---
   if (isDojo) {
     const blocked =
       p.subscription_status === "banned" ||
@@ -129,9 +141,8 @@ export async function middleware(request: NextRequest) {
     if (blocked) {
       const url = request.nextUrl.clone();
       url.pathname = "/";
-      return NextResponse.redirect(url);
+      return withAuthCookies(response, NextResponse.redirect(url));
     }
-    return response;
   }
 
   return response;
@@ -143,6 +154,7 @@ export const config = {
     "/sensei/:path*",
     "/admin/:path*",
     "/onboarding/:path*",
-    "/profile/:path*"
+    "/profile/:path*",
+    "/progress/:path*"
   ]
 };

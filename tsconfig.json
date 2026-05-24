@@ -26,6 +26,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@supabase/supabase-js": [
+        "./src/types/supabase-js-shim.d.ts"
       ]
     }
   },

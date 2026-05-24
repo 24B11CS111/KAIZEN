@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       try {
         const { data: list } = await admin.auth.admin.listUsers();
         const existing = list?.users.find(
-          (u) => (u.email ?? "").toLowerCase() === email.toLowerCase()
+          (u: any) => (u.email ?? "").toLowerCase() === email.toLowerCase()
         );
         if (existing) {
           await admin.auth.admin.updateUserById(existing.id, {

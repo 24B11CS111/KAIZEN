@@ -2,103 +2,305 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   KAIZEN.SYS — globals.css
+   Single source of truth. No layering conflicts.
+   ============================================================ */
+
+/* ── Design tokens ────────────────────────────────────────── */
 :root {
-  --bg: #050505;
-  --bg-elev: #0a0a0a;
-  --accent: #d00000;
-  --text: #ffffff;
-  --muted: rgba(255, 255, 255, 0.6);
-  --border: rgba(255, 255, 255, 0.08);
-  --font-sans: ui-sans-serif, system-ui, "Inter", -apple-system, sans-serif;
-  --font-display: ui-sans-serif, system-ui, "Inter", -apple-system, sans-serif;
+  --bg:           #050505;
+  --bg-elev:      #0a0a0a;
+  --accent:       #d00000;
+  --text:         #ffffff;
+  --muted:        rgba(255, 255, 255, 0.6);
+  --border:       rgba(255, 255, 255, 0.08);
+  --font-sans:    ui-sans-serif, system-ui, "Inter", -apple-system, sans-serif;
 }
 
-* {
+/* ── Base reset ───────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-html, body {
-  background: var(--bg);
+/* ── Document scroll (single scroll container = html) ─────── */
+html {
+  background-color: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
+
+  /* Horizontal overflow prevention — clip doesn't create a scroll container */
+  overflow-x: clip;
+
+  /* Disable iOS pull-to-refresh while keeping vertical scroll */
+  overscroll-behavior-y: none;
+
+  /* Momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+
+  /* Prevent iOS text-size boost */
+  -webkit-text-size-adjust: 100%;
+
+  /* Smooth scroll (disabled on iOS keyboard focus to prevent jank) */
+  scroll-behavior: smooth;
 }
 
 body {
-  /* Single subtle top glow - not overwhelming */
+  min-height: 100%;
+  background-color: var(--bg);
+
+  /* Subtle cinematic top glow — fixed so it doesn't scroll */
   background-image: radial-gradient(
     1200px 500px at 50% -200px,
-    rgba(208, 0, 0, 0.10),
+    rgba(208, 0, 0, 0.08),
     transparent 70%
   );
   background-attachment: fixed;
+
+  /* Horizontal clip on body too */
+  overflow-x: clip;
+
+  /* Body must NOT be a vertical scroll container — html handles scroll */
+  overflow-y: visible;
+
+  /* Safe-area bottom padding (home indicator on iPhone) */
+  padding-bottom: env(safe-area-inset-bottom);
+
+  /* Kill tap highlight on Android */
+  -webkit-tap-highlight-color: transparent;
+
+  /* Faster touch response */
+  touch-action: manipulation;
 }
 
-/* Selection */
-::selection { background: rgba(208, 0, 0, 0.35); color: #fff; }
+/* ── iOS Safari scroll fix ────────────────────────────────── */
+@supports (-webkit-touch-callout: none) {
+  html, body {
+    /* Disable smooth scroll when virtual keyboard is up (iOS jank) */
+    scroll-behavior: auto;
+  }
+}
 
-/* Scrollbar - dark, subtle */
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #050505; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.15); }
+/* ── Images never cause layout shift ─────────────────────── */
+img, svg, video {
+  display: block;
+  max-width: 100%;
+}
 
+/* ── Text selection ───────────────────────────────────────── */
+::selection {
+  background: rgba(208, 0, 0, 0.35);
+  color: #fff;
+}
+
+/* Allow text selection on readable content */
+p, h1, h2, h3, h4, h5, h6, li, span:not(button span) {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Disable selection on UI chrome */
+button, [role="button"], nav, header, .no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ── Touch targets ────────────────────────────────────────── */
+button, [role="button"], a {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+@media (hover: none) and (pointer: coarse) {
+  button, [role="button"], a {
+    min-height: 44px;
+  }
+}
+
+/* ── Focus ring (accessible, premium) ─────────────────────── */
+*:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(208, 0, 0, 0.6),
+    0 0 0 4px rgba(208, 0, 0, 0.15);
+  border-radius: 6px;
+}
+
+/* ── Scrollbar (desktop: subtle; mobile: hidden) ──────────── */
+::-webkit-scrollbar                { width: 6px; height: 6px; }
+::-webkit-scrollbar-track          { background: transparent; }
+::-webkit-scrollbar-thumb          { background: rgba(255,255,255,0.08); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover    { background: rgba(255,255,255,0.14); }
+@media (hover: none) and (pointer: coarse) {
+  ::-webkit-scrollbar { display: none; }
+  *                   { scrollbar-width: none; }
+}
+
+/* ── Input sizing (prevent iOS zoom on focus) ─────────────── */
+input, textarea, select {
+  font-size: 16px;
+}
+@media (min-width: 768px) {
+  input, textarea, select {
+    font-size: 14px;
+  }
+}
+
+/* ── Page fade-in on mount ────────────────────────────────── */
+@keyframes appFadeIn {
+  from { opacity: 0; transform: translate3d(0, 5px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+main {
+  animation: appFadeIn 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Reduced-motion: kill all animations ─────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0ms !important;
+    transition-duration: 0ms !important;
+  }
+  main { animation: none; }
+}
+
+/* ── Dynamic viewport helpers ─────────────────────────────── */
+.h-app     { height: 100svh; height: 100dvh; }
+.min-h-app { min-height: 100svh; min-height: 100dvh; }
+
+/* ── Scrollable containers ────────────────────────────────── */
+.scroll-y {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+/* Snap lane for horizontal carousels */
+.snap-lane {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: 1rem;
+}
+.snap-lane > * { scroll-snap-align: start; }
+
+/* ── PWA standalone: extra bottom clearance ───────────────── */
+@media all and (display-mode: standalone) {
+  body {
+    padding-bottom: max(env(safe-area-inset-bottom), 16px);
+  }
+}
+
+/* ============================================================
+   COMPONENT LAYER
+   ============================================================ */
 @layer components {
+
+  /* Page container */
   .container-page {
     @apply max-w-6xl mx-auto px-6;
   }
+  .container-app {
+    @apply mx-auto px-4 md:px-6 max-w-6xl;
+    padding-left:  max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
 
+  /* Bottom-nav clearance */
+  .pb-bottom-nav {
+    padding-bottom: max(80px, calc(76px + env(safe-area-inset-bottom)));
+  }
+
+  /* Cards */
   .card {
-    @apply rounded-xl border border-white/10 bg-white/[0.02];
-    transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+    @apply rounded-xl border border-white/[0.07] bg-white/[0.02];
+    transition: border-color 200ms ease, box-shadow 200ms ease;
   }
   .card-hover:hover {
-    border-color: rgba(208, 0, 0, 0.45);
-    transform: translateY(-2px);
-    box-shadow: 0 12px 32px -12px rgba(208, 0, 0, 0.25);
+    border-color: rgba(208, 0, 0, 0.4);
+    box-shadow: 0 8px 32px -12px rgba(208, 0, 0, 0.2);
   }
 
+  /* Glass surface */
+  .glass-surface {
+    background: rgba(5, 5, 5, 0.78);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .glass-premium {
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* Primary button */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-md
-           px-5 py-2.5 text-sm font-medium
+    @apply inline-flex items-center justify-center gap-2 rounded-lg
+           px-5 py-2.5 text-sm font-semibold
            bg-blood-500 text-white
-           hover:bg-blood-600 transition-colors
-           focus:outline-none focus:ring-2 focus:ring-blood-500/40 focus:ring-offset-2 focus:ring-offset-obsidian;
+           hover:bg-blood-600
+           focus:outline-none focus:ring-2 focus:ring-blood-500/40 focus:ring-offset-2 focus:ring-offset-obsidian
+           transition-all;
+    box-shadow: 0 0 22px -6px rgba(208, 0, 0, 0.55);
   }
+  .btn-primary:hover {
+    box-shadow: 0 0 30px -4px rgba(208, 0, 0, 0.7);
+  }
+  .btn-primary:active { transform: scale(0.97); }
+
+  /* Secondary button */
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-md
-           px-5 py-2.5 text-sm font-medium
+    @apply inline-flex items-center justify-center gap-2 rounded-lg
+           px-5 py-2.5 text-sm font-semibold
            border border-white/15 text-white
-           bg-transparent hover:border-white/30 hover:bg-white/5 transition-colors
-           focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-obsidian;
+           hover:border-white/30 hover:bg-white/[0.05]
+           focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-obsidian
+           transition-all;
   }
-  .btn-sm {
-    @apply px-4 py-2 text-xs;
+  .btn-secondary:active { transform: scale(0.97); }
+
+  /* Small variant */
+  .btn-sm { @apply px-4 py-1.5 text-xs; }
+
+  /* Tap feedback for any interactive element */
+  .btn-tap {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  @media (hover: none) and (pointer: coarse) {
+    .btn-tap:active { transform: scale(0.97); transition: transform 80ms ease-out; }
   }
 
-  .eyebrow {
-    @apply inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-white/55;
+  /* Tap-scale card */
+  .tap-card {
+    @apply transition-transform duration-150 ease-out;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tap-card:active { transform: scale(0.97); }
+
+  /* Sticky CTA for mobile */
+  .cta-pinned {
+    position: sticky;
+    bottom: max(16px, env(safe-area-inset-bottom));
   }
 
-  .pill-tag {
-    @apply inline-flex items-center rounded-md px-2.5 py-1
-           text-xs font-medium
-           border border-white/10 bg-white/[0.03] text-white/85
-           hover:border-blood-500/40 hover:text-white transition-colors;
-  }
-
-  .section {
-    @apply py-20 md:py-24;
-  }
-  .section-tight {
-    @apply py-16 md:py-20;
-  }
-
+  /* Typography */
   .h1 {
-    @apply text-4xl md:text-6xl font-semibold tracking-tight leading-[1.05];
+    @apply text-[44px] sm:text-5xl md:text-6xl lg:text-7xl
+           font-semibold tracking-[-0.025em] leading-[1.03];
   }
   .h2 {
-    @apply text-3xl md:text-4xl font-semibold tracking-tight leading-tight;
+    @apply text-3xl md:text-[44px]
+           font-semibold tracking-[-0.02em] leading-[1.08];
   }
   .h3 {
     @apply text-lg md:text-xl font-semibold tracking-tight;
@@ -106,227 +308,86 @@ body {
   .lead {
     @apply text-base md:text-lg text-white/65 leading-relaxed;
   }
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-white/55;
+  }
+  .pill-tag {
+    @apply inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium
+           border border-white/10 bg-white/[0.03] text-white/85
+           hover:border-blood-500/40 hover:text-white transition-colors;
+  }
+
+  /* Section rhythm */
+  .section       { @apply py-16 md:py-20; }
+  .section-tight { @apply py-12 md:py-16; }
+
+  /* Skeleton shimmer */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(255,255,255,0.03) 0%,
+      rgba(255,255,255,0.08) 40%,
+      rgba(255,255,255,0.03) 80%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+    border-radius: 0.5rem;
+  }
+
+  /* Glow ring on hover */
+  .glow-ring {
+    transition: box-shadow 250ms ease, border-color 250ms ease;
+  }
+  .glow-ring:hover {
+    box-shadow: 0 0 0 1px rgba(208,0,0,0.4), 0 0 24px -6px rgba(208,0,0,0.4);
+    border-color: rgba(208,0,0,0.5);
+  }
+
+  /* Depth layers */
+  .depth-1 { box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 16px -8px rgba(0,0,0,0.55); }
+  .depth-2 { box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 12px 40px -16px rgba(0,0,0,0.7); }
+  .depth-3 { box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 80px -24px rgba(0,0,0,0.85); }
+
+  /* Glow text underline */
+  .glow-underline { text-shadow: 0 0 18px rgba(208,0,0,0.35); }
+
+  /* Mobile app shell (full-height flex column) */
+  .shell-app {
+    min-height: 100svh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
 }
 
-/* Restrained pulse for the brand dot */
-@keyframes softPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.55; }
-}
-.pulse-dot {
-  animation: softPulse 2s ease-in-out infinite;
-}
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
 
 /* Skeleton shimmer */
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(255,255,255,0.04) 0%,
-    rgba(255,255,255,0.10) 40%,
-    rgba(255,255,255,0.04) 80%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.6s linear infinite;
-  border-radius: 0.5rem;
+  100% { background-position:  200% 0; }
 }
 
-/* Button tap feedback */
-.btn-primary, .btn-secondary {
-  transition: transform 120ms ease, box-shadow 200ms ease, background-color 200ms ease, border-color 200ms ease;
+/* Pulse (brand dot, loading states) */
+@keyframes softPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
 }
-.btn-primary:active, .btn-secondary:active {
-  transform: scale(0.96);
-}
-.btn-primary:active {
-  box-shadow: 0 0 22px -4px rgba(208, 0, 0, 0.55);
-}
+.pulse-dot { animation: softPulse 2s ease-in-out infinite; }
 
-/* Subtle CTA arrow nudge */
-@keyframes nudgeRight {
-  0%, 100% { transform: translateX(0); }
-  50%      { transform: translateX(2px); }
-}
-.cta-nudge {
-  display: inline-block;
-  animation: nudgeRight 1.6s ease-in-out infinite;
-}
-
-/* ============================================================
-   MOBILE-FIRST ADDITIONS - safe areas, app-like behaviors
-   ============================================================ */
-
-html {
-  scroll-behavior: smooth;
-  /* Prevent iOS rubber-band white flash */
-  background: var(--bg);
-  /* No horizontal scroll, ever */
-  overflow-x: hidden;
-  /* Better mobile font rendering */
-  -webkit-text-size-adjust: 100%;
-}
-
-body {
-  /* No horizontal scroll, ever */
-  overflow-x: hidden;
-  /* iOS safe-area aware default padding */
-  padding-bottom: env(safe-area-inset-bottom);
-  /* Disable pull-to-refresh / overscroll bounce */
-  overscroll-behavior-y: none;
-  /* Better tap responsiveness */
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-
-/* Disable text selection on UI chrome (buttons, nav, etc) */
-button, [role="button"], nav, header, footer, .no-select {
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-/* Tap-target compliance: minimum 44px */
-@media (hover: none) and (pointer: coarse) {
-  button, [role="button"], a.btn-primary, a.btn-secondary, .pill-tag {
-    min-height: 44px;
-  }
-}
-
-@layer components {
-  /* Container that feels app-like on mobile, web-like on desktop */
-  .container-app {
-    @apply mx-auto px-4 md:px-6 max-w-6xl;
-    /* respect notch on iPhone */
-    padding-left: max(1rem, env(safe-area-inset-left));
-    padding-right: max(1rem, env(safe-area-inset-right));
-  }
-
-  /* Bottom-nav-aware bottom padding for scrollable content */
-  .pb-bottom-nav {
-    padding-bottom: calc(76px + env(safe-area-inset-bottom));
-  }
-
-  /* Tap card - subtle scale-down on press */
-  .tap-card {
-    @apply transition-transform duration-150 ease-out;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .tap-card:active {
-    transform: scale(0.97);
-  }
-}
-
-/* ============================================================
-   Mobile input behavior (iOS zoom prevention + smooth scroll)
-   ============================================================ */
-input, textarea, select {
-  /* 16px+ font prevents iOS Safari from zooming in on focus */
-  font-size: 16px;
-  /* Native iOS-style smooth scroll inside scrollable inputs */
-  -webkit-overflow-scrolling: touch;
-}
-@media (min-width: 768px) {
-  /* On desktop, restore tighter form font sizing */
-  input, textarea, select {
-    font-size: 14px;
-  }
-}
-
-/* Smooth scroll containers */
-.scroll-y {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-}
-
-
-/* ============================================================
-   CINEMATIC POLISH LAYER (added v2)
-   Pure additive utilities. No global side effects on existing
-   components. Opt-in via classnames or framer-motion props.
-   ============================================================ */
-
-/* --- Ambient floating motion (use sparingly on hero / accents) --- */
+/* Ambient float (hero accents) */
 @keyframes ambientFloat {
   0%, 100% { transform: translate3d(0, 0, 0); }
-  50%      { transform: translate3d(0, -6px, 0); }
+  50%       { transform: translate3d(0, -6px, 0); }
 }
 .ambient-float {
-  animation: ambientFloat 4.8s ease-in-out infinite;
+  animation: ambientFloat 5s ease-in-out infinite;
   will-change: transform;
 }
 
-/* --- Subtle drift for hero blobs / background ornaments --- */
-@keyframes ambientDrift {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.55; }
-  50%      { transform: translate3d(8px, -10px, 0) scale(1.04); opacity: 0.85; }
-}
-.ambient-drift {
-  animation: ambientDrift 8s ease-in-out infinite;
-  will-change: transform, opacity;
-}
-
-/* --- Glow ring around interactive elements on hover --- */
-.glow-ring {
-  transition: box-shadow 250ms ease, border-color 250ms ease;
-}
-.glow-ring:hover {
-  box-shadow: 0 0 0 1px rgba(208, 0, 0, 0.45),
-              0 0 24px -6px rgba(208, 0, 0, 0.45);
-  border-color: rgba(208, 0, 0, 0.55);
-}
-
-/* --- Depth tiers (use as className) --- */
-.depth-1 { box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 16px -8px rgba(0,0,0,0.6); }
-.depth-2 { box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 12px 40px -16px rgba(0,0,0,0.75); }
-.depth-3 { box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 80px -24px rgba(0,0,0,0.85); }
-
-/* --- Premium glass surface (over our existing .card) --- */
-.glass-premium {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border: 1px solid rgba(255,255,255,0.08);
-}
-
-/* --- Subtle parallax tilt - applied via inline transform from JS --- */
-.tilt-base { transform-style: preserve-3d; transition: transform 200ms ease; }
-
-/* --- Scanline / cyber overlay for hero ornaments (very subtle) --- */
-.scanlines {
-  background-image: repeating-linear-gradient(
-    180deg,
-    rgba(255,255,255,0.02) 0,
-    rgba(255,255,255,0.02) 1px,
-    transparent 1px,
-    transparent 3px
-  );
-}
-
-/* --- Refined focus ring (premium, accessible) --- */
-*:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(208, 0, 0, 0.55),
-              0 0 0 4px rgba(208, 0, 0, 0.15);
-  border-radius: 6px;
-}
-button:focus-visible, a:focus-visible {
-  box-shadow: 0 0 0 2px rgba(208, 0, 0, 0.55),
-              0 0 0 4px rgba(208, 0, 0, 0.15);
-}
-
-/* --- Tap haptics (visual) for cards on mobile --- */
-@media (hover: none) and (pointer: coarse) {
-  .tap-card:active {
-    transform: scale(0.975);
-    transition: transform 80ms ease;
-  }
-}
-
-/* --- Stagger-friendly fade-in (use with style="--i:0" etc) --- */
+/* Stagger-in (list reveals) */
 @keyframes staggerIn {
   from { opacity: 0; transform: translate3d(0, 8px, 0); }
   to   { opacity: 1; transform: translate3d(0, 0, 0); }
@@ -336,427 +397,89 @@ button:focus-visible, a:focus-visible {
   animation-delay: calc(var(--i, 0) * 60ms);
 }
 
-/* --- Animated gradient border for "active" / "current" highlights --- */
+/* CTA arrow nudge */
+@keyframes nudgeRight {
+  0%, 100% { transform: translateX(0); }
+  50%       { transform: translateX(2px); }
+}
+.cta-nudge {
+  display: inline-block;
+  animation: nudgeRight 1.8s ease-in-out infinite;
+}
+
+/* Drift (hero ornaments) */
+@keyframes ambientDrift {
+  0%, 100% { transform: translate3d(0,  0,  0) scale(1);    opacity: 0.55; }
+  50%       { transform: translate3d(8px,-10px,0) scale(1.04); opacity: 0.85; }
+}
+.ambient-drift { animation: ambientDrift 8s ease-in-out infinite; }
+
+/* Animated border sheen */
 @keyframes borderSheen {
-  0% { background-position: 0% 50%; }
+  0%   { background-position: 0%   50%; }
   100% { background-position: 200% 50%; }
 }
 .border-sheen {
   background-image: linear-gradient(
     100deg,
-    rgba(208,0,0,0.4) 0%,
-    rgba(208,0,0,0.9) 25%,
-    rgba(208,0,0,0.4) 50%,
-    rgba(208,0,0,0.9) 75%,
+    rgba(208,0,0,0.4) 0%, rgba(208,0,0,0.9) 25%,
+    rgba(208,0,0,0.4) 50%, rgba(208,0,0,0.9) 75%,
     rgba(208,0,0,0.4) 100%
   );
   background-size: 200% 100%;
   animation: borderSheen 3.5s linear infinite;
 }
 
-/* --- Reduced motion: turn it all off, respect users --- */
-@media (prefers-reduced-motion: reduce) {
-  .ambient-float,
-  .ambient-drift,
-  .border-sheen,
-  .stagger-in,
-  .pulse-dot,
-  .cta-nudge {
-    animation: none !important;
-  }
-  * { transition-duration: 0ms !important; }
+/* Subtle drift (smaller) */
+@keyframes subtleDrift {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-3px); }
+}
+.drift { animation: subtleDrift 6s ease-in-out infinite; }
+
+/* ── Scanlines (hero ornament) */
+.scanlines {
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(255,255,255,0.015) 0, rgba(255,255,255,0.015) 1px,
+    transparent 1px, transparent 3px
+  );
 }
 
-
-/* ============================================================
-   FINAL MOBILE-APP HARDENING (additive)
-   ============================================================ */
-
-/* iOS Safari: stop the home indicator from overlapping the bottom nav */
-.pb-bottom-nav { padding-bottom: max(76px, calc(76px + env(safe-area-inset-bottom))); }
-
-/* Disable double-tap zoom on UI chrome */
-button, [role="button"], a, .tap-card, .pill-tag {
-  touch-action: manipulation;
+/* ── Cinema grid (hero section background) */
+.bg-cinema-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse at center, black 25%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 25%, transparent 70%);
 }
 
-/* Stop iOS callout (gray bubble) on long-press of buttons */
-button, [role="button"], a {
-  -webkit-touch-callout: none;
-}
-
-/* Allow text selection on prose where it matters */
-p, h1, h2, h3, h4, h5, h6, span:not(button span), li {
-  -webkit-user-select: text;
-  user-select: text;
-}
-
-/* Hide scrollbars on mobile-only horizontal scrollers */
-@media (hover: none) and (pointer: coarse) {
-  .scroll-x::-webkit-scrollbar { display: none; }
-  .scroll-x { scrollbar-width: none; }
-}
-
-/* Prevent rubber-band on iOS for full-screen panels */
-.no-overscroll { overscroll-behavior: contain; }
-
-/* ============================================================
-   PREMIUM MOBILE APP LAYER (v5)
-   Dynamic viewport, font smoothing, momentum + jank prevention,
-   smooth 60fps targets for the dashboard surfaces.
-   Pure additive — no existing class is touched.
-   ============================================================ */
-
-/* 1. Dynamic viewport heights — handles iOS Safari URL bar collapse
-      without layout jumping. Older browsers ignore dvh / svh / lvh. */
-.h-app        { height: 100svh; height: 100dvh; }
-.min-h-app    { min-height: 100svh; min-height: 100dvh; }
-.max-h-app    { max-height: 100svh; max-height: 100dvh; }
-
-/* 2. Font smoothing for premium typography rendering on mobile */
-html {
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-font-smoothing: antialiased;
-  /* Locks the viewport behind the safe area so the bg never bleeds white */
-  background-color: #050505;
-}
-body {
-  /* GPU layer hint so scrolling stays smooth on long pages */
-  -webkit-transform: translate3d(0, 0, 0);
-          transform: translate3d(0, 0, 0);
-}
-
-/* 3. Smooth page transition — fades in newly mounted top-level
-      <main> so route changes don't pop in. ~120ms is below the
-      perceived-as-snappy threshold. */
-@keyframes appFadeIn {
-  from { opacity: 0; transform: translate3d(0, 4px, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
-}
-main {
-  animation: appFadeIn 220ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-@media (prefers-reduced-motion: reduce) {
-  main { animation: none; }
-}
-
-/* 4. Reusable "scroll snap" lane for horizontal scrollers
-      (mission rows, branch carousels). */
-.snap-lane {
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-  scroll-padding-inline: 1rem;
-}
-.snap-lane > * { scroll-snap-align: start; }
-
-/* 5. Image / SVG never block layout — prevent CLS from icon swaps */
-img, svg, video { display: block; max-width: 100%; }
-
-/* 6. Premium glass surface — used by the navbar; opt-in elsewhere */
-.glass-surface {
-  background: rgba(5, 5, 5, 0.72);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-/* 7. Fixed-on-mobile, static-on-desktop helper for bottom CTAs */
-.cta-pinned {
-  position: sticky;
-  bottom: max(16px, env(safe-area-inset-bottom));
-}
-
-/* 8. Subtle blood glow underline accent used by milestones */
-.glow-underline {
-  text-shadow: 0 0 18px rgba(208, 0, 0, 0.35);
-}
-
-/* 9. Disable transitions during route changes to avoid mid-flight jank */
-.is-route-changing * {
-  transition: none !important;
-  animation: none !important;
-}
-
-/* 10. Long-press friendly tap state — slightly more pronounced press */
-@media (hover: none) and (pointer: coarse) {
-  .tap-card:active   { transform: scale(0.965); }
-  .btn-tap:active    { transform: scale(0.97); transition: transform 0.08s ease-out; }
-}
-
-/* 11. iOS PWA standalone: respect device chrome */
-@media all and (display-mode: standalone) {
-  body {
-    /* In PWA mode the URL bar is gone — give footer / bottom-nav
-       more breathing room above the home indicator. */
-    padding-bottom: max(env(safe-area-inset-bottom), 16px);
-  }
-}
-
-/* ============================================================
-   SCROLL SAFETY LAYER (v6)
-   Defensive rules so no page can be accidentally scroll-locked.
-   Targets the patterns that historically lock mobile scroll:
-     - min-h-screen + grid place-items-center
-     - motion.div wrappers with implicit overflow
-     - locked body / html height
-     - long auth forms cramped into viewport-center
-   ============================================================ */
-
-/* 1. Never set html/body to a fixed height — let the browser decide.
-      `min-height: 100%` is fine; explicit `height: 100%` is not. */
-html, body {
-  /* Allow content to push past viewport (scroll) naturally. */
-  min-height: 100%;
-  height: auto;
-}
-
-/* 2. Auth screens (login / signup / onboarding) — content can be taller
-      than viewport on small phones with the keyboard up. Make the
-      centering layout scroll-safe by upgrading `grid place-items-center`
-      to `flex` whenever we use `min-h-[100svh]` alongside it. */
-main.min-h-\[100svh\].grid,
-main.min-h-\[100dvh\].grid {
-  display: flex !important;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow-y: auto;
-}
-
-/* 3. Body must allow vertical scroll even when overscroll-behavior is
-      disabled. (overscroll-behavior:none stops PULL refresh, NOT scroll
-      itself — but be explicit so a CSS audit can't mis-read it.) */
-body {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* 4. Framer Motion wrappers — make sure motion.div never accidentally
-      becomes a fixed-height scroll container. */
-[style*="will-change"] {
-  overflow: visible;
-}
-
-/* 5. Bottom-nav clearance — already handled by .pb-bottom-nav, but
-      guarantee any page using fixed bottom nav has at least the safe
-      area + nav height of padding to avoid content hiding behind it. */
-main.has-bottom-nav,
-main[class*="pb-bottom-nav"] {
-  padding-bottom: calc(76px + env(safe-area-inset-bottom));
-}
-
-/* 6. Subscribe to dynamic viewport height for app shells. */
-.shell-app {
-  min-height: 100svh;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* 7. Visible scrollbar on desktop, hidden on mobile (already feels native) */
-@media (hover: none) and (pointer: coarse) {
-  ::-webkit-scrollbar { width: 0; height: 0; }
-  * { scrollbar-width: none; }
-}
-
-/* 8. iOS WebKit fix — when input is focused with virtual keyboard up,
-      let the page scroll behind the keyboard so the user can see what
-      they typed. */
-@supports (-webkit-touch-callout: none) {
-  html, body { scroll-behavior: auto; }
-}
-
-/* 9. Last-resort safety: any element marked .scrollable always scrolls. */
-.scrollable {
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-}
-
-/* ============================================================
-   SCROLL FIX LAYER (v7) — undo nested-scroll-container bug
-   ============================================================
-   The v5 "Premium Mobile App" + v6 "Scroll Safety" layers each
-   added `overflow-y: auto` to <body> and to auth pages' <main>.
-   Two scroll containers on the same axis means:
-     - the inner one captures swipe gestures
-     - hits its bottom before the document does
-     - the page "stops before reaching the bottom"
-     - the user feels stuck
-
-   The fix: let the document (html) be the ONLY scroll container,
-   restore body / main to passive flow. We use highly-specific
-   selectors so we override the earlier !important rules.
-   ============================================================ */
-
-/* 1. Document scroll, not body scroll. */
-html, body {
-  overflow-y: visible !important;
-  height: auto !important;
-}
-html {
-  /* Modern: overflow-x:clip doesn't create a scroll container.
-     Falls back to hidden on older browsers (acceptable trade-off). */
-  overflow-x: clip;
-}
-body {
-  /* Keep horizontal containment but DO NOT enable y-scroll on body. */
-  overflow-x: clip;
-  overflow-y: visible !important;
-  /* Drop the GPU layer hint — it forced a stacking context that on
-     some mobile browsers also became a scroll container. */
-  transform: none !important;
-  -webkit-transform: none !important;
-}
-
-/* 2. Auth pages: stop forcing overflow on <main>.
-      We still want vertical centering, but centering must not steal
-      the scroll. Use natural document scroll. */
-main.min-h-\[100svh\].grid,
-main.min-h-\[100dvh\].grid,
-main.min-h-app.grid {
-  /* Re-establish grid layout; centering still works, scrolling falls
-     through to the document. */
-  display: grid !important;
-  overflow-y: visible !important;
-  /* If content is taller than viewport, drop centering so the top
-     of the content stays reachable. align-items:start handles this. */
-  align-items: start !important;
-}
-
-/* 3. Same for any other page that previously got the forced overflow. */
-main, section {
-  overflow: visible;
-}
-
-/* 4. Re-disable pull-to-refresh AT THE DOCUMENT LEVEL — this is the
-      correct place (not body) and does NOT block scroll. */
-html {
-  overscroll-behavior-y: none;
-}
-body {
-  /* Body no longer needs its own overscroll rule — fix moved up to html. */
-  overscroll-behavior-y: auto;
-}
-
-/* 5. Keep momentum scrolling on the document. */
-html {
-  -webkit-overflow-scrolling: touch;
-}
-
-/* 6. The auth-pages `grid place-items-center` pattern — we don't want
-      content vertically centered when it's taller than the viewport
-      (causes "weird scrollback"). align-items:start gives a top-anchored
-      flow that scrolls naturally. */
-main[class*="place-items-center"] {
-  align-items: start !important;
-}
-
-/* 7. Final sanity: no element should set position:fixed on <body> from
-      previously-loaded code paths. (Defensive — no current component
-      does this; future-proofing.) */
-body.is-modal-open {
-  /* If a future modal locks body via this class, do it via
-     overflow:hidden HERE — predictable, scoped, reversible. */
-  overflow: hidden !important;
-}
-
-/* ============================================================
-   LANDING CINEMATIC LAYER (v8)
-   Bridges sections with ambient gradients, tightens vertical
-   rhythm, adds scroll-revealed depth so the page reads as ONE
-   ecosystem instead of stacked rectangles.
-   ============================================================ */
-
-/* 1. Tighter section rhythm — was py-20/24, now py-16/20.
-      Sections feel connected, not isolated. */
-@layer components {
-  .section        { @apply py-16 md:py-20 !important; }
-  .section-tight  { @apply py-12 md:py-16 !important; }
-}
-
-/* 2. Ambient inter-section gradients — every <section> gets a
-      faint radial bleed at top + bottom so transitions feel like
-      one continuous canvas, not stacked blocks. */
-main > section,
-main > section + section {
+/* ── Inter-section ambient gradient ──────────────────────── */
+main > section {
   position: relative;
 }
 main > section::before {
   content: "";
   position: absolute;
-  top: 0;
-  inset-inline: 0;
+  top: 0; inset-inline: 0;
   height: 40%;
   pointer-events: none;
-  background: radial-gradient(120% 100% at 50% 0%, rgba(208,0,0,0.045), transparent 55%);
+  background: radial-gradient(120% 100% at 50% 0%, rgba(208,0,0,0.04), transparent 55%);
   z-index: 0;
 }
 main > section > * {
   position: relative;
   z-index: 1;
 }
-
-/* 3. Soft horizontal hairline between sections — like a thin red
-      filament that connects them. Visible only between sections. */
 main > section + section::after {
   content: "";
   position: absolute;
-  top: 0;
-  inset-inline: 15%;
+  top: 0; inset-inline: 15%;
   height: 1px;
   pointer-events: none;
-  background: linear-gradient(90deg, transparent 0%, rgba(208,0,0,0.32) 50%, transparent 100%);
-}
-
-/* 4. Subtle ambient drift on hero badges + chips */
-@keyframes subtleDrift {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-3px); }
-}
-.drift {
-  animation: subtleDrift 6s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .drift { animation: none; }
-}
-
-/* 5. Scroll-reveal helper — used by sections to fade in on entry.
-      Combined with framer-motion's whileInView for safety. */
-@keyframes revealUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.reveal-on-scroll {
-  animation: revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-timeline: view();
-  animation-range: entry 5% cover 30%;
-}
-
-/* 6. Bigger headlines — the brief asked for dominant typography.
-      h1 was text-4xl md:text-6xl; bump to feel investor-grade. */
-@layer components {
-  .h1 {
-    @apply text-[44px] sm:text-5xl md:text-6xl lg:text-7xl
-           font-semibold tracking-[-0.025em] leading-[1.02] !important;
-  }
-  .h2 {
-    @apply text-3xl md:text-5xl
-           font-semibold tracking-[-0.02em] leading-[1.08] !important;
-  }
-}
-
-/* 7. Hero ambient grid — soft dotted grid behind the hero only.
-      Other sections stay clean. Add via class on the hero <section>. */
-.bg-cinema-grid::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
-  background-size: 28px 28px;
-  mask-image: radial-gradient(ellipse at center, black 25%, transparent 70%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 25%, transparent 70%);
+  background: linear-gradient(90deg, transparent 0%, rgba(208,0,0,0.28) 50%, transparent 100%);
 }

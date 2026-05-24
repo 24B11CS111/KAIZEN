@@ -79,7 +79,7 @@ export async function POST(request: Request) {
   try {
     const { data: list } = await admin.auth.admin.listUsers();
     const found = list?.users.find(
-      (u) => (u.email ?? "").toLowerCase() === email
+      (u: any) => (u.email ?? "").toLowerCase() === email
     );
     if (!found) {
       return NextResponse.json(

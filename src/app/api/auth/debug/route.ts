@@ -31,10 +31,12 @@ export async function GET() {
   let supabaseReachable = false;
   let supabaseError: string | null = null;
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    // Strip trailing slash — supabase-js does this internally; raw fetch does not.
+    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/$/, "");
     const anonKey     = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (supabaseUrl && anonKey) {
-      const res = await fetch(`${supabaseUrl}/auth/v1/settings`, {
+      // Use /auth/v1/health which is the canonical liveness endpoint
+      const res = await fetch(`${supabaseUrl}/auth/v1/health`, {
         headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
         signal: AbortSignal.timeout(5000)
       });
@@ -51,7 +53,7 @@ export async function GET() {
   let adminApiOk = false;
   let adminApiError: string | null = null;
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/$/, "");
     const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (supabaseUrl && serviceKey) {
       const res = await fetch(`${supabaseUrl}/auth/v1/admin/users?page=1&per_page=1`, {

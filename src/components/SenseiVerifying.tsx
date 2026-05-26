@@ -1,13 +1,20 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ScanLine, AlertTriangle } from "lucide-react";
+import { ScanLine, AlertTriangle, QrCode } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Status = "pending" | "active" | "rejected" | "banned" | "expired";
 const POLL_MS = 4000;
+
+const QR_URL =
+  process.env.NEXT_PUBLIC_UPI_QR_PATH ||
+  "https://res.cloudinary.com/dzqfrwizz/image/upload/v1778002547/70f7bcee-4a22-41ea-b6c9-5af680bfc6a0_fjcl52.png";
+const UPI_ID = process.env.NEXT_PUBLIC_UPI_ID || "kaizen@upi";
+const UPI_NAME = process.env.NEXT_PUBLIC_UPI_NAME || "KAIZEN";
 
 interface Props {
   name?: string | null;
@@ -92,9 +99,13 @@ export function SenseiVerifying({ name, initialStatus = "pending" }: Props) {
   }, [router]);
 
   if (status === "rejected") {
+    const upiLink =
+      "upi://pay?" +
+      new URLSearchParams({ pa: UPI_ID, pn: UPI_NAME, cu: "INR", tn: "KAIZEN-RETRY" }).toString();
+
     return (
-      <div className="grid place-items-center min-h-[60vh] px-6">
-        <div className="text-center max-w-md">
+      <div className="grid place-items-center min-h-[60vh] px-6 py-10">
+        <div className="text-center max-w-sm w-full">
           <div className="relative h-20 w-20 mx-auto mb-6 grid place-items-center">
             <div className="absolute inset-0 rounded-full bg-blood-500/20" />
             <AlertTriangle className="h-9 w-9 text-blood-500" />
@@ -102,11 +113,34 @@ export function SenseiVerifying({ name, initialStatus = "pending" }: Props) {
           <p className="label-mono">Status . Rejected</p>
           <h1 className="heading text-3xl mt-3">Payment rejected.</h1>
           <p className="text-white/60 mt-3 text-sm leading-relaxed">
-            Please contact support. We could not verify your UTR.
+            We could not verify your UTR. Scan the QR below and re-submit with a valid 12-digit reference.
           </p>
-          <Link href="/enroll" className="btn-primary mt-6 inline-flex items-center justify-center w-full">
-            Re-submit payment
-          </Link>
+
+          {/* QR */}
+          <div className="mt-6 flex flex-col items-center gap-2">
+            <div className="relative h-36 w-36 rounded-xl overflow-hidden border border-white/[0.08] bg-white">
+              <Image
+                src={QR_URL}
+                alt="UPI QR"
+                fill
+                sizes="144px"
+                className="object-contain p-1.5"
+                priority
+              />
+            </div>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-white/40 flex items-center gap-1.5">
+              <QrCode className="h-3 w-3" /> {UPI_ID}
+            </p>
+          </div>
+
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <a href={upiLink} className="btn-ghost text-xs justify-center">
+              Open UPI app
+            </a>
+            <Link href="/enroll" className="btn-primary text-xs justify-center inline-flex items-center">
+              Re-submit payment
+            </Link>
+          </div>
         </div>
       </div>
     );

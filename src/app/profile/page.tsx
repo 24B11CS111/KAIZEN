@@ -1,26 +1,33 @@
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import {
   User, Mail, CreditCard, Calendar, Clock,
   ShieldCheck, ArrowRight, LogOut, Settings,
-  Sword, AlertCircle
+  Sword, AlertCircle, QrCode
 } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LogoutButton } from "@/components/LogoutButton";
 
 export const dynamic = "force-dynamic";
 
+const QR_URL =
+  process.env.NEXT_PUBLIC_UPI_QR_PATH ||
+  "https://res.cloudinary.com/dzqfrwizz/image/upload/v1778002547/70f7bcee-4a22-41ea-b6c9-5af680bfc6a0_fjcl52.png";
+const UPI_ID = process.env.NEXT_PUBLIC_UPI_ID || "kaizen@upi";
+const UPI_NAME = process.env.NEXT_PUBLIC_UPI_NAME || "KAIZEN";
+
 const STATUS_CONFIG: Record<string, { label: string; color: string; glow: string; dot: string }> = {
-  active:   { label: "Active",     color: "text-emerald-400", glow: "shadow-[0_0_16px_-4px_rgba(52,211,153,0.5)]", dot: "bg-emerald-400" },
+  active:   { label: "Active",     color: "text-emerald-400", glow: "shadow-[0_0_16px_-4px_rgba(52,211,153,0.5)]",  dot: "bg-emerald-400" },
   pending:  { label: "Pending",    color: "text-amber-300",   glow: "shadow-[0_0_16px_-4px_rgba(251,191,36,0.4)]",  dot: "bg-amber-400" },
-  expired:  { label: "Expired",    color: "text-white/50",    glow: "",                                              dot: "bg-white/30" },
+  expired:  { label: "Expired",    color: "text-white/50",    glow: "",                                               dot: "bg-white/30" },
   rejected: { label: "Rejected",   color: "text-blood-500",   glow: "shadow-[0_0_16px_-4px_rgba(208,0,0,0.4)]",    dot: "bg-blood-500" },
   banned:   { label: "Banned",     color: "text-blood-500",   glow: "shadow-[0_0_16px_-4px_rgba(208,0,0,0.4)]",    dot: "bg-blood-500" },
 };
 
 function planLabel(amount: number | null | undefined): string {
-  if (amount === 49) return "Intermediate Plan — ₹49";
-  if (amount === 99) return "B.Tech Plan — ₹99";
+  if (amount === 49) return "Intermediate Plan — \u20b949";
+  if (amount === 99) return "B.Tech Plan — \u20b999";
   return "Free";
 }
 
@@ -31,7 +38,7 @@ function planTier(amount: number | null | undefined): "free" | "intermediate" | 
 }
 
 function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "\u2014";
   return new Date(iso).toLocaleDateString("en-IN", {
     day: "numeric", month: "short", year: "numeric"
   });
@@ -55,13 +62,25 @@ export default async function ProfilePage() {
   if (!profile) redirect("/");
 
   const name       = profile.full_name ?? "Warrior";
-  const email      = profile.email ?? user.email ?? "—";
+  const email      = profile.email ?? user.email ?? "\u2014";
   const status     = (profile.subscription_status ?? "pending") as string;
   const statusConf = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
   const tier       = planTier(profile.plan_amount);
   const joinDate   = formatDate(profile.created_at);
   const expiry     = formatDate(profile.expiry_date);
   const inits      = initials(name);
+
+  // UPI deep-link for re-payment (server-side, used in expired/rejected block)
+  const planAmount = profile.plan_amount ?? 99;
+  const upiLink =
+    "upi://pay?" +
+    new URLSearchParams({
+      pa: UPI_ID,
+      pn: UPI_NAME,
+      am: String(planAmount),
+      cu: "INR",
+      tn: "KAIZEN-RENEW"
+    }).toString();
 
   return (
     <main className="min-h-[100svh] bg-obsidian">
@@ -181,21 +200,52 @@ export default async function ProfilePage() {
             </div>
           </div>
         )}
+
         {(status === "expired" || status === "rejected") && (
-          <div className="rounded-2xl border border-blood-500/20 bg-blood-500/[0.04] p-4 mb-3 flex gap-3 items-start">
-            <AlertCircle className="h-4 w-4 text-blood-500 shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-blood-500">
-                {status === "expired" ? "Access expired" : "Access inactive"}
+          <div className="rounded-2xl border border-blood-500/20 bg-blood-500/[0.04] p-5 mb-3">
+            <div className="flex gap-3 items-start">
+              <AlertCircle className="h-4 w-4 text-blood-500 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-blood-500">
+                  {status === "expired" ? "Access expired" : "Access inactive"}
+                </p>
+                <p className="text-xs text-white/50 mt-1 leading-relaxed">
+                  {status === "rejected"
+                    ? "Your UTR could not be verified. Scan the QR and re-submit."
+                    : "Renew your subscription to continue your journey."}
+                </p>
+              </div>
+            </div>
+
+            {/* QR + action buttons */}
+            <div className="mt-4 flex flex-col items-center gap-2">
+              <div className="relative h-36 w-36 rounded-xl overflow-hidden border border-white/[0.10] bg-white">
+                <Image
+                  src={QR_URL}
+                  alt="UPI QR"
+                  fill
+                  sizes="144px"
+                  className="object-contain p-1.5"
+                  priority
+                />
+              </div>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-white/40 flex items-center gap-1.5">
+                <QrCode className="h-3 w-3" /> {UPI_ID}
               </p>
-              <p className="text-xs text-white/50 mt-1 leading-relaxed">
-                Renew your subscription to continue your journey.
-              </p>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <a
+                href={upiLink}
+                className="btn-tap inline-flex items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-white text-[11px] font-semibold px-3.5 py-2 transition-all"
+              >
+                Open UPI app
+              </a>
               <Link
                 href="/enroll"
-                className="btn-tap mt-2.5 inline-flex items-center gap-1.5 rounded-lg bg-blood-500 text-white text-[11px] font-semibold px-3.5 py-2 shadow-[0_0_16px_-4px_rgba(208,0,0,0.55)]"
+                className="btn-tap inline-flex items-center justify-center gap-1.5 rounded-lg bg-blood-500 text-white text-[11px] font-semibold px-3.5 py-2 shadow-[0_0_16px_-4px_rgba(208,0,0,0.55)]"
               >
-                Renew access <ArrowRight className="h-3.5 w-3.5" />
+                {status === "rejected" ? "Re-submit" : "Renew"} <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
           </div>

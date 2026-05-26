@@ -80,7 +80,7 @@ export function RegistrationFlow() {
   const planAmount = path === "btech" ? 99 : 49;
   const upi = process.env.NEXT_PUBLIC_UPI_ID || "kaizen@upi";
   const upiName = process.env.NEXT_PUBLIC_UPI_NAME || "KAIZEN.SYS";
-  const qrPath = process.env.NEXT_PUBLIC_UPI_QR_PATH || "/upi-qr.png";
+  const qrPath = process.env.NEXT_PUBLIC_UPI_QR_PATH || "https://res.cloudinary.com/dzqfrwizz/image/upload/v1778002547/70f7bcee-4a22-41ea-b6c9-5af680bfc6a0_fjcl52.png";
   const upiLink = useMemo(() => {
     const params = new URLSearchParams({
       pa: upi, pn: upiName, am: String(planAmount), cu: "INR",

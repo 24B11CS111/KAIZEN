@@ -9,6 +9,7 @@ import {
   Phone, Sparkles, Eye, EyeOff
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { buildCallbackUrl, sanitizeNextPath } from "@/lib/siteUrl";
 
 const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1779649962/image-removebg-preview_i3duhi.png";
 
@@ -32,16 +33,22 @@ function describeAuthError(raw: string): string {
   if (m.includes("invalid otp") || m.includes("token has expired"))
     return "That code is wrong or expired. Request a fresh one.";
   if (m.includes("phone provider") || m.includes("sms provider"))
-    return "SMS sign-in isn't enabled on this project yet.";
+    return "SMS sign-in is not enabled on this project yet.";
   if (m.includes("provider is not enabled") || m.includes("oauth provider"))
-    return "Google sign-in isn't configured yet. Contact support.";
+    return "Google sign-in is not configured yet. Contact support.";
+  // Supabase GoTrue redirect URL validation errors
+  if (m.includes("invalid path") || m.includes("redirect url") || m.includes("redirect_url") || m.includes("invalid url"))
+    return "Authentication failed. Please try again.";
+  if (m.includes("pkce") || m.includes("code verifier"))
+    return "Sign-in session expired. Please try again.";
   return raw || "Sign-in failed. Please try again.";
 }
 
 export function LoginForm() {
   const router = useRouter();
   const search = useSearchParams();
-  const next = search.get("next") || "/dojo";
+  // Sanitize next immediately — prevents open redirects and Next.js "Invalid path" errors
+  const next = sanitizeNextPath(search.get("next") || "/dojo");
 
   const [mode, setMode] = useState<Mode>("password");
   const [email, setEmail] = useState("");
@@ -56,7 +63,7 @@ export function LoginForm() {
   const [magicSent, setMagicSent] = useState(false);
   const [bootChecking, setBootChecking] = useState(true);
 
-  // Surface any error passed from the OAuth callback.
+  // Surface any error passed from the OAuth callback (?error=...).
   useEffect(() => {
     const e = search.get("error");
     if (e) setError(e);
@@ -91,7 +98,7 @@ export function LoginForm() {
 
     return () => {
       cancelled = true;
-      sub.subscription.unsubscribe();
+      try { sub.subscription.unsubscribe(); } catch {}
     };
   }, [router, next]);
 
@@ -121,6 +128,7 @@ export function LoginForm() {
       });
       if (error) throw error;
       if (!data.session) throw new Error("No session returned");
+      // next is already sanitized at the top of this component
       router.replace(next);
       router.refresh();
     } catch (err) {
@@ -134,11 +142,11 @@ export function LoginForm() {
     setError(null); setLoading(true);
     try {
       const supabase = createSupabaseBrowserClient();
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      // buildCallbackUrl always returns an absolute URL — required by Supabase GoTrue.
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
-          emailRedirectTo: origin + "/auth/callback?next=" + encodeURIComponent(next)
+          emailRedirectTo: buildCallbackUrl(next)
         }
       });
       if (error) throw error;
@@ -153,17 +161,18 @@ export function LoginForm() {
     setGoogleLoading(true);
     try {
       const supabase = createSupabaseBrowserClient();
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      // buildCallbackUrl always returns an absolute URL — required by Supabase GoTrue.
+      // The URL must be whitelisted in Supabase Dashboard → Auth → Redirect URLs.
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: origin + "/auth/callback?next=" + encodeURIComponent(next),
+          redirectTo: buildCallbackUrl(next),
           queryParams: { prompt: "select_account", access_type: "offline" }
         }
       });
       if (error) throw error;
-      // OAuth redirects the browser — we intentionally leave googleLoading=true
-      // so there's no blank-screen flash while the redirect completes.
+      // OAuth redirects the browser — intentionally leave googleLoading=true
+      // so there is no blank-screen flash while the redirect completes.
     } catch (err) {
       setError(describeAuthError(err instanceof Error ? err.message : String(err)));
       setGoogleLoading(false);
@@ -219,7 +228,7 @@ export function LoginForm() {
             <Image src={KAIZEN_LOGO} alt="KAIZEN.SYS" width={52} height={52} className="object-contain" priority />
           </motion.span>
           <span className="text-[10px] uppercase tracking-[0.32em] text-white/40">
-            {googleLoading ? "Connecting…" : "KAIZEN.SYS"}
+            {googleLoading ? "Connecting\u2026" : "KAIZEN.SYS"}
           </span>
         </div>
       </main>
@@ -247,7 +256,7 @@ export function LoginForm() {
         {/* Card */}
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-7 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.9)]">
           <Link href="/" className="text-[10px] uppercase tracking-[0.18em] text-white/45 hover:text-white/80 transition-colors">
-            ← Return to gate
+            \u2190 Return to gate
           </Link>
           <h1 className="text-[26px] font-semibold leading-tight mt-3">
             Enter the <span className="text-blood-500">dojo</span>.
@@ -432,7 +441,7 @@ function SubmitBtn({
       className="btn-tap w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blood-500 text-white py-3.5 text-sm font-semibold shadow-[0_0_24px_-6px_rgba(208,0,0,0.6)] hover:bg-blood-600 hover:shadow-[0_0_32px_-4px_rgba(208,0,0,0.75)] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
     >
       {loading ? (
-        <><Loader2 className="h-4 w-4 animate-spin" /> Working…</>
+        <><Loader2 className="h-4 w-4 animate-spin" /> Working\u2026</>
       ) : (
         <>{children} <ArrowRight className="h-4 w-4" /></>
       )}

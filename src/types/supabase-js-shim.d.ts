@@ -1,11 +1,11 @@
 /**
  * KAIZEN.SYS — @supabase/supabase-js type shim
- * 
+ *
  * The sandbox node_modules have a truncated @supabase/supabase-js package.
  * This shim re-declares just the types used by this project so `tsc --noEmit`
  * passes locally. On Vercel, `npm install` runs fresh and provides the full
  * package — this file is not used in production builds.
- * 
+ *
  * DO NOT reference this file directly — it is wired via tsconfig.json paths.
  */
 
@@ -68,6 +68,7 @@ export declare class SupabaseClient<Database = any, SchemaName extends string = 
 export interface SupabaseAuthClient {
   getSession(): Promise<{ data: { session: Session | null }; error: AuthError | null }>;
   getUser(): Promise<{ data: { user: User | null }; error: AuthError | null }>;
+  signUp(credentials: { email: string; password: string; options?: { emailRedirectTo?: string; data?: object } }): Promise<{ data: { session: Session | null; user: User | null }; error: AuthError | null }>;
   signInWithPassword(credentials: { email: string; password: string }): Promise<{ data: { session: Session | null; user: User | null }; error: AuthError | null }>;
   signInWithOAuth(params: { provider: string; options?: { redirectTo?: string; queryParams?: Record<string, string>; scopes?: string } }): Promise<{ data: any; error: AuthError | null }>;
   signInWithOtp(params: { email?: string; phone?: string; options?: { emailRedirectTo?: string; shouldCreateUser?: boolean } }): Promise<{ data: any; error: AuthError | null }>;

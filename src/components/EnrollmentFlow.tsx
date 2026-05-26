@@ -24,7 +24,7 @@ export function EnrollmentFlow({ initialPlan, isAuthenticated }: Props) {
 
   const upi = process.env.NEXT_PUBLIC_UPI_ID || "kaizen@upi";
   const upiName = process.env.NEXT_PUBLIC_UPI_NAME || "KAIZEN.SYS";
-  const qrPath = process.env.NEXT_PUBLIC_UPI_QR_PATH || "/upi-qr.png";
+  const qrPath = process.env.NEXT_PUBLIC_UPI_QR_PATH || "https://res.cloudinary.com/dzqfrwizz/image/upload/v1778002547/70f7bcee-4a22-41ea-b6c9-5af680bfc6a0_fjcl52.png";
 
   const upiLink = useMemo(() => {
     if (!plan) return "";
@@ -107,7 +107,6 @@ export function EnrollmentFlow({ initialPlan, isAuthenticated }: Props) {
 
               <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 <div className="glass rounded-xl p-4 grid place-items-center aspect-square relative">
-                  {/* Static QR image — replace public/upi-qr.png with your real QR */}
                   <Image
                     src={qrPath}
                     alt="UPI QR"

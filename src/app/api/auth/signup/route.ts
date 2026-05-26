@@ -14,11 +14,37 @@ function envFault() {
 }
 
 /**
+ * Translate raw GoTrue / Supabase admin API errors into user-friendly strings.
+ * Called server-side so errors never reach the browser as cryptic internal messages.
+ */
+function friendlyAdminError(raw: string): string {
+  const m = raw.toLowerCase();
+  if (m.includes("already") || m.includes("registered") || m.includes("exists"))
+    return "An account with this email already exists.";
+  if (m.includes("invalid path") || m.includes("invalid url") || m.includes("redirect"))
+    return "Sign-up is temporarily unavailable. Please try again in a moment.";
+  if (m.includes("rate") && m.includes("limit"))
+    return "Too many sign-up attempts. Try again later.";
+  if (m.includes("password") && (m.includes("weak") || m.includes("short") || m.includes("length")))
+    return "Password too weak. Use 8+ characters with uppercase, lowercase, and a digit.";
+  if (m.includes("invalid") && m.includes("email"))
+    return "Enter a valid email address.";
+  if (m.includes("network") || m.includes("fetch") || m.includes("connection"))
+    return "Could not reach the authentication server. Check your connection.";
+  return "Sign-up failed. Please try again.";
+}
+
+/**
  * Lightweight signup endpoint — email + password only.
  *
- * Creates the user with email_confirm=true so the browser can immediately
- * sign-in afterward and progress through /onboarding. The detailed
- * profile fields are collected in the onboarding flow (NOT here).
+ * Strategy:
+ *   1. Use admin createUser with email_confirm:true (no confirmation email).
+ *   2. If createUser fails with a Supabase config error (e.g. Site URL not set),
+ *      fall back to direct signUp via the anon key — which works even when the
+ *      Supabase Dashboard Site URL is not yet configured.
+ *   3. Seed a minimal profile row so onboarding can read it.
+ *
+ * The detailed profile fields (name, course, etc.) are collected in /onboarding.
  */
 export async function POST(request: Request) {
   const fault = envFault();
@@ -78,6 +104,7 @@ export async function POST(request: Request) {
     );
   }
 
+  // --- Attempt 1: Admin API (fast, bypasses email confirmation) ---
   const { data: created, error: createErr } = await admin.auth.admin.createUser({
     email,
     password,
@@ -94,8 +121,7 @@ export async function POST(request: Request) {
 
     if (alreadyExists) {
       // Existing-but-unconfirmed user: force-confirm + reset password so
-      // signInWithPassword from the browser will succeed. This mirrors
-      // the recovery path used by the legacy /api/register/signup route.
+      // signInWithPassword from the browser will succeed immediately.
       try {
         const { data: list } = await admin.auth.admin.listUsers();
         const existing = list?.users.find(
@@ -117,13 +143,95 @@ export async function POST(request: Request) {
       );
     }
 
+    // --- Attempt 2: Config error (e.g. Supabase Site URL not set) ---
+    // The admin API fails with "Invalid path" when the Supabase Dashboard
+    // Site URL is not configured. Fall back to a direct signUp call using
+    // the anon key — this works regardless of Site URL configuration,
+    // but the user may receive a confirmation email if the project
+    // requires email verification.
+    const isConfigError =
+      msg.includes("invalid path") ||
+      msg.includes("invalid url") ||
+      msg.includes("redirect");
+
+    if (isConfigError) {
+      console.warn(
+        "[auth/signup] Admin createUser failed with config error — falling back to anon signUp.",
+        createErr.message
+      );
+
+      const { NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY } = process.env;
+      if (NEXT_PUBLIC_SUPABASE_URL && NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        try {
+          const { createClient } = await import("@supabase/supabase-js");
+          const anonClient = createClient(
+            NEXT_PUBLIC_SUPABASE_URL,
+            NEXT_PUBLIC_SUPABASE_ANON_KEY,
+            { auth: { persistSession: false, autoRefreshToken: false } }
+          );
+          const { data: signUpData, error: signUpErr } = await anonClient.auth.signUp({
+            email,
+            password
+          });
+
+          if (signUpErr) {
+            const signUpMsg = (signUpErr.message ?? "").toLowerCase();
+            if (signUpMsg.includes("already") || signUpMsg.includes("registered") || signUpMsg.includes("exists")) {
+              return NextResponse.json(
+                { error: "An account with this email already exists." },
+                { status: 409 }
+              );
+            }
+            return NextResponse.json(
+              { error: friendlyAdminError(signUpErr.message) },
+              { status: 400 }
+            );
+          }
+
+          // Seed profile if we got a user back
+          if (signUpData?.user) {
+            try {
+              await admin.from("profiles").upsert(
+                { id: signUpData.user.id, email: signUpData.user.email ?? email },
+                { onConflict: "id" }
+              );
+            } catch (e) {
+              console.error("[auth/signup] profile seed (fallback) failed:", e);
+            }
+          }
+
+          // If email confirmation is required by the project, signal the
+          // frontend to show a "check your email" message.
+          const needsConfirmation = !signUpData?.session && signUpData?.user;
+          return NextResponse.json({
+            ok: true,
+            needs_email_confirmation: Boolean(needsConfirmation),
+            user_id: signUpData?.user?.id ?? null
+          });
+        } catch (e) {
+          console.error("[auth/signup] anon signUp fallback failed:", e);
+        }
+      }
+
+      // If fallback also failed, return a clear message that points at root cause
+      return NextResponse.json(
+        {
+          error:
+            "Authentication service is not fully configured. " +
+            "Set your Site URL in Supabase Dashboard \u2192 Auth \u2192 URL Configuration."
+        },
+        { status: 503 }
+      );
+    }
+
+    // All other errors — translate and return
     return NextResponse.json(
-      { error: createErr.message ?? "Sign up failed" },
+      { error: friendlyAdminError(createErr.message) },
       { status: 400 }
     );
   }
 
-  // Seed an email-only profile row. Onboarding fills in the rest.
+  // Admin createUser succeeded — seed profile
   if (created.user) {
     try {
       await admin.from("profiles").upsert(
@@ -135,7 +243,6 @@ export async function POST(request: Request) {
       );
     } catch (e) {
       console.error("[auth/signup] profile seed failed:", e);
-      // Non-fatal: the trigger or later RLS-protected calls can self-heal.
     }
   }
 

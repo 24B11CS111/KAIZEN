@@ -6,9 +6,10 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   Mail, KeyRound, ArrowRight, Loader2, AlertTriangle,
-  Eye, EyeOff, ShieldCheck
+  Eye, EyeOff, ShieldCheck, MailCheck
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { buildCallbackUrl, sanitizeNextPath } from "@/lib/siteUrl";
 
 const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1779649962/image-removebg-preview_i3duhi.png";
 
@@ -26,6 +27,11 @@ function describeSignupError(raw: string): string {
     return "Password too weak. Use 8+ chars with uppercase, lowercase, and a digit.";
   if (m.includes("invalid") && m.includes("email"))
     return "Enter a valid email address.";
+  // Supabase GoTrue redirect URL validation errors
+  if (m.includes("invalid path") || m.includes("redirect url") || m.includes("redirect_url") || m.includes("invalid url"))
+    return "Authentication failed. Please try again.";
+  if (m.includes("provider is not enabled") || m.includes("oauth provider"))
+    return "Google sign-in is not configured yet. Contact support.";
   return raw || "Sign-up failed. Please try again.";
 }
 
@@ -43,7 +49,8 @@ function passwordStrength(pw: string): { score: number; label: string } {
 export function SignupForm() {
   const router = useRouter();
   const search = useSearchParams();
-  const next = search.get("next") || "/onboarding";
+  // Sanitize next immediately — prevents open redirects and Next.js "Invalid path" errors
+  const next = sanitizeNextPath(search.get("next") || "/onboarding");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -52,6 +59,7 @@ export function SignupForm() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bootChecking, setBootChecking] = useState(true);
+  const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,11 +94,12 @@ export function SignupForm() {
     setGoogleLoading(true);
     try {
       const supabase = createSupabaseBrowserClient();
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      // buildCallbackUrl always returns an absolute URL — required by Supabase GoTrue.
+      // The URL must be whitelisted in Supabase Dashboard → Auth → Redirect URLs.
       const { error: oauthErr } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: origin + "/auth/callback?next=" + encodeURIComponent(next),
+          redirectTo: buildCallbackUrl(next),
           queryParams: { prompt: "select_account", access_type: "offline" }
         }
       });
@@ -116,6 +125,13 @@ export function SignupForm() {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json?.error || "Sign-up failed");
 
+      // Supabase project requires email verification — show confirmation screen.
+      if (json.needs_email_confirmation) {
+        setError(null);
+        setEmailSent(true);
+        return;
+      }
+
       // Establish browser session immediately so /onboarding is accessible.
       const supabase = createSupabaseBrowserClient();
       const { error: signErr } = await supabase.auth.signInWithPassword({
@@ -123,6 +139,7 @@ export function SignupForm() {
       });
       if (signErr) throw signErr;
 
+      // next is already sanitized at the top of this component
       router.replace(next);
       router.refresh();
     } catch (err) {
@@ -131,6 +148,50 @@ export function SignupForm() {
       setLoading(false);
     }
   };
+
+  // --- Email confirmation sent screen ---
+  if (emailSent) {
+    return (
+      <main className="min-h-[100svh] grid place-items-center px-6 bg-obsidian">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-[380px] text-center"
+        >
+          <span style={{ filter: "drop-shadow(0 0 20px rgba(208,0,0,0.5))" }} className="inline-block mb-6">
+            <Image src={KAIZEN_LOGO} alt="KAIZEN.SYS" width={56} height={56} className="object-contain mx-auto" priority />
+          </span>
+          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-8 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.9)]">
+            <div className="flex justify-center mb-4">
+              <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blood-500/10 border border-blood-500/25">
+                <MailCheck className="h-5 w-5 text-blood-500" />
+              </span>
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Check your inbox</h2>
+            <p className="text-sm text-white/55 leading-relaxed mb-1">
+              We sent a confirmation link to
+            </p>
+            <p className="text-sm font-semibold text-white/90 mb-5 break-all">{email.trim()}</p>
+            <p className="text-xs text-white/40 leading-relaxed">
+              Click the link in the email to activate your account, then come back to sign in.
+              Check your spam folder if you don&apos;t see it within a minute.
+            </p>
+          </div>
+          <p className="mt-6 text-xs text-white/40">
+            Wrong email?{" "}
+            <button
+              type="button"
+              onClick={() => { setEmailSent(false); setError(null); }}
+              className="text-blood-500 font-semibold hover:underline"
+            >
+              Try again
+            </button>
+          </p>
+        </motion.div>
+      </main>
+    );
+  }
 
   if (bootChecking || googleLoading) {
     return (
@@ -144,7 +205,7 @@ export function SignupForm() {
             <Image src={KAIZEN_LOGO} alt="KAIZEN.SYS" width={52} height={52} className="object-contain" priority />
           </motion.span>
           <span className="text-[10px] uppercase tracking-[0.32em] text-white/40">
-            {googleLoading ? "Connecting…" : "KAIZEN.SYS"}
+            {googleLoading ? "Connecting\u2026" : "KAIZEN.SYS"}
           </span>
         </div>
       </main>
@@ -172,7 +233,7 @@ export function SignupForm() {
         {/* Card */}
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-7 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.9)]">
           <Link href="/" className="text-[10px] uppercase tracking-[0.18em] text-white/45 hover:text-white/80 transition-colors">
-            ← Return to gate
+            \u2190 Return to gate
           </Link>
           <h1 className="text-[26px] font-semibold leading-tight mt-3">
             Forge your <span className="text-blood-500">identity</span>.
@@ -271,7 +332,7 @@ export function SignupForm() {
               className="btn-tap w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blood-500 text-white py-3.5 text-sm font-semibold shadow-[0_0_24px_-6px_rgba(208,0,0,0.6)] hover:bg-blood-600 hover:shadow-[0_0_32px_-4px_rgba(208,0,0,0.75)] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none mt-1"
             >
               {loading ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Creating your account…</>
+                <><Loader2 className="h-4 w-4 animate-spin" /> Creating your account\u2026</>
               ) : (
                 <>Create account <ArrowRight className="h-4 w-4" /></>
               )}

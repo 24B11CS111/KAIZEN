@@ -9,6 +9,14 @@
  *   - src/lib/supabase/client.ts (browser)
  *   - src/lib/supabase/server.ts (RSC + route handlers)
  *   - src/lib/supabase/middleware.ts (Edge middleware)
+ *
+ * Auth redirect URLs — these are NOT Supabase env vars but are critical:
+ *   NEXT_PUBLIC_SITE_URL  — set to production domain in Vercel env vars
+ *   Supabase Dashboard → Auth → URL Configuration → Redirect URLs must include:
+ *     https://[domain]/auth/callback?*   (production)
+ *     https://*.vercel.app/auth/callback?*  (all preview deployments)
+ *     http://localhost:3000/auth/callback?*  (local dev)
+ *   The ?* wildcard is REQUIRED — without it Supabase rejects URLs with query params.
  */
 
 interface SupabaseEnv {

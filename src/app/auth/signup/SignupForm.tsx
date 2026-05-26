@@ -28,11 +28,11 @@ function describeSignupError(raw: string): string {
   if (m.includes("invalid") && m.includes("email"))
     return "Enter a valid email address.";
   // Supabase GoTrue redirect URL validation errors
-  if (m.includes("invalid path") || m.includes("redirect url") || m.includes("redirect_url") || m.includes("invalid url"))
-    return "Authentication failed. Please try again.";
   if (m.includes("provider is not enabled") || m.includes("oauth provider"))
     return "Google sign-in is not configured yet. Contact support.";
-  return raw || "Sign-up failed. Please try again.";
+  // Return raw Supabase message for unrecognised errors so we can diagnose production.
+  if (!raw) return "Sign-up failed. Please try again.";
+  return raw;
 }
 
 function passwordStrength(pw: string): { score: number; label: string } {

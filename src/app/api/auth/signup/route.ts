@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { SignupSchema } from "@/lib/validation";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { buildCallbackUrl } from "@/lib/siteUrl";
 
 export const runtime = "nodejs";
 
@@ -35,12 +36,12 @@ function friendlyAdminError(raw: string): string {
 }
 
 /**
- * Lightweight signup endpoint — email + password only.
+ * Lightweight signup endpoint -- email + password only.
  *
  * Strategy:
  *   1. Use admin createUser with email_confirm:true (no confirmation email).
  *   2. If createUser fails with a Supabase config error (e.g. Site URL not set),
- *      fall back to direct signUp via the anon key — which works even when the
+ *      fall back to direct signUp via the anon key -- which works even when the
  *      Supabase Dashboard Site URL is not yet configured.
  *   3. Seed a minimal profile row so onboarding can read it.
  *
@@ -146,7 +147,7 @@ export async function POST(request: Request) {
     // --- Attempt 2: Config error (e.g. Supabase Site URL not set) ---
     // The admin API fails with "Invalid path" when the Supabase Dashboard
     // Site URL is not configured. Fall back to a direct signUp call using
-    // the anon key — this works regardless of Site URL configuration,
+    // the anon key -- this works regardless of Site URL configuration,
     // but the user may receive a confirmation email if the project
     // requires email verification.
     const isConfigError =
@@ -156,7 +157,7 @@ export async function POST(request: Request) {
 
     if (isConfigError) {
       console.warn(
-        "[auth/signup] Admin createUser failed with config error — falling back to anon signUp.",
+        "[auth/signup] Admin createUser failed with config error -- falling back to anon signUp.",
         createErr.message
       );
 
@@ -171,7 +172,11 @@ export async function POST(request: Request) {
           );
           const { data: signUpData, error: signUpErr } = await anonClient.auth.signUp({
             email,
-            password
+            password,
+            options: {
+              // Absolute URL required by GoTrue -- must be on the Redirect URL allowlist.
+              emailRedirectTo: buildCallbackUrl("/dojo")
+            }
           });
 
           if (signUpErr) {
@@ -224,14 +229,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // All other errors — translate and return
+    // All other errors -- translate and return
     return NextResponse.json(
       { error: friendlyAdminError(createErr.message) },
       { status: 400 }
     );
   }
 
-  // Admin createUser succeeded — seed profile
+  // Admin createUser succeeded -- seed profile
   if (created.user) {
     try {
       await admin.from("profiles").upsert(

@@ -107,8 +107,11 @@ export async function POST(request: Request) {
         { status: 409 }
       );
     }
+    // "Invalid path" errors mean Supabase Site URL is not configured.
+    // Log the raw message so it appears in Vercel function logs.
+    console.error("[register/signup] createUser error:", createErr.message);
     return NextResponse.json(
-      { error: createErr.message ?? "Sign up failed" },
+      { error: "Sign-up failed. Please try again. (ref: " + (createErr.message ?? "unknown") + ")" },
       { status: 400 }
     );
   }

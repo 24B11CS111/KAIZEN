@@ -36,18 +36,17 @@ function describeAuthError(raw: string): string {
     return "SMS sign-in is not enabled on this project yet.";
   if (m.includes("provider is not enabled") || m.includes("oauth provider"))
     return "Google sign-in is not configured yet. Contact support.";
-  // Supabase GoTrue redirect URL validation errors
-  if (m.includes("invalid path") || m.includes("redirect url") || m.includes("redirect_url") || m.includes("invalid url"))
-    return "Authentication failed. Please try again.";
   if (m.includes("pkce") || m.includes("code verifier"))
     return "Sign-in session expired. Please try again.";
-  return raw || "Sign-in failed. Please try again.";
+  // For all unrecognised errors show the raw Supabase message so we can diagnose
+  // production issues. Once the root cause is fixed this can be made friendly.
+  if (!raw) return "Sign-in failed. Please try again.";
+  return raw;
 }
 
 export function LoginForm() {
   const router = useRouter();
   const search = useSearchParams();
-  // Sanitize next immediately — prevents open redirects and Next.js "Invalid path" errors
   const next = sanitizeNextPath(search.get("next") || "/dojo");
 
   const [mode, setMode] = useState<Mode>("password");
@@ -64,14 +63,25 @@ export function LoginForm() {
   const [bootChecking, setBootChecking] = useState(true);
 
   // Surface any error passed from the OAuth callback (?error=...).
+  // Immediately scrub ?error from the URL so a stale OAuth failure does not
+  // contaminate subsequent password login attempts (the #1 production bug).
   useEffect(() => {
     const e = search.get("error");
-    if (e) setError(e);
+    if (e) {
+      setError(e);
+      // Clear ?error (and any other auth params) from the address bar without
+      // a navigation -- prevents the error from re-appearing on re-render.
+      try {
+        const clean = new URL(window.location.href);
+        clean.searchParams.delete("error");
+        clean.searchParams.delete("error_code");
+        clean.searchParams.delete("error_description");
+        window.history.replaceState({}, "", clean.pathname + (clean.search || "") + clean.hash);
+      } catch {}
+    }
   }, [search]);
 
   // Boot check: if user is already signed in, skip straight to destination.
-  // Uses getSession() (cookie read, no network) + onAuthStateChange for
-  // OAuth redirects that complete mid-render. Falls back on network error.
   useEffect(() => {
     let cancelled = false;
     const supabase = createSupabaseBrowserClient();
@@ -87,11 +97,9 @@ export function LoginForm() {
         }
       })
       .catch(() => {
-        // Network error — show form rather than getting stuck loading.
         if (!cancelled) setBootChecking(false);
       });
 
-    // Listen for OAuth redirects completing (e.g. Google consent screen returns).
     const { data: sub } = supabase.auth.onAuthStateChange((_e: any, session: any) => {
       if (session && !cancelled) router.replace(next);
     });
@@ -128,10 +136,10 @@ export function LoginForm() {
       });
       if (error) throw error;
       if (!data.session) throw new Error("No session returned");
-      // next is already sanitized at the top of this component
       router.replace(next);
       router.refresh();
     } catch (err) {
+      console.error("[LoginForm] password sign-in error:", err);
       setError(describeAuthError(err instanceof Error ? err.message : String(err)));
     } finally { setLoading(false); }
   };
@@ -142,7 +150,6 @@ export function LoginForm() {
     setError(null); setLoading(true);
     try {
       const supabase = createSupabaseBrowserClient();
-      // buildCallbackUrl always returns an absolute URL — required by Supabase GoTrue.
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
@@ -152,6 +159,7 @@ export function LoginForm() {
       if (error) throw error;
       setMagicSent(true);
     } catch (err) {
+      console.error("[LoginForm] magic link error:", err);
       setError(describeAuthError(err instanceof Error ? err.message : String(err)));
     } finally { setLoading(false); }
   };
@@ -161,8 +169,6 @@ export function LoginForm() {
     setGoogleLoading(true);
     try {
       const supabase = createSupabaseBrowserClient();
-      // buildCallbackUrl always returns an absolute URL — required by Supabase GoTrue.
-      // The URL must be whitelisted in Supabase Dashboard → Auth → Redirect URLs.
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -171,9 +177,8 @@ export function LoginForm() {
         }
       });
       if (error) throw error;
-      // OAuth redirects the browser — intentionally leave googleLoading=true
-      // so there is no blank-screen flash while the redirect completes.
     } catch (err) {
+      console.error("[LoginForm] Google OAuth error:", err);
       setError(describeAuthError(err instanceof Error ? err.message : String(err)));
       setGoogleLoading(false);
     }
@@ -193,6 +198,7 @@ export function LoginForm() {
       setPhone(normalized);
       setOtpSent(true);
     } catch (err) {
+      console.error("[LoginForm] phone OTP send error:", err);
       setError(describeAuthError(err instanceof Error ? err.message : String(err)));
     } finally { setLoading(false); }
   };
@@ -211,6 +217,7 @@ export function LoginForm() {
       router.replace(next);
       router.refresh();
     } catch (err) {
+      console.error("[LoginForm] phone OTP verify error:", err);
       setError(describeAuthError(err instanceof Error ? err.message : String(err)));
     } finally { setLoading(false); }
   };

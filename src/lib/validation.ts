@@ -3,6 +3,8 @@ import { z } from "zod";
 const sanitize = (s: string) =>
   s.replace(/[ -]/g, "").trim();
 
+const normalizeEmail = (s: string) => s.trim().toLowerCase();
+
 export const PlanSchema = z.union([z.literal(49), z.literal(99)]);
 
 export const NameSchema = z
@@ -16,7 +18,7 @@ export const EmailSchema = z
   .string()
   .min(3)
   .max(254)
-  .transform(sanitize)
+  .transform(normalizeEmail)
   .pipe(z.string().email("Enter a valid email"));
 
 export const PasswordSchema = z

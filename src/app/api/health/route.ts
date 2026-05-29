@@ -16,6 +16,8 @@ interface HealthOut {
   supabase_anon?: CheckResult;
   profiles_table?: CheckResult;
   path_branch_columns?: CheckResult;
+  onboarding_data_table?: CheckResult;
+  user_progress_table?: CheckResult;
 }
 
 const requiredEnv = [
@@ -122,6 +124,38 @@ export async function GET() {
       : { ok: true };
   } catch (e: any) {
     out.path_branch_columns = {
+      ok: false,
+      detail: e?.message ?? String(e)
+    };
+  }
+
+  try {
+    const { error } = await admin.from("onboarding_data").select("id").limit(1);
+    out.onboarding_data_table = error
+      ? {
+          ok: false,
+          detail: error.message,
+          hint: "Run supabase/migrations/0004_onboarding.sql in the Supabase SQL editor."
+        }
+      : { ok: true };
+  } catch (e: any) {
+    out.onboarding_data_table = {
+      ok: false,
+      detail: e?.message ?? String(e)
+    };
+  }
+
+  try {
+    const { error } = await admin.from("user_progress").select("user_id").limit(1);
+    out.user_progress_table = error
+      ? {
+          ok: false,
+          detail: error.message,
+          hint: "Run supabase/migrations/0006_persistence_layer.sql in the Supabase SQL editor."
+        }
+      : { ok: true };
+  } catch (e: any) {
+    out.user_progress_table = {
       ok: false,
       detail: e?.message ?? String(e)
     };

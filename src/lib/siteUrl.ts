@@ -7,9 +7,10 @@
  *
  * Priority order:
  *   1. NEXT_PUBLIC_SITE_URL        -- explicit override; set in Vercel env vars (Production)
- *   2. NEXT_PUBLIC_VERCEL_URL      -- auto-injected by Vercel for every deployment
- *   3. window.location.origin      -- browser fallback (local dev)
- *   4. Hard-coded production URL   -- last resort for server-side code
+ *   2. NEXT_PUBLIC_VERCEL_URL      -- optional public override
+ *   3. VERCEL_URL                  -- auto-injected by Vercel for server runtimes
+ *   4. window.location.origin      -- browser fallback (local dev)
+ *   5. Hard-coded production URL   -- last resort for server-side code
  *
  * Production domain: https://kaizen-ikyw.vercel.app
  *
@@ -32,19 +33,24 @@ export function getSiteUrl(): string {
     return envUrl.replace(/\/$/, "");
   }
 
-  // 2. Vercel auto-injects NEXT_PUBLIC_VERCEL_URL for every deployment.
-  //    It is the hostname only (no protocol), e.g. "kaizen-ikyw.vercel.app".
+  // 2. Optional public Vercel override.
   const vercelUrl = process.env.NEXT_PUBLIC_VERCEL_URL;
   if (vercelUrl) {
     return "https://" + vercelUrl;
   }
 
-  // 3. Browser origin -- works for local dev and any non-Vercel host.
+  // 3. Vercel server runtime host. This is the canonical built-in env var.
+  const serverVercelUrl = process.env.VERCEL_URL;
+  if (serverVercelUrl) {
+    return "https://" + serverVercelUrl;
+  }
+
+  // 4. Browser origin -- works for local dev and any non-Vercel host.
   if (typeof window !== "undefined") {
     return window.location.origin;
   }
 
-  // 4. Hard-coded production fallback -- last resort so server-side code
+  // 5. Hard-coded production fallback -- last resort so server-side code
   //    (e.g. callback route) always has an absolute base URL.
   return "https://kaizen-ikyw.vercel.app";
 }

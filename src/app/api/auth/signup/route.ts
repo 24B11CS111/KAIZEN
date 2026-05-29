@@ -2,9 +2,15 @@ import { NextResponse } from "next/server";
 import { SignupSchema } from "@/lib/validation";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
-import { buildCallbackUrl } from "@/lib/siteUrl";
 
 export const runtime = "nodejs";
+
+type AuthFailure = {
+  message: string;
+  code?: string;
+  status?: number;
+  name?: string;
+};
 
 function envFault() {
   const missing: string[] = [];
@@ -14,38 +20,70 @@ function envFault() {
   return missing;
 }
 
-/**
- * Translate raw GoTrue / Supabase admin API errors into user-friendly strings.
- * Called server-side so errors never reach the browser as cryptic internal messages.
- */
-function friendlyAdminError(raw: string): string {
-  const m = raw.toLowerCase();
-  if (m.includes("already") || m.includes("registered") || m.includes("exists"))
-    return "An account with this email already exists.";
-  if (m.includes("invalid path") || m.includes("invalid url") || m.includes("redirect"))
-    return "Sign-up is temporarily unavailable. Please try again in a moment.";
-  if (m.includes("rate") && m.includes("limit"))
-    return "Too many sign-up attempts. Try again later.";
-  if (m.includes("password") && (m.includes("weak") || m.includes("short") || m.includes("length")))
-    return "Password too weak. Use 8+ characters with uppercase, lowercase, and a digit.";
-  if (m.includes("invalid") && m.includes("email"))
-    return "Enter a valid email address.";
-  if (m.includes("network") || m.includes("fetch") || m.includes("connection"))
-    return "Could not reach the authentication server. Check your connection.";
-  return "Sign-up failed. Please try again.";
+function toAuthFailure(error: unknown): AuthFailure {
+  if (!error || typeof error !== "object") {
+    return { message: error ? String(error) : "Unknown auth error" };
+  }
+
+  const maybe = error as {
+    message?: unknown;
+    code?: unknown;
+    status?: unknown;
+    name?: unknown;
+  };
+
+  return {
+    message:
+      typeof maybe.message === "string" && maybe.message.trim().length > 0
+        ? maybe.message
+        : "Unknown auth error",
+    code: typeof maybe.code === "string" ? maybe.code : undefined,
+    status: typeof maybe.status === "number" ? maybe.status : undefined,
+    name: typeof maybe.name === "string" ? maybe.name : undefined
+  };
+}
+
+function logFailure(context: string, error: unknown, meta?: Record<string, unknown>) {
+  const failure = toAuthFailure(error);
+  console.error(`[auth/signup] ${context}`, {
+    ...failure,
+    ...(meta ?? {})
+  });
+  return failure;
+}
+
+function responseForFailure(
+  error: unknown,
+  fallbackStatus = 400,
+  extra?: Record<string, unknown>
+) {
+  const failure = toAuthFailure(error);
+  const status =
+    typeof failure.status === "number" && failure.status >= 400 && failure.status <= 599
+      ? failure.status
+      : fallbackStatus;
+
+  return NextResponse.json(
+    {
+      error: failure.message,
+      code: failure.code ?? null,
+      ...(extra ?? {})
+    },
+    { status }
+  );
 }
 
 /**
  * Lightweight signup endpoint -- email + password only.
  *
- * Strategy:
- *   1. Use admin createUser with email_confirm:true (no confirmation email).
- *   2. If createUser fails with a Supabase config error (e.g. Site URL not set),
- *      fall back to direct signUp via the anon key -- which works even when the
- *      Supabase Dashboard Site URL is not yet configured.
- *   3. Seed a minimal profile row so onboarding can read it.
+ * Production rule:
+ *   - We create the auth user with the service-role admin API.
+ *   - We create the companion profile row explicitly.
+ *   - If profile creation fails, we roll the auth user back so the system
+ *     never ends up with a half-created account that cannot onboard.
  *
- * The detailed profile fields (name, course, etc.) are collected in /onboarding.
+ * No generic masking and no redirect-dependent fallbacks live here while
+ * production auth is being debugged.
  */
 export async function POST(request: Request) {
   const fault = envFault();
@@ -55,7 +93,7 @@ export async function POST(request: Request) {
         error:
           "Server is missing env var(s): " +
           fault.join(", ") +
-          ". Add them to .env.local and restart."
+          ". Add them to the Vercel project env and redeploy."
       },
       { status: 500 }
     );
@@ -98,14 +136,17 @@ export async function POST(request: Request) {
   let admin;
   try {
     admin = createSupabaseAdminClient();
-  } catch {
+  } catch (error) {
+    logFailure("admin client initialization failed", error);
     return NextResponse.json(
-      { error: "Could not initialize Supabase. Check SUPABASE_SERVICE_ROLE_KEY." },
+      {
+        error:
+          "Could not initialize Supabase admin client. Check SUPABASE_SERVICE_ROLE_KEY in production."
+      },
       { status: 500 }
     );
   }
 
-  // --- Attempt 1: Admin API (fast, bypasses email confirmation) ---
   const { data: created, error: createErr } = await admin.auth.admin.createUser({
     email,
     password,
@@ -114,142 +155,100 @@ export async function POST(request: Request) {
   });
 
   if (createErr) {
-    const msg = (createErr.message ?? "").toLowerCase();
+    const failure = logFailure("createUser failed", createErr, { email });
+    const msg = failure.message.toLowerCase();
     const alreadyExists =
       msg.includes("already") ||
       msg.includes("registered") ||
       msg.includes("exists");
 
     if (alreadyExists) {
-      // Existing-but-unconfirmed user: force-confirm + reset password so
-      // signInWithPassword from the browser will succeed immediately.
       try {
-        const { data: list } = await admin.auth.admin.listUsers();
+        const { data: list, error: listErr } = await admin.auth.admin.listUsers();
+        if (listErr) {
+          logFailure("listUsers during duplicate recovery failed", listErr, { email });
+          return responseForFailure(listErr, 409);
+        }
+
         const existing = list?.users.find(
-          (u: any) => (u.email ?? "").toLowerCase() === email.toLowerCase()
+          (user: { id: string; email?: string | null }) =>
+            (user.email ?? "").toLowerCase() === email.toLowerCase()
         );
+
         if (existing) {
-          await admin.auth.admin.updateUserById(existing.id, {
+          const { error: updateErr } = await admin.auth.admin.updateUserById(existing.id, {
             email_confirm: true,
             password
           });
-          return NextResponse.json({ ok: true, confirmed_existing: true });
-        }
-      } catch (e) {
-        console.error("[auth/signup] confirm-existing failed:", e);
-      }
-      return NextResponse.json(
-        { error: "An account with this email already exists." },
-        { status: 409 }
-      );
-    }
 
-    // --- Attempt 2: Config error (e.g. Supabase Site URL not set) ---
-    // The admin API fails with "Invalid path" when the Supabase Dashboard
-    // Site URL is not configured. Fall back to a direct signUp call using
-    // the anon key -- this works regardless of Site URL configuration,
-    // but the user may receive a confirmation email if the project
-    // requires email verification.
-    const isConfigError =
-      msg.includes("invalid path") ||
-      msg.includes("invalid url") ||
-      msg.includes("redirect");
+          if (updateErr) {
+            logFailure("updateUserById during duplicate recovery failed", updateErr, {
+              email,
+              userId: existing.id
+            });
+            return responseForFailure(updateErr, 409);
+          }
 
-    if (isConfigError) {
-      console.warn(
-        "[auth/signup] Admin createUser failed with config error -- falling back to anon signUp.",
-        createErr.message
-      );
-
-      const { NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY } = process.env;
-      if (NEXT_PUBLIC_SUPABASE_URL && NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        try {
-          const { createClient } = await import("@supabase/supabase-js");
-          const anonClient = createClient(
-            NEXT_PUBLIC_SUPABASE_URL,
-            NEXT_PUBLIC_SUPABASE_ANON_KEY,
-            { auth: { persistSession: false, autoRefreshToken: false } }
+          const { error: profileErr } = await admin.from("profiles").upsert(
+            {
+              id: existing.id,
+              email
+            },
+            { onConflict: "id" }
           );
-          const { data: signUpData, error: signUpErr } = await anonClient.auth.signUp({
-            email,
-            password,
-            options: {
-              // Absolute URL required by GoTrue -- must be on the Redirect URL allowlist.
-              emailRedirectTo: buildCallbackUrl("/dojo")
-            }
-          });
 
-          if (signUpErr) {
-            const signUpMsg = (signUpErr.message ?? "").toLowerCase();
-            if (signUpMsg.includes("already") || signUpMsg.includes("registered") || signUpMsg.includes("exists")) {
-              return NextResponse.json(
-                { error: "An account with this email already exists." },
-                { status: 409 }
-              );
-            }
-            return NextResponse.json(
-              { error: friendlyAdminError(signUpErr.message) },
-              { status: 400 }
-            );
+          if (profileErr) {
+            logFailure("profile upsert during duplicate recovery failed", profileErr, {
+              email,
+              userId: existing.id
+            });
+            return responseForFailure(profileErr, 500, {
+              stage: "profile_upsert_existing_user"
+            });
           }
 
-          // Seed profile if we got a user back
-          if (signUpData?.user) {
-            try {
-              await admin.from("profiles").upsert(
-                { id: signUpData.user.id, email: signUpData.user.email ?? email },
-                { onConflict: "id" }
-              );
-            } catch (e) {
-              console.error("[auth/signup] profile seed (fallback) failed:", e);
-            }
-          }
-
-          // If email confirmation is required by the project, signal the
-          // frontend to show a "check your email" message.
-          const needsConfirmation = !signUpData?.session && signUpData?.user;
           return NextResponse.json({
             ok: true,
-            needs_email_confirmation: Boolean(needsConfirmation),
-            user_id: signUpData?.user?.id ?? null
+            confirmed_existing: true,
+            user_id: existing.id
           });
-        } catch (e) {
-          console.error("[auth/signup] anon signUp fallback failed:", e);
         }
+      } catch (error) {
+        logFailure("duplicate recovery threw", error, { email });
       }
-
-      // If fallback also failed, return a clear message that points at root cause
-      return NextResponse.json(
-        {
-          error:
-            "Authentication service is not fully configured. " +
-            "Set your Site URL in Supabase Dashboard \u2192 Auth \u2192 URL Configuration."
-        },
-        { status: 503 }
-      );
     }
 
-    // All other errors -- translate and return
-    return NextResponse.json(
-      { error: friendlyAdminError(createErr.message) },
-      { status: 400 }
-    );
+    return responseForFailure(createErr);
   }
 
-  // Admin createUser succeeded -- seed profile
-  if (created.user) {
-    try {
-      await admin.from("profiles").upsert(
-        {
-          id: created.user.id,
-          email: created.user.email ?? email
-        },
-        { onConflict: "id" }
-      );
-    } catch (e) {
-      console.error("[auth/signup] profile seed failed:", e);
+  const user = created.user;
+  if (!user) {
+    const error = new Error("Supabase createUser returned no user.");
+    logFailure("createUser returned no user", error, { email });
+    return responseForFailure(error, 500);
+  }
+
+  const { error: profileErr } = await admin.from("profiles").upsert(
+    {
+      id: user.id,
+      email: user.email ?? email
+    },
+    { onConflict: "id" }
+  );
+
+  if (profileErr) {
+    logFailure("profile upsert failed", profileErr, { email, userId: user.id });
+
+    const { error: rollbackErr } = await admin.auth.admin.deleteUser(user.id);
+    if (rollbackErr) {
+      logFailure("rollback deleteUser failed after profile upsert failure", rollbackErr, {
+        email,
+        userId: user.id
+      });
     }
+
+    return responseForFailure(profileErr, 500, { stage: "profile_upsert" });
   }
 
-  return NextResponse.json({ ok: true, user_id: created.user?.id ?? null });
+  return NextResponse.json({ ok: true, user_id: user.id });
 }

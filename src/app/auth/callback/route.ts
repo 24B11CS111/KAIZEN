@@ -40,19 +40,13 @@ export async function GET(request: NextRequest) {
 
   // 1. Provider-side errors come back as ?error=... -- surface them cleanly.
   if (errorParam) {
-    const m = errorParam.toLowerCase();
-    let friendly = "Authentication failed. Please try again.";
-    if (m.includes("access_denied") || m.includes("user denied"))
-      friendly = "Sign-in was cancelled. You can try again any time.";
-    else if (m.includes("redirect_uri") || m.includes("redirect uri"))
-      friendly = "Sign-in misconfigured (redirect URI). Contact support.";
-    else if (m.includes("invalid_request") || m.includes("invalid request"))
-      friendly = "Sign-in link is invalid. Request a new one.";
-    else if (m.includes("invalid path") || m.includes("invalid url"))
-      friendly = "Authentication failed. Please try again.";
+    console.error("[auth/callback] provider returned error", {
+      error: errorParam,
+      next
+    });
     try {
       const url = new URL("/auth/login", origin);
-      url.searchParams.set("error", friendly);
+      url.searchParams.set("error", errorParam);
       return NextResponse.redirect(url);
     } catch {
       return NextResponse.redirect(new URL("/auth/login", request.url));
@@ -74,17 +68,15 @@ export async function GET(request: NextRequest) {
     const supabase = createSupabaseServerClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
-      const msg = (error.message ?? "").toLowerCase();
-      let friendly = "Sign-in failed. Request a new link.";
-      if (msg.includes("expired") || msg.includes("already used"))
-        friendly = "This link expired or was already used. Request a new one.";
-      else if (msg.includes("invalid"))
-        friendly = "Invalid sign-in link. Try again.";
-      else if (msg.includes("redirect") || msg.includes("path"))
-        friendly = "Authentication failed. Please try again.";
+      console.error("[auth/callback] exchangeCodeForSession returned error", {
+        message: error.message,
+        status: (error as { status?: number }).status,
+        code: (error as { code?: string }).code,
+        next
+      });
       try {
         const url = new URL("/auth/login", origin);
-        url.searchParams.set("error", friendly);
+        url.searchParams.set("error", error.message || "Sign-in failed.");
         return NextResponse.redirect(url);
       } catch {
         return NextResponse.redirect(new URL("/auth/login", request.url));
@@ -94,7 +86,10 @@ export async function GET(request: NextRequest) {
     console.error("[auth/callback] exchangeCodeForSession threw:", e);
     try {
       const url = new URL("/auth/login", origin);
-      url.searchParams.set("error", "Sign-in failed. Please try again.");
+      url.searchParams.set(
+        "error",
+        e instanceof Error ? e.message : "Sign-in failed. Please try again."
+      );
       return NextResponse.redirect(url);
     } catch {
       return NextResponse.redirect(new URL("/auth/login", request.url));

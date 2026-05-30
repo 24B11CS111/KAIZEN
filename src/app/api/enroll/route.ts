@@ -61,6 +61,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Account is banned." }, { status: 403 });
   }
 
+  const { data: existingPending } = await admin
+    .from("utr_logs")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("status", "pending")
+    .limit(1)
+    .maybeSingle();
+
+  if (existingPending) {
+    return NextResponse.json(
+      { error: "Your offering is under Sensei verification." },
+      { status: 409 }
+    );
+  }
+
   // WhatsApp uniqueness across other users
   if (whatsapp) {
     const { data: dupe } = await admin
@@ -83,6 +98,7 @@ export async function POST(request: Request) {
     .update({
       full_name,
       whatsapp,
+      plan_amount,
       subscription_status: "pending"
     })
     .eq("id", user.id);

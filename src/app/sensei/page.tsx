@@ -65,6 +65,8 @@ export default async function SenseiPage() {
     utr_number: row.utr_number,
     plan_amount: row.plan_amount,
     created_at: row.created_at,
+    payment_status: row.status ?? "pending",
+    rejection_reason: row.rejection_reason ?? null,
     subscription_status: row.profiles?.subscription_status ?? row.status ?? "pending",
     expiry_date: row.profiles?.expiry_date ?? null
   }));

@@ -24,6 +24,8 @@ export interface SenseiPendingRow {
   utr_number: string;
   plan_amount: number;
   created_at: string;
+  payment_status: string;
+  rejection_reason?: string | null;
   subscription_status: string | null;
   expiry_date: string | null;
 }
@@ -63,14 +65,16 @@ export function SenseiVerificationDashboard({ initialPending, stats }: Props) {
   const [pending, startTransition] = useTransition();
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [reasonDrafts, setReasonDrafts] = useState<Record<string, string>>({});
+  const [approvedCount, setApprovedCount] = useState(stats.approved);
+  const [rejectedCount, setRejectedCount] = useState(stats.rejected);
 
   const liveStats = useMemo(
     () => ({
       pending: rows.length,
-      approved: stats.approved,
-      rejected: stats.rejected
+      approved: approvedCount,
+      rejected: rejectedCount
     }),
-    [rows.length, stats.approved, stats.rejected]
+    [rows.length, approvedCount, rejectedCount]
   );
 
   const submit = (row: SenseiPendingRow, kind: "approve" | "reject" | "ban") => {
@@ -98,6 +102,8 @@ export function SenseiVerificationDashboard({ initialPending, stats }: Props) {
 
         if (kind !== "ban") {
           setRows((prev) => prev.filter((item) => item.utr_id !== row.utr_id));
+          if (kind === "approve") setApprovedCount((current) => current + 1);
+          if (kind === "reject") setRejectedCount((current) => current + 1);
           setReasonDrafts((prev) => {
             const next = { ...prev };
             delete next[row.utr_id];
@@ -162,6 +168,9 @@ export function SenseiVerificationDashboard({ initialPending, stats }: Props) {
                         <h3 className="text-base font-semibold text-white">{row.full_name ?? "Unnamed warrior"}</h3>
                         <span className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-white/50">
                           {row.subscription_status ?? "pending"}
+                        </span>
+                        <span className="rounded-full border border-amber-300/20 bg-amber-300/[0.06] px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-amber-300">
+                          Payment {row.payment_status}
                         </span>
                       </div>
 

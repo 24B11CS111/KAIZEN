@@ -16,6 +16,7 @@ export interface Profile {
   id: string;
   email: string;
   role: UserRole;
+  is_admin: boolean;
   subscription_status: SubscriptionStatus;
   plan_amount: number | null;
   start_date: string | null;
@@ -34,6 +35,7 @@ export interface UtrLog {
   utr_number: string;
   plan_amount: number;
   status: UtrStatus;
+  rejection_reason: string | null;
   reviewed_by: string | null;
   reviewed_at: string | null;
   ip_address: string | null;
@@ -85,6 +87,7 @@ export interface Database {
           id: string;
           email: string;
           role: UserRole;
+          is_admin: boolean;
           subscription_status: SubscriptionStatus;
           plan_amount: number | null;
           start_date: string | null;
@@ -109,6 +112,7 @@ export interface Database {
           id?: string;
           email?: string;
           role?: UserRole;
+          is_admin?: boolean;
           subscription_status?: SubscriptionStatus;
           plan_amount?: number | null;
           start_date?: string | null;
@@ -133,6 +137,7 @@ export interface Database {
           id?: string;
           email?: string;
           role?: UserRole;
+          is_admin?: boolean;
           subscription_status?: SubscriptionStatus;
           plan_amount?: number | null;
           start_date?: string | null;
@@ -162,6 +167,7 @@ export interface Database {
           utr_number: string;
           plan_amount: number;
           status: UtrStatus;
+          rejection_reason: string | null;
           reviewed_by: string | null;
           reviewed_at: string | null;
           ip_address: string | null;
@@ -173,6 +179,7 @@ export interface Database {
           utr_number?: string;
           plan_amount?: number;
           status?: UtrStatus;
+          rejection_reason?: string | null;
           reviewed_by?: string | null;
           reviewed_at?: string | null;
           ip_address?: string | null;
@@ -184,6 +191,7 @@ export interface Database {
           utr_number?: string;
           plan_amount?: number;
           status?: UtrStatus;
+          rejection_reason?: string | null;
           reviewed_by?: string | null;
           reviewed_at?: string | null;
           ip_address?: string | null;
@@ -387,7 +395,7 @@ export interface Database {
         Returns: undefined;
       };
       reject_utr: {
-        Args: { p_utr_id: string };
+        Args: { p_utr_id: string; p_reason?: string | null };
         Returns: undefined;
       };
       ban_user: {

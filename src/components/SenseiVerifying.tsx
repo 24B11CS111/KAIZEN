@@ -48,6 +48,9 @@ export function SenseiVerifying({ name, initialStatus = "pending" }: Props) {
       setChecking(false);
       if (s === "active") {
         if (timer) { clearInterval(timer); timer = null; }
+        try {
+          window.sessionStorage.setItem("kaizen_verification_status", "approved");
+        } catch {}
         router.replace("/dashboard");
         router.refresh();
       } else if (s === "expired" || s === "banned") {
@@ -111,9 +114,9 @@ export function SenseiVerifying({ name, initialStatus = "pending" }: Props) {
             <AlertTriangle className="h-9 w-9 text-blood-500" />
           </div>
           <p className="label-mono">Status . Rejected</p>
-          <h1 className="heading text-3xl mt-3">Payment rejected.</h1>
+          <h1 className="heading text-3xl mt-3">Verification failed.</h1>
           <p className="text-white/60 mt-3 text-sm leading-relaxed">
-            We could not verify your UTR. Scan the QR below and re-submit with a valid 12-digit reference.
+            Verification failed. Contact support or re-submit with a valid 12-digit UTR reference.
           </p>
 
           {/* QR */}

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -9,7 +9,7 @@ import {
   Eye, EyeOff, ShieldCheck, MailCheck
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { buildCallbackUrl, sanitizeNextPath } from "@/lib/siteUrl";
+import { sanitizeNextPath } from "@/lib/siteUrl";
 
 const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1779649962/image-removebg-preview_i3duhi.png";
 
@@ -27,9 +27,6 @@ function describeSignupError(raw: string): string {
     return "Password too weak. Use 8+ chars with uppercase, lowercase, and a digit.";
   if (m.includes("invalid") && m.includes("email"))
     return "Enter a valid email address.";
-  // Supabase GoTrue redirect URL validation errors
-  if (m.includes("provider is not enabled") || m.includes("oauth provider"))
-    return "Google sign-in is not configured yet. Contact support.";
   // Return raw Supabase message for unrecognised errors so we can diagnose production.
   if (!raw) return "Sign-up failed. Please try again.";
   return raw;
@@ -56,7 +53,6 @@ export function SignupForm() {
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bootChecking, setBootChecking] = useState(true);
   const [emailSent, setEmailSent] = useState(false);
@@ -88,28 +84,6 @@ export function SignupForm() {
     /[a-z]/.test(password) &&
     /\d/.test(password);
   const canSubmit = emailValid && pwValid && !loading;
-
-  const submitGoogle = useCallback(async () => {
-    setError(null);
-    setGoogleLoading(true);
-    try {
-      const supabase = createSupabaseBrowserClient();
-      // buildCallbackUrl always returns an absolute URL — required by Supabase GoTrue.
-      // The URL must be whitelisted in Supabase Dashboard → Auth → Redirect URLs.
-      const { error: oauthErr } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: buildCallbackUrl(next),
-          queryParams: { prompt: "select_account", access_type: "offline" }
-        }
-      });
-      if (oauthErr) throw oauthErr;
-      // Leave googleLoading=true — browser is redirecting to Google.
-    } catch (err) {
-      setError(describeSignupError(err instanceof Error ? err.message : String(err)));
-      setGoogleLoading(false);
-    }
-  }, [next]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,7 +167,7 @@ export function SignupForm() {
     );
   }
 
-  if (bootChecking || googleLoading) {
+  if (bootChecking) {
     return (
       <main className="min-h-[100svh] grid place-items-center px-6 bg-obsidian">
         <div className="flex flex-col items-center gap-5">
@@ -205,7 +179,7 @@ export function SignupForm() {
             <Image src={KAIZEN_LOGO} alt="KAIZEN.SYS" width={52} height={52} className="object-contain" priority />
           </motion.span>
           <span className="text-[10px] uppercase tracking-[0.32em] text-white/40">
-            {googleLoading ? "Connecting\u2026" : "KAIZEN.SYS"}
+            KAIZEN.SYS
           </span>
         </div>
       </main>
@@ -242,28 +216,7 @@ export function SignupForm() {
             Create your account. No credit card needed.
           </p>
 
-          {/* Google */}
-          <button
-            type="button"
-            onClick={submitGoogle}
-            disabled={loading || googleLoading}
-            className="btn-tap mt-6 w-full inline-flex items-center justify-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/20 px-4 py-3.5 text-sm font-semibold transition-all disabled:opacity-50"
-          >
-            {googleLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin text-white/70" />
-            ) : (
-              <GoogleIcon />
-            )}
-            Continue with Google
-          </button>
-
-          <div className="mt-5 mb-5 flex items-center gap-3">
-            <span className="flex-1 h-px bg-white/[0.07]" />
-            <span className="text-[10px] uppercase tracking-[0.18em] text-white/30">or with email</span>
-            <span className="flex-1 h-px bg-white/[0.07]" />
-          </div>
-
-          <form onSubmit={submit} noValidate className="space-y-3.5">
+          <form onSubmit={submit} noValidate className="mt-6 space-y-3.5">
             <Field
               label="Email" icon={Mail} type="email" autoComplete="email"
               value={email} onChange={setEmail} placeholder="warrior@school.edu"
@@ -411,16 +364,5 @@ function ErrBanner({ msg }: { msg: string }) {
       <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
       <span className="leading-relaxed">{msg}</span>
     </motion.div>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" aria-hidden>
-      <path fill="#EA4335" d="M12 5c1.617 0 3.077.561 4.225 1.654l3.156-3.156C17.404 1.55 14.882.5 12 .5 7.392.5 3.397 3.137 1.5 7l3.69 2.86C6.05 7.123 8.808 5 12 5z"/>
-      <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.28 1.4-1.12 2.61-2.39 3.41l3.66 2.84c2.13-1.97 3.75-4.88 3.75-8.49z"/>
-      <path fill="#FBBC05" d="M5.19 14.14c-.22-.66-.34-1.36-.34-2.14s.12-1.48.34-2.14L1.5 7C.66 8.5.18 10.2.18 12s.48 3.5 1.32 5l3.69-2.86z"/>
-      <path fill="#34A853" d="M12 23.5c3.24 0 5.96-1.07 7.95-2.91l-3.66-2.84c-1.02.69-2.33 1.1-4.29 1.1-3.19 0-5.95-2.13-6.81-5l-3.69 2.86C3.4 20.86 7.39 23.5 12 23.5z"/>
-    </svg>
   );
 }

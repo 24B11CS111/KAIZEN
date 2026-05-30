@@ -1,5 +1,5 @@
 "use client";
-import { memo, useCallback, useMemo, useState, useTransition } from "react";
+import { memo, useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Check, Lock, Sparkles, Trophy, FlameKindling } from "lucide-react";
 import Link from "next/link";
@@ -70,6 +70,9 @@ export function DojoDashboard({
   const [sealedTodayLocal, setSealedTodayLocal] = useState<boolean>(sealedToday);
   const [streakBrokenLocal, setStreakBrokenLocal] = useState<boolean>(streakBroken);
   const [showBurst, setShowBurst] = useState(false);
+  const [approvalBanner, setApprovalBanner] = useState(false);
+  const currentStreak = streakState.current;
+  const longestStreak = streakState.longest;
 
   const isPaid = (profile.plan_amount ?? 0) > 0;
   const planMaxDay = isPaid ? TOTAL_DAYS : FREE_LIMIT;
@@ -110,24 +113,24 @@ export function DojoDashboard({
   const cardLocked = (planLocked || cycleLocked) && !allDone;
 
   // Gamification
-  const xp = useMemo(() => computeXpState(completedCount, streakState.current), [completedCount, streakState.current]);
+  const xp = useMemo(() => computeXpState(completedCount, currentStreak), [completedCount, currentStreak]);
   const todayProgressPct = sealedTodayLocal || completed.has(displayDay) ? 100 : 0;
   const aiMsg = useMemo(
     () => aiStatusMessage({
-      completedCount, streak: streakState.current,
+      completedCount, streak: currentStreak,
       sealedToday: sealedTodayLocal, streakBroken: streakBrokenLocal,
       missedDays
     }),
-    [completedCount, streakState.current, sealedTodayLocal, streakBrokenLocal, missedDays]
+    [completedCount, currentStreak, sealedTodayLocal, streakBrokenLocal, missedDays]
   );
   const milestone = getMilestone(completedCount);
   const achievements = useMemo(
     () => buildAchievements({
       completed: completedCount,
-      longestStreak: streakState.longest,
-      currentStreak: streakState.current
+      longestStreak,
+      currentStreak
     }),
-    [completedCount, streakState.longest, streakState.current]
+    [completedCount, longestStreak, currentStreak]
   );
 
   // Realtime - bump key whenever any of this user's data changes server-side
@@ -205,8 +208,8 @@ export function DojoDashboard({
       full_name:            profile.full_name ?? null,
       expiry_date:          profile.expiry_date ?? null,
       subscription_status:  profile.subscription_status ?? null,
-      streak:               streakState.current,
-      longest_streak:       streakState.longest,
+      streak:               currentStreak,
+      longest_streak:       longestStreak,
       current_day:          currentDay,
       completed_count:      completedCount,
       sealed_today:         sealedTodayLocal,
@@ -214,10 +217,20 @@ export function DojoDashboard({
     }),
     [
       profile.full_name, profile.expiry_date, profile.subscription_status,
-      streakState.current, streakState.longest, currentDay,
+      currentStreak, longestStreak, currentDay,
       completedCount, sealedTodayLocal, missedDays
     ]
   );
+
+  useEffect(() => {
+    try {
+      const flag = window.sessionStorage.getItem("kaizen_verification_status");
+      if (flag === "approved") {
+        setApprovalBanner(true);
+        window.sessionStorage.removeItem("kaizen_verification_status");
+      }
+    } catch {}
+  }, []);
 
   return (
     <motion.div
@@ -241,8 +254,8 @@ export function DojoDashboard({
           currentDay={displayDay}
           goal={(profile as any).main_goal ?? null}
           branch={profile.branch ?? null}
-          streak={streakState.current}
-          longestStreak={streakState.longest}
+          streak={currentStreak}
+          longestStreak={longestStreak}
           sealedToday={sealedTodayLocal}
           missedDays={missedDays}
         />
@@ -252,10 +265,36 @@ export function DojoDashboard({
         <HeroStatusPanel
           firstName={firstName}
           xp={xp}
-          currentStreak={streakState.current}
+          currentStreak={currentStreak}
           todayProgressPct={todayProgressPct}
           aiMessage={aiMsg}
         />
+
+        {approvalBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl border border-emerald-400/25 bg-emerald-400/[0.06] p-4"
+          >
+            <div className="text-[10px] uppercase tracking-[0.18em] text-emerald-300">Access granted</div>
+            <div className="mt-1 text-sm font-semibold text-white">
+              Sensei has accepted your discipline path.
+            </div>
+          </motion.div>
+        )}
+
+        {remaining > 0 && remaining <= 3 && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl border border-amber-300/20 bg-amber-300/[0.05] p-4"
+          >
+            <div className="text-[10px] uppercase tracking-[0.18em] text-amber-300">Expiry reminder</div>
+            <div className="mt-1 text-sm font-semibold text-white">
+              Your subscription expires in {remaining} day{remaining === 1 ? "" : "s"}.
+            </div>
+          </motion.div>
+        )}
 
         {streakBrokenLocal && (
           <motion.div
@@ -288,7 +327,7 @@ export function DojoDashboard({
                   Discipline weakens when consistency breaks. Return and continue your ascent.
                 </p>
                 <div className="mt-3 text-[11px] text-white/45">
-                  Best streak: {streakState.longest} {streakState.longest === 1 ? "day" : "days"} — your floor, not your ceiling.
+                  Best streak: {longestStreak} {longestStreak === 1 ? "day" : "days"} — your floor, not your ceiling.
                 </div>
               </div>
             </div>
@@ -299,7 +338,7 @@ export function DojoDashboard({
           completedDays={completedCount}
           totalDays={TOTAL_DAYS}
           cycleDay={cycleDay}
-          longestStreak={streakState.longest}
+          longestStreak={longestStreak}
           studyHoursEstimate={completedCount * 1.5}
         />
 

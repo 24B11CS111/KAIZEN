@@ -16,7 +16,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "utr_id required" }, { status: 400 });
   }
 
-  const { error } = await supabase.rpc("reject_utr", { p_utr_id: parsed.data.utr_id });
+  const { error } = await supabase.rpc("reject_utr", {
+    p_utr_id: parsed.data.utr_id,
+    p_reason: parsed.data.rejection_reason ?? null
+  });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({
+    ok: true,
+    status: "rejected",
+    message: "Verification failed. Contact support."
+  });
 }

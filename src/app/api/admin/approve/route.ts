@@ -18,5 +18,9 @@ export async function POST(req: Request) {
 
   const { error } = await supabase.rpc("approve_utr", { p_utr_id: parsed.data.utr_id });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({
+    ok: true,
+    status: "active",
+    message: "Sensei has accepted your discipline path."
+  });
 }

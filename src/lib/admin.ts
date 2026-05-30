@@ -6,7 +6,8 @@ import { isAdminEmail } from "@/lib/adminEmail";
  * Returns { supabase } if the request is from a verified admin;
  * otherwise returns a NextResponse to short-circuit the route handler.
  *
- * Admin = profiles.role === "admin" AND email matches ADMIN_EMAIL
+ * Admin = (profiles.role === "admin" OR profiles.is_admin === true)
+ * AND email matches ADMIN_EMAIL
  * (defaults to hrixofficial@gmail.com).
  */
 export async function requireAdmin() {
@@ -16,12 +17,12 @@ export async function requireAdmin() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role,email")
+    .select("role,is_admin,email")
     .eq("id", user.id)
     .maybeSingle();
 
   const p: any = profile;
-  const ok = p && p.role === "admin" && isAdminEmail(p.email);
+  const ok = p && (p.role === "admin" || p.is_admin === true) && isAdminEmail(p.email);
   if (!ok) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  return { supabase };
+  return { supabase, user, profile: p };
 }

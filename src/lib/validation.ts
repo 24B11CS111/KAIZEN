@@ -86,7 +86,8 @@ export const DayCompletionSchema = z.object({
 
 export const AdminActionSchema = z.object({
   utr_id: z.string().uuid().optional(),
-  user_id: z.string().uuid().optional()
+  user_id: z.string().uuid().optional(),
+  rejection_reason: z.string().trim().max(240, "Reason too long").optional().nullable()
 });
 
 // =============================================================

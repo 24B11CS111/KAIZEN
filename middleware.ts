@@ -75,7 +75,7 @@ export async function middleware(request: NextRequest) {
   try {
     const res = await supabase
       .from("profiles")
-      .select("role,email,subscription_status,expiry_date,onboarded_at")
+      .select("role,is_admin,email,subscription_status,expiry_date,onboarded_at")
       .eq("id", user.id)
       .maybeSingle();
     profileRow = res.data;
@@ -84,7 +84,7 @@ export async function middleware(request: NextRequest) {
       // Likely `onboarded_at` column doesn't exist yet — retry without it.
       const fb = await supabase
         .from("profiles")
-        .select("role,email,subscription_status,expiry_date")
+        .select("role,is_admin,email,subscription_status,expiry_date")
         .eq("id", user.id)
         .maybeSingle();
       profileRow = fb.data;
@@ -102,7 +102,7 @@ export async function middleware(request: NextRequest) {
 
   // --- Admin / Sensei gate ---
   if (isSensei || isAdmin) {
-    const ok = p.role === "admin" && isAdminEmail(user.email);
+    const ok = (p.role === "admin" || p.is_admin === true) && isAdminEmail(user.email);
     if (!ok) {
       const url = request.nextUrl.clone();
       url.pathname = "/";

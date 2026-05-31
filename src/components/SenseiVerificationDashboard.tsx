@@ -146,7 +146,7 @@ export function SenseiVerificationDashboard({ initialPending, stats }: Props) {
 
         {rows.length === 0 ? (
           <div className="px-5 py-14 text-center">
-            <p className="text-base font-medium text-white/80">The queue is clear.</p>
+            <p className="text-base font-medium text-white/80">No warriors awaiting Sensei verification.</p>
             <p className="mt-1 text-sm text-white/45">New payment submissions will appear here automatically.</p>
           </div>
         ) : (

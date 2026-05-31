@@ -162,7 +162,7 @@ export function SenseiVerifying({ name, initialStatus = "pending" }: Props) {
         <p className="label-mono">
           Status . {checking ? "Checking..." : "Pending"}
         </p>
-        <h1 className="heading text-3xl mt-3">Sensei is verifying...</h1>
+        <h1 className="heading text-3xl mt-3">Your offering is under Sensei verification.</h1>
         <p className="text-white/60 mt-3 text-sm leading-relaxed">
           Your offering has been received{name ? `, ${name.split(" ")[0]}` : ""}.
           The Sensei manually inspects every UTR. You&apos;ll receive a

@@ -193,9 +193,9 @@ export default async function ProfilePage() {
           <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-4 mb-3 flex gap-3">
             <AlertCircle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-amber-300">Payment verification pending</p>
+              <p className="text-sm font-medium text-amber-300">Your offering is under Sensei verification.</p>
               <p className="text-xs text-white/50 mt-1 leading-relaxed">
-                Your payment is being verified. You&apos;ll receive access within 24 hours.
+                Your payment is waiting for manual approval. Premium systems stay locked until the Sensei approves the submission.
               </p>
             </div>
           </div>

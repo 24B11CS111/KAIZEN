@@ -7,7 +7,6 @@ import {
   type SenseiPendingRow
 } from "@/components/SenseiVerificationDashboard";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { isAdminEmail } from "@/lib/adminEmail";
 import { isAuthBypassed } from "@/lib/devBypass";
 
 export const dynamic = "force-dynamic";
@@ -36,11 +35,11 @@ export default async function SenseiPage() {
 
     const { data: me } = await supabase
       .from("profiles")
-      .select("role,is_admin,email")
+      .select("is_admin")
       .eq("id", user.id)
       .maybeSingle();
     const p: any = me;
-    if (!p || !(p.role === "admin" || p.is_admin === true) || !isAdminEmail(p.email)) {
+    if (!p || p.is_admin !== true) {
       redirect("/");
     }
   }

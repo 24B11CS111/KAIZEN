@@ -210,10 +210,10 @@ export function EnrollmentFlow({ initialPlan, isAuthenticated }: Props) {
                     <Check className="h-8 w-8 text-blood-500" />
                   </div>
                 </div>
-                <h2 className="heading text-3xl">Sealed. Sensei is verifying.</h2>
+                <h2 className="heading text-3xl">Your offering is under Sensei verification.</h2>
                 <p className="mt-2 text-white/60 max-w-md">
-                  Your offering has been received. You&apos;ll be activated within minutes.
-                  Visit the Dojo to watch the gate open.
+                  Your payment and UTR have been submitted successfully. Premium access activates
+                  only after manual Sensei approval.
                 </p>
                 <Link href="/dojo" className="btn-blood mt-6">
                   Enter the Dojo <ArrowRight className="h-4 w-4" />

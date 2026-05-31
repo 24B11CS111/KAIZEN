@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { isAdminEmail } from "@/lib/adminEmail";
 
 /**
  * Returns { supabase } if the request is from a verified admin;
  * otherwise returns a NextResponse to short-circuit the route handler.
  *
- * Admin = (profiles.role === "admin" OR profiles.is_admin === true)
- * AND email matches ADMIN_EMAIL
- * (defaults to hrixofficial@gmail.com).
+ * Admin = profiles.is_admin === true
  */
 export async function requireAdmin() {
   const supabase = createSupabaseServerClient();
@@ -22,7 +19,7 @@ export async function requireAdmin() {
     .maybeSingle();
 
   const p: any = profile;
-  const ok = p && (p.role === "admin" || p.is_admin === true) && isAdminEmail(p.email);
+  const ok = p && p.is_admin === true;
   if (!ok) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   return { supabase, user, profile: p };
 }

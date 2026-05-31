@@ -104,7 +104,7 @@ export async function middleware(request: NextRequest) {
     const ok = p.is_admin === true;
     if (!ok) {
       const url = request.nextUrl.clone();
-      url.pathname = "/";
+      url.pathname = "/dojo";
       return withAuthCookies(response, NextResponse.redirect(url));
     }
     return response;

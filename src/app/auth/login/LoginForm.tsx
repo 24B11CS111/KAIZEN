@@ -6,17 +6,14 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   Mail, KeyRound, ArrowRight, Loader2, AlertTriangle,
-  Phone, Sparkles, Eye, EyeOff
+  Eye, EyeOff
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { buildCallbackUrl, sanitizeNextPath } from "@/lib/siteUrl";
+import { sanitizeNextPath } from "@/lib/siteUrl";
 
 const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1779649962/image-removebg-preview_i3duhi.png";
 
-type Mode = "password" | "magic" | "phone";
-
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_RE = /^\+?[1-9]\d{7,14}$/;
 
 function describeAuthError(raw: string): string {
   const m = raw.toLowerCase();
@@ -30,11 +27,7 @@ function describeAuthError(raw: string): string {
     return "No connection. Check your network and try again.";
   if (m.includes("user not found") || m.includes("no user"))
     return "No account found. Create one first.";
-  if (m.includes("invalid otp") || m.includes("token has expired"))
-    return "That code is wrong or expired. Request a fresh one.";
-  if (m.includes("phone provider") || m.includes("sms provider"))
-    return "SMS sign-in is not enabled on this project yet.";
-  if (m.includes("pkce") || m.includes("code verifier"))
+  if (m.includes("pkce") || m.includes("code verifier") || m.includes("auth session"))
     return "Sign-in session expired. Please try again.";
   // For all unrecognised errors show the raw Supabase message so we can diagnose
   // production issues. Once the root cause is fixed this can be made friendly.
@@ -47,27 +40,18 @@ export function LoginForm() {
   const search = useSearchParams();
   const next = sanitizeNextPath(search.get("next") || "/dojo");
 
-  const [mode, setMode] = useState<Mode>("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [magicSent, setMagicSent] = useState(false);
   const [bootChecking, setBootChecking] = useState(true);
 
-  // Surface any error passed from the OAuth callback (?error=...).
-  // Immediately scrub ?error from the URL so a stale OAuth failure does not
-  // contaminate subsequent password login attempts (the #1 production bug).
+  // Surface any error passed from the auth callback (?error=...).
   useEffect(() => {
     const e = search.get("error");
     if (e) {
       setError(e);
-      // Clear ?error (and any other auth params) from the address bar without
-      // a navigation -- prevents the error from re-appearing on re-render.
       try {
         const clean = new URL(window.location.href);
         clean.searchParams.delete("error");
@@ -107,20 +91,8 @@ export function LoginForm() {
     };
   }, [router, next]);
 
-  // Reset transient state when switching modes.
-  useEffect(() => {
-    setError(null);
-    setMagicSent(false);
-    setOtpSent(false);
-    setOtp("");
-  }, [mode]);
-
   const emailValid   = useMemo(() => EMAIL_RE.test(email.trim()), [email]);
-  const phoneValid   = useMemo(() => PHONE_RE.test(phone.replace(/\s|-/g, "")), [phone]);
   const canPassword  = emailValid && password.length >= 6 && !loading;
-  const canMagic     = emailValid && !loading;
-  const canSendOtp   = phoneValid && !loading;
-  const canVerifyOtp = otp.length >= 4 && otp.length <= 8 && !loading;
 
   const submitPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,64 +109,6 @@ export function LoginForm() {
       router.refresh();
     } catch (err) {
       console.error("[LoginForm] password sign-in error:", err);
-      setError(describeAuthError(err instanceof Error ? err.message : String(err)));
-    } finally { setLoading(false); }
-  };
-
-  const submitMagic = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canMagic) return;
-    setError(null); setLoading(true);
-    try {
-      const supabase = createSupabaseBrowserClient();
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: {
-          emailRedirectTo: buildCallbackUrl(next)
-        }
-      });
-      if (error) throw error;
-      setMagicSent(true);
-    } catch (err) {
-      console.error("[LoginForm] magic link error:", err);
-      setError(describeAuthError(err instanceof Error ? err.message : String(err)));
-    } finally { setLoading(false); }
-  };
-
-  const sendPhoneOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canSendOtp) return;
-    setError(null); setLoading(true);
-    try {
-      const supabase = createSupabaseBrowserClient();
-      const normalized = phone.startsWith("+")
-        ? phone
-        : "+91" + phone.replace(/\D/g, "").slice(-10);
-      const { error } = await supabase.auth.signInWithOtp({ phone: normalized });
-      if (error) throw error;
-      setPhone(normalized);
-      setOtpSent(true);
-    } catch (err) {
-      console.error("[LoginForm] phone OTP send error:", err);
-      setError(describeAuthError(err instanceof Error ? err.message : String(err)));
-    } finally { setLoading(false); }
-  };
-
-  const verifyPhoneOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canVerifyOtp) return;
-    setError(null); setLoading(true);
-    try {
-      const supabase = createSupabaseBrowserClient();
-      const { data, error } = await supabase.auth.verifyOtp({
-        phone, token: otp, type: "sms"
-      });
-      if (error) throw error;
-      if (!data.session) throw new Error("No session returned");
-      router.replace(next);
-      router.refresh();
-    } catch (err) {
-      console.error("[LoginForm] phone OTP verify error:", err);
       setError(describeAuthError(err instanceof Error ? err.message : String(err)));
     } finally { setLoading(false); }
   };
@@ -247,102 +161,31 @@ export function LoginForm() {
           </h1>
           <p className="mt-1.5 text-sm text-white/55">Sign in to continue your path.</p>
 
-          {/* Mode tabs */}
-          <div className="mt-6 inline-flex w-full rounded-lg border border-white/[0.08] bg-white/[0.02] p-0.5 text-[11px]">
-            <ModeTab active={mode === "password"} onClick={() => setMode("password")}>Password</ModeTab>
-            <ModeTab active={mode === "magic"}    onClick={() => setMode("magic")}>Magic link</ModeTab>
-            <ModeTab active={mode === "phone"}    onClick={() => setMode("phone")}>Phone</ModeTab>
-          </div>
-
           <AnimatePresence mode="wait">
-            {mode === "password" && (
-              <Pane key="password">
-                <form onSubmit={submitPassword} className="mt-5 space-y-3.5" noValidate>
-                  <Field label="Email" icon={Mail} type="email" autoComplete="email"
-                    value={email} onChange={setEmail} placeholder="warrior@school.edu"
-                    inputMode="email" />
-                  <div className="relative">
-                    <Field label="Password" icon={KeyRound}
-                      type={showPw ? "text" : "password"}
-                      autoComplete="current-password"
-                      value={password} onChange={setPassword} placeholder="Your password" />
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      onClick={() => setShowPw(v => !v)}
-                      className="absolute right-3 bottom-[14px] text-white/40 hover:text-white/70"
-                      aria-label={showPw ? "Hide password" : "Show password"}
-                    >
-                      {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  {error && <ErrBanner msg={error} />}
-                  <SubmitBtn loading={loading} disabled={!canPassword}>Sign in</SubmitBtn>
-                </form>
-              </Pane>
-            )}
-
-            {mode === "magic" && (
-              <Pane key="magic">
-                {!magicSent ? (
-                  <form onSubmit={submitMagic} className="mt-5 space-y-3.5" noValidate>
-                    <Field label="Email" icon={Mail} type="email" autoComplete="email"
-                      value={email} onChange={setEmail} placeholder="warrior@school.edu"
-                      inputMode="email" />
-                    <p className="text-[11px] text-white/45 leading-relaxed">
-                      We email you a one-time sign-in link. No password needed.
-                    </p>
-                    {error && <ErrBanner msg={error} />}
-                    <SubmitBtn loading={loading} disabled={!canMagic}>Email me a link</SubmitBtn>
-                  </form>
-                ) : (
-                  <SentBanner
-                    label="Link sent"
-                    body={"Check " + email + ". The link expires in 1 hour."}
-                  />
-                )}
-              </Pane>
-            )}
-
-            {mode === "phone" && (
-              <Pane key="phone">
-                {!otpSent ? (
-                  <form onSubmit={sendPhoneOtp} className="mt-5 space-y-3.5" noValidate>
-                    <Field label="Mobile" icon={Phone} type="tel" inputMode="tel"
-                      autoComplete="tel" value={phone} onChange={setPhone}
-                      placeholder="+91 98XXXXXXXX" />
-                    <p className="text-[11px] text-white/45 leading-relaxed">
-                      A 6-digit SMS code. Indian numbers can skip the country code.
-                    </p>
-                    {error && <ErrBanner msg={error} />}
-                    <SubmitBtn loading={loading} disabled={!canSendOtp}>Send code</SubmitBtn>
-                  </form>
-                ) : (
-                  <form onSubmit={verifyPhoneOtp} className="mt-5 space-y-3.5" noValidate>
-                    <p className="text-[11px] text-white/55">
-                      Code sent to <span className="text-white/85 font-medium">{phone}</span>.
-                    </p>
-                    <Field
-                      label="6-digit code" icon={Sparkles} inputMode="numeric"
-                      value={otp}
-                      onChange={(v) => setOtp(v.replace(/\D/g, "").slice(0, 8))}
-                      placeholder="123456"
-                    />
-                    {error && <ErrBanner msg={error} />}
-                    <SubmitBtn loading={loading} disabled={!canVerifyOtp}>
-                      Verify &amp; sign in
-                    </SubmitBtn>
-                    <button
-                      type="button"
-                      onClick={() => { setOtpSent(false); setOtp(""); setError(null); }}
-                      className="w-full text-[11px] text-white/45 hover:text-white/75 transition-colors pt-1"
-                    >
-                      Change number
-                    </button>
-                  </form>
-                )}
-              </Pane>
-            )}
+            <Pane key="password">
+              <form onSubmit={submitPassword} className="mt-6 space-y-3.5" noValidate>
+                <Field label="Email" icon={Mail} type="email" autoComplete="email"
+                  value={email} onChange={setEmail} placeholder="warrior@school.edu"
+                  inputMode="email" />
+                <div className="relative">
+                  <Field label="Password" icon={KeyRound}
+                    type={showPw ? "text" : "password"}
+                    autoComplete="current-password"
+                    value={password} onChange={setPassword} placeholder="Your password" />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowPw(v => !v)}
+                    className="absolute right-3 bottom-[14px] text-white/40 hover:text-white/70"
+                    aria-label={showPw ? "Hide password" : "Show password"}
+                  >
+                    {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {error && <ErrBanner msg={error} />}
+                <SubmitBtn loading={loading} disabled={!canPassword}>Sign in</SubmitBtn>
+              </form>
+            </Pane>
           </AnimatePresence>
         </div>
 
@@ -375,25 +218,6 @@ function Pane({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ModeTab({
-  active, onClick, children
-}: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={
-        "btn-tap flex-1 px-2 py-1.5 rounded-[7px] text-center transition-all " +
-        (active
-          ? "bg-blood-500 text-white font-semibold shadow-[0_0_16px_-4px_rgba(208,0,0,0.6)]"
-          : "text-white/55 hover:text-white/85")
-      }
-    >
-      {children}
-    </button>
-  );
-}
-
 function SubmitBtn({
   loading, disabled, children
 }: { loading: boolean; disabled: boolean; children: React.ReactNode }) {
@@ -409,19 +233,6 @@ function SubmitBtn({
         <>{children} <ArrowRight className="h-4 w-4" /></>
       )}
     </button>
-  );
-}
-
-function SentBanner({ label, body }: { label: string; body: string }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="mt-5 rounded-xl border border-blood-500/30 bg-blood-500/[0.06] p-4"
-    >
-      <p className="text-sm font-semibold">{label}</p>
-      <p className="text-xs text-white/60 mt-1.5 leading-relaxed">{body}</p>
-    </motion.div>
   );
 }
 

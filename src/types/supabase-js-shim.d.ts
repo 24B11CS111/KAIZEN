@@ -70,9 +70,6 @@ export interface SupabaseAuthClient {
   getUser(): Promise<{ data: { user: User | null }; error: AuthError | null }>;
   signUp(credentials: { email: string; password: string; options?: { emailRedirectTo?: string; data?: object } }): Promise<{ data: { session: Session | null; user: User | null }; error: AuthError | null }>;
   signInWithPassword(credentials: { email: string; password: string }): Promise<{ data: { session: Session | null; user: User | null }; error: AuthError | null }>;
-  signInWithOAuth(params: { provider: string; options?: { redirectTo?: string; queryParams?: Record<string, string>; scopes?: string } }): Promise<{ data: any; error: AuthError | null }>;
-  signInWithOtp(params: { email?: string; phone?: string; options?: { emailRedirectTo?: string; shouldCreateUser?: boolean } }): Promise<{ data: any; error: AuthError | null }>;
-  verifyOtp(params: { phone?: string; email?: string; token: string; type: string }): Promise<{ data: { session: Session | null }; error: AuthError | null }>;
   signOut(): Promise<{ error: AuthError | null }>;
   onAuthStateChange(callback: (event: string, session: Session | null) => void): { data: { subscription: { unsubscribe: () => void } } };
   exchangeCodeForSession(code: string): Promise<{ data: { session: Session | null }; error: AuthError | null }>;

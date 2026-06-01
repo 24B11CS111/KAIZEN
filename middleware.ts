@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getUserFromRequest } from "@/lib/supabase/middleware";
+import { isAdminEmail } from "@/lib/adminEmail";
 
 /**
  * Route protection — defensive, cookie-propagating edition.
@@ -101,7 +102,7 @@ export async function middleware(request: NextRequest) {
 
   // --- Admin / Sensei gate ---
   if (isSensei || isAdmin) {
-    const ok = p.is_admin === true;
+    const ok = p.is_admin === true && isAdminEmail(user.email);
     if (!ok) {
       const url = request.nextUrl.clone();
       url.pathname = "/dojo";

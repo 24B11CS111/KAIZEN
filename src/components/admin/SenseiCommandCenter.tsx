@@ -9,6 +9,7 @@ import { SenseiLiveRadar } from "./SenseiLiveRadar";
 import { SenseiAnalyticsCenter } from "./SenseiAnalyticsCenter";
 import { SenseiUserDirectory } from "./SenseiUserDirectory";
 import { SenseiAdminActivityFeed } from "./SenseiAdminActivityFeed";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 interface CommandProps {
   pendingUsers: SenseiUserRecord[];
@@ -56,28 +57,37 @@ export function SenseiCommandCenter(props: CommandProps) {
             <motion.div key="radar" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
               <div className="grid gap-6 lg:grid-cols-3">
                 <div className="lg:col-span-2">
-                  <SenseiLiveRadar />
+                  <ErrorBoundary name="Live Radar">
+                    <SenseiLiveRadar />
+                  </ErrorBoundary>
                 </div>
                 <div className="lg:col-span-1">
-                  <SenseiAdminActivityFeed initialFeed={props.activityFeed} />
+                  <ErrorBoundary name="Activity Feed">
+                    <SenseiAdminActivityFeed initialFeed={props.activityFeed} />
+                  </ErrorBoundary>
                 </div>
               </div>
             </motion.div>
           )}
           {activeTab === "directory" && (
             <motion.div key="directory" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-              <SenseiUserDirectory users={props.directoryUsers} onUpdate={() => window.location.reload()} />
+              <ErrorBoundary name="User Directory">
+                <SenseiUserDirectory users={props.directoryUsers} onUpdate={() => window.location.reload()} />
+              </ErrorBoundary>
             </motion.div>
           )}
           {activeTab === "analytics" && (
             <motion.div key="analytics" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-              <SenseiAnalyticsCenter analytics={props.analytics} stats={props.stats} />
+              <ErrorBoundary name="Analytics Center">
+                <SenseiAnalyticsCenter analytics={props.analytics} stats={props.stats} />
+              </ErrorBoundary>
             </motion.div>
           )}
           {activeTab === "approvals" && (
             <motion.div key="approvals" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-              {/* Wrapping the legacy verification dashboard for approvals */}
-              <SenseiVerificationDashboard {...props} />
+              <ErrorBoundary name="Approvals Dashboard">
+                <SenseiVerificationDashboard {...props} />
+              </ErrorBoundary>
             </motion.div>
           )}
         </AnimatePresence>

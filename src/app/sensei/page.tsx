@@ -511,40 +511,64 @@ function activityDetail(row: GenericRow) {
 }
 
 export default async function SenseiPage() {
-  const { pendingUsers, directoryUsers, stats, analytics, activityFeed, usageMetrics } = await loadSenseiData();
+  try {
+    const { pendingUsers, directoryUsers, stats, analytics, activityFeed, usageMetrics } = await loadSenseiData();
 
-  return (
-    <main className="min-h-[100svh] bg-obsidian">
-      <Navbar />
-      <section className="container-app pt-24 pb-bottom-nav">
-        <div className="mx-auto max-w-7xl">
-          <header className="mb-6 rounded-3xl border border-white/[0.08] bg-white/[0.02] p-5 sm:p-6">
-            <div className="flex items-start gap-3">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-blood-500/25 bg-blood-500/[0.08] shadow-[0_0_24px_-12px_rgba(208,0,0,0.6)]">
-                <ShieldCheck className="h-5 w-5 text-blood-500" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-white/45">Sensei Control Center</p>
-                <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">Investor-grade warrior command</h1>
-                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/55">
-                  Review pending UTR submissions, inspect full learner context, approve premium access,
-                  and monitor growth analytics from one disciplined control surface.
-                </p>
+    return (
+      <main className="min-h-[100svh] bg-obsidian">
+        <Navbar />
+        <section className="container-app pt-24 pb-bottom-nav">
+          <div className="mx-auto max-w-7xl">
+            <header className="mb-6 rounded-3xl border border-white/[0.08] bg-white/[0.02] p-5 sm:p-6">
+              <div className="flex items-start gap-3">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-blood-500/25 bg-blood-500/[0.08] shadow-[0_0_24px_-12px_rgba(208,0,0,0.6)]">
+                  <ShieldCheck className="h-5 w-5 text-blood-500" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/45">Sensei Control Center</p>
+                  <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">Investor-grade warrior command</h1>
+                  <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/55">
+                    Review pending UTR submissions, inspect full learner context, approve premium access,
+                    and monitor growth analytics from one disciplined control surface.
+                  </p>
+                </div>
               </div>
-            </div>
-          </header>
+            </header>
 
-          <SenseiCommandCenter
-            pendingUsers={pendingUsers}
-            directoryUsers={directoryUsers}
-            stats={stats}
-            analytics={analytics}
-            activityFeed={activityFeed}
-            usageMetrics={usageMetrics}
-          />
+            <SenseiCommandCenter
+              pendingUsers={pendingUsers}
+              directoryUsers={directoryUsers}
+              stats={stats}
+              analytics={analytics}
+              activityFeed={activityFeed}
+              usageMetrics={usageMetrics}
+            />
+          </div>
+        </section>
+        <Footer />
+      </main>
+    );
+  } catch (error: any) {
+    // If NEXT_REDIRECT is thrown, we must rethrow it so Next.js can redirect
+    if (error && typeof error === "object" && "digest" in error && String(error.digest).startsWith("NEXT_REDIRECT")) {
+      throw error;
+    }
+    
+    return (
+      <main className="min-h-[100svh] bg-obsidian text-white flex flex-col items-center justify-center p-6">
+        <Navbar />
+        <div className="max-w-2xl w-full rounded-3xl border border-blood-500/30 bg-blood-500/5 p-8 text-center mt-24">
+          <ShieldCheck className="h-12 w-12 text-blood-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Command Center Initialization Failed</h1>
+          <p className="text-white/60 mb-6">
+            A critical failure occurred while booting the Sensei dashboard. Safe fallback activated.
+          </p>
+          <div className="bg-black/50 p-4 rounded-xl border border-white/10 text-left overflow-auto text-sm text-red-400 font-mono">
+            {error instanceof Error ? error.stack || error.message : String(error)}
+          </div>
         </div>
-      </section>
-      <Footer />
-    </main>
-  );
+        <Footer />
+      </main>
+    );
+  }
 }

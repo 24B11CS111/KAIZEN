@@ -5,9 +5,11 @@ import { Footer } from "@/components/Footer";
 import {
   SenseiVerificationDashboard,
   type SenseiChartPoint,
+  type SenseiActivityEntry,
   type SenseiDashboardAnalytics,
   type SenseiDashboardStats,
   type SenseiPaymentHistoryEntry,
+  type SenseiUsageMetric,
   type SenseiUserRecord
 } from "@/components/SenseiVerificationDashboard";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -72,12 +74,14 @@ async function loadSenseiData() {
     dailyLogsRes,
     paymentsRes,
     onboardingRes,
-    aiPlansRes
+    aiPlansRes,
+    activityRes,
+    onlineSessionsRes
   ] = await Promise.all([
     supabase
       .from("profiles")
       .select(
-        "id,email,full_name,whatsapp,created_at,path_type,branch,occupation,field_of_study,daily_time_min,skill_level,main_goal,main_goal_other,subscription_status,expiry_date,plan_amount,age,gender,workout_location,fitness_level"
+        "id,email,avatar_url,full_name,whatsapp,created_at,last_active_at,path_type,branch,occupation,field_of_study,daily_time_min,skill_level,main_goal,main_goal_other,subscription_status,expiry_date,plan_amount,age,gender,workout_location,fitness_level,is_suspended"
       )
       .order("created_at", { ascending: false }),
     supabase
@@ -85,7 +89,7 @@ async function loadSenseiData() {
       .select("user_id,current_streak,longest_streak,last_completed_date,updated_at"),
     supabase
       .from("daily_logs")
-      .select("user_id,day,completed,completed_at,created_at")
+      .select("id,user_id,day,completed,completed_at,created_at,workout_completed,discipline_completed,study_completed")
       .order("created_at", { ascending: false }),
     supabase
       .from("utr_logs")
@@ -100,7 +104,17 @@ async function loadSenseiData() {
     supabase
       .from("ai_plans")
       .select("user_id,track_id,track_label,version,created_at")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("activity_log")
+      .select("id,user_id,type,metadata,created_at")
       .order("created_at", { ascending: false })
+      .limit(30),
+    supabase
+      .from("online_sessions")
+      .select("user_id,pathname,last_seen_at,online_at")
+      .order("last_seen_at", { ascending: false })
+      .limit(100)
   ]);
 
   const profiles = ((profilesRes.data as GenericRow[] | null) ?? []).filter((profile) => profile.email !== "hrixofficial@gmail.com");
@@ -109,6 +123,8 @@ async function loadSenseiData() {
   const payments = (paymentsRes.data as GenericRow[] | null) ?? [];
   const onboardingEntries = (onboardingRes.data as GenericRow[] | null) ?? [];
   const aiPlans = (aiPlansRes.data as GenericRow[] | null) ?? [];
+  const activityRows = (activityRes.data as GenericRow[] | null) ?? [];
+  const onlineSessions = (onlineSessionsRes.data as GenericRow[] | null) ?? [];
 
   const streakMap = new Map<string, GenericRow>();
   for (const row of streaks) streakMap.set(String(row.user_id), row);
@@ -185,10 +201,12 @@ async function loadSenseiData() {
 
     return {
       user_id: userId,
+      avatar_url: (profile.avatar_url ?? null) as string | null,
       full_name: (profile.full_name ?? onboarding?.full_name ?? null) as string | null,
       email: (profile.email ?? null) as string | null,
       whatsapp: (profile.whatsapp ?? null) as string | null,
       joined_at: (profile.created_at ?? null) as string | null,
+      last_active_at: (profile.last_active_at ?? null) as string | null,
       path_type: (profile.path_type ?? null) as string | null,
       branch: (profile.branch ?? null) as string | null,
       occupation: (profile.occupation ?? onboarding?.occupation ?? null) as string | null,
@@ -201,6 +219,7 @@ async function loadSenseiData() {
       fitness_level: (profile.fitness_level ?? null) as string | null,
       age: (profile.age ?? onboarding?.age ?? null) as number | null,
       gender: (profile.gender ?? onboarding?.gender ?? null) as string | null,
+      is_suspended: Boolean(profile.is_suspended),
       current_streak: Number(streak?.current_streak ?? 0),
       longest_streak: Number(streak?.longest_streak ?? 0),
       last_completed_date: (streak?.last_completed_date ?? null) as string | null,
@@ -248,6 +267,7 @@ async function loadSenseiData() {
   const approvedPayments = payments.filter((row) => row.status === "approved");
   const totalRevenue = approvedPayments.reduce((sum, row) => sum + Number(row.plan_amount ?? 0), 0);
   const activeSubscribers = directoryUsers.filter((user) => user.subscription_status === "active").length;
+  const suspendedUsers = directoryUsers.filter((user) => user.is_suspended || user.subscription_status === "banned").length;
   const expiringSoon = directoryUsers.filter((user) => {
     if (user.subscription_status !== "active") return false;
     const expiry = safeDate(user.expiry_date);
@@ -272,7 +292,8 @@ async function loadSenseiData() {
     expiringSoon,
     totalUsers: directoryUsers.length,
     monthlyGrowth,
-    consistencyRate
+    consistencyRate,
+    suspendedUsers
   };
 
   const monthSeries: Date[] = Array.from({ length: 6 }, (_, index) => {
@@ -303,6 +324,18 @@ async function loadSenseiData() {
     value: revenueByMonth.get(monthKey(month)) ?? 0
   }));
 
+  const subscriptionGrowth: SenseiChartPoint[] = monthSeries.map((month) => {
+    const start = new Date(month.getFullYear(), month.getMonth(), 1);
+    const end = new Date(month.getFullYear(), month.getMonth() + 1, 1);
+    return {
+      label: formatMonthLabel(month),
+      value: approvedPayments.filter((payment) => {
+        const date = safeDate(payment.reviewed_at ?? payment.created_at);
+        return date && date >= start && date < end;
+      }).length
+    };
+  });
+
   const dailyActiveUsers: SenseiChartPoint[] = Array.from({ length: 7 }, (_, index) => {
     const day = new Date(now);
     day.setDate(now.getDate() - (6 - index));
@@ -323,6 +356,61 @@ async function loadSenseiData() {
     );
     return { label, value: ids.size };
   });
+
+  const liveActiveUsers: SenseiChartPoint[] = Array.from({ length: 6 }, (_, index) => {
+    const cutoff = new Date(now.getTime() - (5 - index) * 5 * 60 * 1000);
+    return {
+      label: index === 5 ? "Now" : `-${(5 - index) * 5}m`,
+      value: onlineSessions.filter((session) => {
+        const seen = safeDate(session.last_seen_at ?? session.online_at);
+        return seen && seen >= cutoff;
+      }).length
+    };
+  });
+
+  const retentionTrend: SenseiChartPoint[] = dailyActiveUsers.map((point) => ({
+    label: point.label,
+    value: directoryUsers.length === 0 ? 0 : Math.round((point.value / directoryUsers.length) * 100)
+  }));
+
+  const workoutCompletion: SenseiChartPoint[] = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(now);
+    day.setDate(now.getDate() - (6 - index));
+    const label = day.toLocaleDateString("en-IN", { weekday: "short" });
+    return {
+      label,
+      value: dailyLogs.filter((log) => {
+        const activity = safeDate(log.completed_at ?? log.created_at);
+        return log.workout_completed === true &&
+          activity &&
+          activity.getFullYear() === day.getFullYear() &&
+          activity.getMonth() === day.getMonth() &&
+          activity.getDate() === day.getDate();
+      }).length
+    };
+  });
+
+  const streakConsistency: SenseiChartPoint[] = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(now);
+    day.setDate(now.getDate() - (6 - index));
+    const label = day.toLocaleDateString("en-IN", { weekday: "short" });
+    return {
+      label,
+      value: dailyLogs.filter((log) => {
+        const activity = safeDate(log.completed_at ?? log.created_at);
+        return log.completed === true &&
+          activity &&
+          activity.getFullYear() === day.getFullYear() &&
+          activity.getMonth() === day.getMonth() &&
+          activity.getDate() === day.getDate();
+      }).length
+    };
+  });
+
+  const dailyEngagement: SenseiChartPoint[] = dailyActiveUsers.map((point) => ({
+    label: point.label,
+    value: point.value
+  }));
 
   const branchCounts = new Map<string, number>();
   for (const userRecord of directoryUsers) {
@@ -348,21 +436,81 @@ async function loadSenseiData() {
 
   const analytics: SenseiDashboardAnalytics = {
     usersGrowth,
+    liveActiveUsers,
     monthlyRevenue,
     dailyActiveUsers,
+    subscriptionGrowth,
+    retentionTrend,
+    workoutCompletion,
     branchDistribution,
     planDistribution,
+    streakConsistency,
+    dailyEngagement,
     conversionRate: directoryUsers.length === 0 ? 0 : (approvedUsers.size / directoryUsers.length) * 100,
     retentionRate: directoryUsers.length === 0 ? 0 : (activeLast7DaysUsers.size / directoryUsers.length) * 100,
     workoutCompletionRate:
       paidUsers.size === 0 ? 0 : (workoutCompletionUsers.size / paidUsers.size) * 100
   };
 
-  return { pendingUsers, directoryUsers, stats, analytics };
+  const activityFeed: SenseiActivityEntry[] = [
+    ...activityRows.map((row) => ({
+      id: String(row.id),
+      type: String(row.type ?? "activity"),
+      label: toActivityLabel(String(row.type ?? "activity")),
+      detail: activityDetail(row),
+      user_id: (row.user_id ?? null) as string | null,
+      created_at: (row.created_at ?? null) as string | null
+    })),
+    ...payments.slice(0, 10).map((row) => ({
+      id: `utr-${row.id}`,
+      type: "payment",
+      label: row.status === "pending" ? "Payment submitted" : `Payment ${row.status}`,
+      detail: `UTR ${row.utr_number ?? "—"} / Rs ${Number(row.plan_amount ?? 0)}`,
+      user_id: (row.user_id ?? null) as string | null,
+      created_at: (row.reviewed_at ?? row.created_at ?? null) as string | null
+    }))
+  ]
+    .sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime())
+    .slice(0, 30);
+
+  const routeCounts = new Map<string, number>();
+  for (const session of onlineSessions) {
+    const key = String(session.pathname ?? "/");
+    routeCounts.set(key, (routeCounts.get(key) ?? 0) + 1);
+  }
+  routeCounts.set("/dojo", (routeCounts.get("/dojo") ?? 0) + dailyLogs.length);
+  routeCounts.set("workouts", workoutCompletion.reduce((sum, item) => sum + item.value, 0));
+  routeCounts.set("roadmap", dailyLogs.filter((log) => log.completed === true).length);
+  const maxUsage = Math.max(...Array.from(routeCounts.values()), 1);
+  const usageMetrics: SenseiUsageMetric[] = Array.from(routeCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 9)
+    .map(([label, value]) => ({
+      label,
+      value,
+      intensity: value / maxUsage
+    }));
+
+  return { pendingUsers, directoryUsers, stats, analytics, activityFeed, usageMetrics };
+}
+
+function toActivityLabel(type: string) {
+  if (type.includes("day")) return "Roadmap progress";
+  if (type.includes("workout")) return "Workout completed";
+  if (type.includes("payment")) return "Payment activity";
+  if (type.includes("signup")) return "New signup";
+  return type.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function activityDetail(row: GenericRow) {
+  const metadata = (row.metadata ?? {}) as Record<string, unknown>;
+  if (metadata.day) return `Day ${metadata.day} / ${metadata.xp ?? 0} XP`;
+  if (metadata.pathname) return String(metadata.pathname);
+  return "Platform activity recorded";
 }
 
 export default async function SenseiPage() {
-  const { pendingUsers, directoryUsers, stats, analytics } = await loadSenseiData();
+  const { pendingUsers, directoryUsers, stats, analytics, activityFeed, usageMetrics } = await loadSenseiData();
 
   return (
     <main className="min-h-[100svh] bg-obsidian">
@@ -390,6 +538,8 @@ export default async function SenseiPage() {
             directoryUsers={directoryUsers}
             stats={stats}
             analytics={analytics}
+            activityFeed={activityFeed}
+            usageMetrics={usageMetrics}
           />
         </div>
       </section>

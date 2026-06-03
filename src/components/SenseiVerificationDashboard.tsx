@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { StaggerGroup, StaggerItem } from "./PageTransition";
 import { useMemo, useState, useTransition, type ComponentType, type ReactNode } from "react";
 import {
   Activity,
@@ -41,6 +42,7 @@ export interface SenseiUserRecord {
   email: string | null;
   whatsapp: string | null;
   joined_at: string | null;
+  last_active_at?: string | null;
   path_type: string | null;
   branch: string | null;
   occupation: string | null;
@@ -53,6 +55,7 @@ export interface SenseiUserRecord {
   fitness_level: string | null;
   age: number | null;
   gender: string | null;
+  is_suspended?: boolean;
   current_streak: number;
   longest_streak: number;
   last_completed_date: string | null;
@@ -83,6 +86,7 @@ export interface SenseiDashboardStats {
   totalUsers: number;
   monthlyGrowth: number;
   consistencyRate: number;
+  suspendedUsers?: number;
 }
 
 export interface SenseiChartPoint {
@@ -91,6 +95,12 @@ export interface SenseiChartPoint {
 }
 
 export interface SenseiDashboardAnalytics {
+  liveActiveUsers?: SenseiChartPoint[];
+  subscriptionGrowth?: SenseiChartPoint[];
+  retentionTrend?: SenseiChartPoint[];
+  workoutCompletion?: SenseiChartPoint[];
+  streakConsistency?: SenseiChartPoint[];
+  dailyEngagement?: SenseiChartPoint[];
   usersGrowth: SenseiChartPoint[];
   monthlyRevenue: SenseiChartPoint[];
   dailyActiveUsers: SenseiChartPoint[];
@@ -101,11 +111,28 @@ export interface SenseiDashboardAnalytics {
   workoutCompletionRate: number;
 }
 
+export interface SenseiActivityEntry {
+  id: string;
+  type: string;
+  label: string;
+  detail: string;
+  user_id: string | null;
+  created_at: string | null;
+}
+
+export interface SenseiUsageMetric {
+  label: string;
+  value: number;
+  intensity: number;
+}
+
 interface Props {
   pendingUsers: SenseiUserRecord[];
   directoryUsers: SenseiUserRecord[];
   stats: SenseiDashboardStats;
   analytics: SenseiDashboardAnalytics;
+  activityFeed?: SenseiActivityEntry[];
+  usageMetrics?: SenseiUsageMetric[];
 }
 
 type PlanFilter = "all" | "free" | "49" | "99";
@@ -186,7 +213,9 @@ export function SenseiVerificationDashboard({
   pendingUsers,
   directoryUsers,
   stats,
-  analytics
+  analytics,
+  activityFeed = [],
+  usageMetrics = []
 }: Props) {
   const [pendingRows, setPendingRows] = useState(pendingUsers);
   const [directoryRows, setDirectoryRows] = useState(directoryUsers);
@@ -337,7 +366,7 @@ export function SenseiVerificationDashboard({
   };
 
   return (
-    <div className="space-y-6">
+    <StaggerGroup delayBetween={0.06} className="space-y-5">
       <AnimatePresence>
         {feedback && (
           <motion.div
@@ -357,7 +386,8 @@ export function SenseiVerificationDashboard({
         </div>
       )}
 
-      <section className="grid grid-cols-2 gap-3 xl:grid-cols-6">
+        <StaggerItem>
+        <section className="grid grid-cols-2 gap-3 xl:grid-cols-6">
         <MetricCard label="Pending Approvals" value={String(dashboardStats.pendingApprovals)} helper="awaiting review" accent="blood" icon={Clock3} />
         <MetricCard label="Active Warriors" value={String(dashboardStats.activeSubscribers)} helper="premium access" accent="emerald" icon={BadgeCheck} />
         <MetricCard label="Total Revenue" value={formatCompactINR(dashboardStats.totalRevenue)} helper="approved UTRs" accent="blood" icon={IndianRupee} />
@@ -365,8 +395,10 @@ export function SenseiVerificationDashboard({
         <MetricCard label="Total Users" value={String(dashboardStats.totalUsers)} helper={`${dashboardStats.monthlyGrowth >= 0 ? "+" : ""}${dashboardStats.monthlyGrowth.toFixed(1)}% MoM`} accent="neutral" icon={Users} />
         <MetricCard label="Consistency Rate" value={`${clampPercent(dashboardStats.consistencyRate)}%`} helper="7-day discipline" accent="emerald" icon={Flame} />
       </section>
+      </StaggerItem>
 
-      <section className="grid gap-4 xl:grid-cols-2">
+        <StaggerItem>
+        <section className="grid gap-4 xl:grid-cols-2">
         <ChartPanel title="Total Users Growth" subtitle="Cumulative registrations" icon={TrendingUp}>
           <LineChart data={analytics.usersGrowth} color="#D00000" />
         </ChartPanel>
@@ -390,8 +422,64 @@ export function SenseiVerificationDashboard({
           </div>
         </ChartPanel>
       </section>
+      </StaggerItem>
 
-      <section className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
+        <StaggerItem>
+        <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+        <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5 flex flex-col h-[400px]">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-base font-semibold text-white">Live Activity Feed</h3>
+              <p className="text-sm text-white/45">Realtime platform events</p>
+            </div>
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
+          </div>
+          <div className="flex-1 overflow-y-auto pr-2 space-y-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            {activityFeed.length === 0 ? (
+              <p className="text-sm text-white/45">No recent activity.</p>
+            ) : (
+              activityFeed.map((entry) => (
+                <div key={entry.id} className="flex flex-col gap-1 rounded-2xl border border-white/[0.05] bg-black/20 p-3 transition-colors hover:bg-black/40">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-sm font-medium text-white">{entry.label}</span>
+                    <span className="text-xs text-white/40 whitespace-nowrap">{formatDate(entry.created_at)}</span>
+                  </div>
+                  <p className="text-xs text-white/60">{entry.detail}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5 flex flex-col h-[400px]">
+          <div className="mb-4">
+            <h3 className="text-base font-semibold text-white">Route Usage Intensity</h3>
+            <p className="text-sm text-white/45">Heatmap of warrior attention</p>
+          </div>
+          <div className="flex-1 overflow-y-auto pr-2 space-y-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            {usageMetrics.length === 0 ? (
+              <p className="text-sm text-white/45">No usage data.</p>
+            ) : (
+              usageMetrics.map((metric) => (
+                <div key={metric.label} className="group relative rounded-2xl border border-white/[0.05] bg-black/20 p-3 overflow-hidden">
+                  <div 
+                    className="absolute inset-0 bg-blood-500/10 transition-opacity group-hover:bg-blood-500/20" 
+                    style={{ width: `${metric.intensity * 100}%` }}
+                  />
+                  <div className="relative flex items-center justify-between">
+                    <span className="text-sm font-medium text-white">{metric.label}</span>
+                    <span className="text-xs font-semibold text-white/70">{metric.value} hits</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
+      </StaggerItem>
+
+        <StaggerItem>
+        <section className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-[10px] uppercase tracking-[0.18em] text-white/40">Sensei filters</p>
@@ -416,8 +504,10 @@ export function SenseiVerificationDashboard({
           />
         </div>
       </section>
+      </StaggerItem>
 
-      <section className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
+        <StaggerItem>
+        <section className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[10px] uppercase tracking-[0.18em] text-white/40">Awaiting Sensei Verification</p>
@@ -547,8 +637,10 @@ export function SenseiVerificationDashboard({
           </div>
         )}
       </section>
+      </StaggerItem>
 
-      <section className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
+        <StaggerItem>
+        <section className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[10px] uppercase tracking-[0.18em] text-white/40">Warrior Directory</p>
@@ -600,6 +692,7 @@ export function SenseiVerificationDashboard({
           </div>
         )}
       </section>
+      </StaggerItem>
 
       <AnimatePresence>
         {selectedUser && (
@@ -624,7 +717,7 @@ export function SenseiVerificationDashboard({
           />
         )}
       </AnimatePresence>
-    </div>
+    </StaggerGroup>
   );
 }
 

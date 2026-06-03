@@ -17,6 +17,7 @@ export interface Profile {
   email: string;
   role: UserRole;
   is_admin: boolean;
+          is_suspended: boolean;
   subscription_status: SubscriptionStatus;
   plan_amount: number | null;
   start_date: string | null;
@@ -88,6 +89,7 @@ export interface Database {
           email: string;
           role: UserRole;
           is_admin: boolean;
+          is_suspended: boolean;
           subscription_status: SubscriptionStatus;
           plan_amount: number | null;
           start_date: string | null;
@@ -113,6 +115,7 @@ export interface Database {
           email?: string;
           role?: UserRole;
           is_admin?: boolean;
+          is_suspended?: boolean;
           subscription_status?: SubscriptionStatus;
           plan_amount?: number | null;
           start_date?: string | null;
@@ -138,6 +141,7 @@ export interface Database {
           email?: string;
           role?: UserRole;
           is_admin?: boolean;
+          is_suspended?: boolean;
           subscription_status?: SubscriptionStatus;
           plan_amount?: number | null;
           start_date?: string | null;

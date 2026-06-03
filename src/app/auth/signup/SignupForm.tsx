@@ -11,7 +11,7 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { sanitizeNextPath } from "@/lib/siteUrl";
 
-const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1779649962/image-removebg-preview_i3duhi.png";
+const KAIZEN_LOGO = "https://res.cloudinary.com/dsvfrlwt1/image/upload/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -136,7 +136,7 @@ export function SignupForm() {
           <span style={{ filter: "drop-shadow(0 0 20px rgba(208,0,0,0.5))" }} className="inline-block mb-6">
             <Image src={KAIZEN_LOGO} alt="KAIZEN.SYS" width={56} height={56} className="object-contain mx-auto" priority />
           </span>
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-8 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.9)]">
+          <div className="rounded-2xl glass-surface p-8 shadow-[0_32px_80px_-24px_rgba(0,0,0,0.9)]">
             <div className="flex justify-center mb-4">
               <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blood-500/10 border border-blood-500/25">
                 <MailCheck className="h-5 w-5 text-blood-500" />
@@ -205,7 +205,7 @@ export function SignupForm() {
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-7 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.9)]">
+        <div className="rounded-2xl glass-surface p-7 shadow-[0_32px_80px_-24px_rgba(0,0,0,0.9)]">
           <Link href="/" className="text-[10px] uppercase tracking-[0.18em] text-white/45 hover:text-white/80 transition-colors">
             \u2190 Return to gate
           </Link>
@@ -225,10 +225,10 @@ export function SignupForm() {
             />
 
             <div>
-              <label className="block">
-                <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">Password</span>
-                <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-white/[0.09] bg-white/[0.02] px-3.5 py-3.5 focus-within:border-blood-500/50 transition-colors">
-                  <KeyRound className="h-4 w-4 text-white/35 shrink-0" />
+              <label className="block group">
+                <span className="text-[10px] uppercase tracking-[0.18em] text-white/45 group-focus-within:text-blood-500/80 transition-colors">Password</span>
+                <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-white/[0.09] bg-white/[0.02] px-3.5 py-3.5 focus-within:border-blood-500/60 focus-within:bg-blood-500/[0.02] focus-within:shadow-[0_0_24px_-6px_rgba(208,0,0,0.25)] transition-all duration-300">
+                  <KeyRound className="h-4 w-4 text-white/35 shrink-0 group-focus-within:text-blood-500/80 transition-colors" />
                   <input
                     type={showPw ? "text" : "password"}
                     value={password}
@@ -328,17 +328,17 @@ interface FieldProps {
 
 function Field({ label, value, onChange, type = "text", placeholder, autoComplete, inputMode, icon: Icon, valid }: FieldProps) {
   return (
-    <label className="block">
-      <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">{label}</span>
+    <label className="block group">
+      <span className="text-[10px] uppercase tracking-[0.18em] text-white/45 group-focus-within:text-blood-500/80 transition-colors">{label}</span>
       <div
         className={
-          "mt-1.5 flex items-center gap-2 rounded-xl border bg-white/[0.02] px-3.5 py-3.5 transition-colors " +
+          "mt-1.5 flex items-center gap-2 rounded-xl border bg-white/[0.02] px-3.5 py-3.5 transition-all duration-300 " +
           (valid === false
             ? "border-blood-500/40"
-            : "border-white/[0.09] focus-within:border-blood-500/50")
+            : "border-white/[0.09] focus-within:border-blood-500/60 focus-within:bg-blood-500/[0.02] focus-within:shadow-[0_0_24px_-6px_rgba(208,0,0,0.25)]")
         }
       >
-        {Icon && <Icon className="h-4 w-4 text-white/35 shrink-0" />}
+        {Icon && <Icon className="h-4 w-4 text-white/35 shrink-0 group-focus-within:text-blood-500/80 transition-colors" />}
         <input
           type={type}
           value={value}

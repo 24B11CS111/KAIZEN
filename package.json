@@ -22,11 +22,13 @@
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.106.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.4.0",
     "framer-motion": "^11.5.4",
     "lucide-react": "^0.441.0",
     "next": "14.2.13",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "recharts": "^3.8.1",
     "tailwind-merge": "^2.5.2",
     "zod": "^3.23.8"
   },

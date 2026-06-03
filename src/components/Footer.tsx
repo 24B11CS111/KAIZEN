@@ -15,7 +15,7 @@ import {
   Twitter, Github, Linkedin, Instagram, Mail, ArrowUpRight
 } from "lucide-react";
 
-const KAIZEN_LOGO = "https://res.cloudinary.com/dzqfrwizz/image/upload/v1779649962/image-removebg-preview_i3duhi.png";
+const KAIZEN_LOGO = "https://res.cloudinary.com/dsvfrlwt1/image/upload/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png";
 
 const PRODUCT = [
   { href: "/dojo",     label: "Dashboard" },

@@ -5,6 +5,7 @@ import { ArrowRight, Check, Lock, Sparkles, Trophy, FlameKindling } from "lucide
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GateOpening } from "./GateOpening";
+import { StaggerGroup, StaggerItem } from "./PageTransition";
 import { MissionCard } from "./MissionCard";
 import { HeroStatusPanel } from "./HeroStatusPanel";
 import { AnalyticsRings } from "./AnalyticsRings";
@@ -248,8 +249,9 @@ export function DojoDashboard({
         <CompletionBurst show={showBurst} />
       </div>
 
-      <main className="container-app pt-4 sm:pt-6 pb-bottom-nav space-y-5">
-        <PersonalizedWelcome
+      <main className="container-app pt-4 sm:pt-6 pb-bottom-nav">
+<StaggerGroup delayBetween={0.08} className="space-y-5 sm:space-y-6">
+        <StaggerItem><PersonalizedWelcome
           firstName={firstName}
           currentDay={displayDay}
           goal={(profile as any).main_goal ?? null}
@@ -258,17 +260,17 @@ export function DojoDashboard({
           longestStreak={longestStreak}
           sealedToday={sealedTodayLocal}
           missedDays={missedDays}
-        />
+        /></StaggerItem>
 
         <EngagementMount input={engagementInput} />
 
-        <HeroStatusPanel
+        <StaggerItem><HeroStatusPanel
           firstName={firstName}
           xp={xp}
           currentStreak={currentStreak}
           todayProgressPct={todayProgressPct}
           aiMessage={aiMsg}
-        />
+        /></StaggerItem>
 
         {approvalBanner && (
           <motion.div
@@ -334,13 +336,13 @@ export function DojoDashboard({
           </motion.div>
         )}
 
-        <AnalyticsRings
+        <StaggerItem><AnalyticsRings
           completedDays={completedCount}
           totalDays={TOTAL_DAYS}
           cycleDay={cycleDay}
           longestStreak={longestStreak}
           studyHoursEstimate={completedCount * 1.5}
-        />
+        /></StaggerItem>
 
         <div className="flex items-center justify-between text-[11px] text-white/45 px-1">
           <span>{Math.max(0, remaining)} days remain in cycle</span>
@@ -381,7 +383,7 @@ export function DojoDashboard({
             · Workout · Discipline · Recovery). When no AI plan exists
             yet (rare — auto-generation runs server-side) we fall back to
             the legacy MissionCard so the dashboard never goes blank. */}
-        {cardLocked || !dailyMission ? (
+        <StaggerItem>{cardLocked || !dailyMission ? (
           <>
             <MissionCard
               day={displayDay}
@@ -395,7 +397,7 @@ export function DojoDashboard({
           </>
         ) : (
           <DailyMissionBoard mission={dailyMission} />
-        )}
+        )}</StaggerItem>
 
         {!allDone && !cardLocked && !completed.has(displayDay) && !sealedTodayLocal && (
           <motion.button
@@ -461,16 +463,16 @@ export function DojoDashboard({
           <div className="card p-3 border-blood-500/40 text-xs text-blood-500">{errMsg}</div>
         )}
 
-        <AIGuidancePanel
+        <StaggerItem><AIGuidancePanel
           recommendation={dayData?.concept ? dayData.concept : "Take ten quiet minutes before you begin."}
           focusArea={dayData?.title || (profile.branch ?? "Discipline")}
           estimatedMinutes={45}
-        />
+        /></StaggerItem>
 
-        <YouVsYou refreshKey={refreshKey} />
-        <AchievementGrid items={achievements} />
+        <StaggerItem><YouVsYou refreshKey={refreshKey} /></StaggerItem>
+        <StaggerItem><AchievementGrid items={achievements} /></StaggerItem>
 
-        <section>
+        <StaggerItem><section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold">30-Day Path</h2>
             {(aiTrackLabel || profile.branch) && (
@@ -515,7 +517,8 @@ export function DojoDashboard({
               );
             })}
           </div>
-        </section>
+        </section></StaggerItem>
+        </StaggerGroup>
       </main>
     </motion.div>
   );

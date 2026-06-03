@@ -5,16 +5,19 @@ import { BottomNavGate } from "@/components/BottomNavGate";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { DevBypassBanner } from "@/components/DevBypassBanner";
+import { GlobalPresence } from "@/components/GlobalPresence";
 
 // KAIZEN.SYS brand — new transparent logo served via Cloudinary CDN with
 // on-the-fly resize + obsidian background fills for browser icons/favicons.
 // The raw transparent URL is used for in-app rendering (IntroLoader, auth pages, etc).
-const CDN     = "https://res.cloudinary.com/dzqfrwizz/image/upload";
-const LOGO_ID = "v1779649962/image-removebg-preview_i3duhi.png";
+const CDN     = "https://res.cloudinary.com/dsvfrlwt1/image/upload";
+const LOGO_ID = "v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png";
 // Padded on obsidian for crisp favicon & apple-touch-icon at every size
 const ICON_16  = CDN + "/w_16,h_16,c_pad,b_rgb:050505/"   + LOGO_ID;
 const ICON_32  = CDN + "/w_32,h_32,c_pad,b_rgb:050505/"   + LOGO_ID;
 const ICON_180 = CDN + "/w_180,h_180,c_pad,b_rgb:050505/" + LOGO_ID;
+const ICON_192 = CDN + "/w_192,h_192,c_pad,b_rgb:050505/" + LOGO_ID;
+const ICON_512 = CDN + "/w_512,h_512,c_pad,b_rgb:050505/" + LOGO_ID;
 
 export const metadata: Metadata = {
   title: "KAIZEN - Discipline builds your future",
@@ -28,17 +31,17 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "KAIZEN",
     startupImage: [
-      { url: "/icon-512.png", media: "(device-width: 430px) and (device-height: 932px)" },
-      { url: "/icon-512.png", media: "(device-width: 393px) and (device-height: 852px)" },
-      { url: "/icon-512.png", media: "(device-width: 390px) and (device-height: 844px)" },
-      { url: "/icon-512.png" }
+      { url: ICON_512, media: "(device-width: 430px) and (device-height: 932px)" },
+      { url: ICON_512, media: "(device-width: 393px) and (device-height: 852px)" },
+      { url: ICON_512, media: "(device-width: 390px) and (device-height: 844px)" },
+      { url: ICON_512 }
     ]
   },
   formatDetection: { telephone: false, email: false, address: false },
   icons: {
     icon: [
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icon-512.png", sizes: "512x512", type: "image/png" }
+      { url: ICON_192, sizes: "192x192", type: "image/png" },
+      { url: ICON_512, sizes: "512x512", type: "image/png" }
     ],
     apple: [
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }
@@ -81,6 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-obsidian text-white antialiased">
         <DevBypassBanner />
         <IntroLoader />
+        <GlobalPresence />
         {children}
         <BottomNavGate />
         <InstallPrompt />

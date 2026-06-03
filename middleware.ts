@@ -75,7 +75,7 @@ export async function middleware(request: NextRequest) {
   try {
     const res = await supabase
       .from("profiles")
-      .select("role,is_admin,email,subscription_status,expiry_date,onboarded_at")
+      .select("role,is_admin,email,subscription_status,expiry_date,onboarded_at,is_suspended")
       .eq("id", user.id)
       .maybeSingle();
     profileRow = res.data;
@@ -84,7 +84,7 @@ export async function middleware(request: NextRequest) {
       // Likely `onboarded_at` column doesn't exist yet — retry without it.
       const fb = await supabase
         .from("profiles")
-        .select("role,is_admin,email,subscription_status,expiry_date")
+        .select("role,is_admin,email,subscription_status,expiry_date,is_suspended")
         .eq("id", user.id)
         .maybeSingle();
       profileRow = fb.data;
@@ -137,7 +137,8 @@ export async function middleware(request: NextRequest) {
   if (isDojo) {
     const blocked =
       p.subscription_status === "banned" ||
-      p.subscription_status === "rejected";
+      p.subscription_status === "rejected" ||
+      p.is_suspended === true;
     if (blocked) {
       const url = request.nextUrl.clone();
       url.pathname = "/";

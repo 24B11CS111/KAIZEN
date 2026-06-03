@@ -230,10 +230,11 @@ main {
 
   /* Glass surface */
   .glass-surface {
-    background: rgba(5, 5, 5, 0.78);
-    backdrop-filter: blur(18px) saturate(140%);
-    -webkit-backdrop-filter: blur(18px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(5, 5, 5, 0.75);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.04), 0 8px 32px rgba(0, 0, 0, 0.4);
   }
   .glass-premium {
     background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
@@ -255,7 +256,7 @@ main {
   .btn-primary:hover {
     box-shadow: 0 0 30px -4px rgba(208, 0, 0, 0.7);
   }
-  .btn-primary:active { transform: scale(0.97); }
+  .btn-primary:active { transform: scale(0.96); transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1); }
 
   /* Secondary button */
   .btn-secondary {
@@ -266,7 +267,7 @@ main {
            focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-obsidian
            transition-all;
   }
-  .btn-secondary:active { transform: scale(0.97); }
+  .btn-secondary:active { transform: scale(0.96); transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1); }
 
   /* Small variant */
   .btn-sm { @apply px-4 py-1.5 text-xs; }
@@ -277,15 +278,15 @@ main {
     touch-action: manipulation;
   }
   @media (hover: none) and (pointer: coarse) {
-    .btn-tap:active { transform: scale(0.97); transition: transform 80ms ease-out; }
+    .btn-tap:active { transform: scale(0.96); transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1); }
   }
 
   /* Tap-scale card */
   .tap-card {
-    @apply transition-transform duration-150 ease-out;
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
     -webkit-tap-highlight-color: transparent;
   }
-  .tap-card:active { transform: scale(0.97); }
+  .tap-card:active { transform: scale(0.96); }
 
   /* Sticky CTA for mobile */
   .cta-pinned {
@@ -295,11 +296,11 @@ main {
 
   /* Typography */
   .h1 {
-    @apply text-[44px] sm:text-5xl md:text-6xl lg:text-7xl
-           font-semibold tracking-[-0.025em] leading-[1.03];
+    @apply text-4xl sm:text-5xl md:text-6xl lg:text-7xl
+           font-bold tracking-[-0.035em] leading-[1.02];
   }
   .h2 {
-    @apply text-3xl md:text-[44px]
+    @apply text-[28px] sm:text-3xl md:text-[40px]
            font-semibold tracking-[-0.02em] leading-[1.08];
   }
   .h3 {

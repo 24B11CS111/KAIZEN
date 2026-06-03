@@ -12,6 +12,7 @@ import {
   type SenseiUsageMetric,
   type SenseiUserRecord
 } from "@/components/SenseiVerificationDashboard";
+import { SenseiCommandCenter } from "@/components/admin/SenseiCommandCenter";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/adminEmail";
 
@@ -533,7 +534,7 @@ export default async function SenseiPage() {
             </div>
           </header>
 
-          <SenseiVerificationDashboard
+          <SenseiCommandCenter
             pendingUsers={pendingUsers}
             directoryUsers={directoryUsers}
             stats={stats}

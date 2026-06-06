@@ -146,6 +146,12 @@ export const FieldOfStudySchema = z
   .min(2, "Tell us your field of study")
   .max(80, "Too long");
 
+export const WorkoutPreferenceSchema = z.enum(["gym", "home_workout", "calisthenics", "cardio", "none"]);
+export const SleepTimingSchema = z.enum(["early_bird", "night_owl", "irregular"]);
+export const ProductivityHabitsSchema = z.enum(["pomodoro", "deep_work", "multitasking", "chaotic"]);
+export const DisciplineLevelSchema = z.enum(["poor", "average", "good", "elite"]);
+export const StudyTimingSchema = z.enum(["morning", "afternoon", "evening", "late_night"]);
+
 export const OnboardingSchema = z.object({
   full_name: NameSchema,
   age: AgeSchema,
@@ -155,6 +161,11 @@ export const OnboardingSchema = z.object({
   daily_time_min: DailyTimeSchema,
   skill_level: SkillLevelSchema,
   main_goal: MainGoalSchema,
-  main_goal_other: z.string().max(120).optional().nullable()
+  main_goal_other: z.string().max(120).optional().nullable(),
+  workout_preference: WorkoutPreferenceSchema.optional(),
+  sleep_timing: SleepTimingSchema.optional(),
+  productivity_habits: ProductivityHabitsSchema.optional(),
+  discipline_level: DisciplineLevelSchema.optional(),
+  study_timing: StudyTimingSchema.optional()
 });
 export type OnboardingInput = z.infer<typeof OnboardingSchema>;

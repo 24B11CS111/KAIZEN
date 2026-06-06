@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { isAdminEmail } from "@/lib/adminEmail";
+import { requireAdminPage } from "@/lib/admin";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { ErrorBoundary } from "@/components/admin/ErrorBoundary";
@@ -8,24 +7,10 @@ import { ErrorBoundary } from "@/components/admin/ErrorBoundary";
 export const dynamic = "force-dynamic";
 
 export default async function SenseiLayout({ children }: { children: React.ReactNode }) {
-  const supabase = createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/auth/login?next=/sensei");
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_admin, email, full_name, avatar_url")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (!profile || profile.is_admin !== true || !isAdminEmail(user.email)) {
-    redirect("/dojo");
-  }
+  const { profile } = await requireAdminPage();
 
   try {
+    const supabase = createSupabaseServerClient();
     await (supabase as any).rpc("touch_all_expired_subscriptions");
   } catch {}
 

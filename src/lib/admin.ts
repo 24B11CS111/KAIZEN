@@ -24,3 +24,23 @@ export async function requireAdmin() {
   if (!ok) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   return { supabase, user, profile: p };
 }
+
+import { redirect } from "next/navigation";
+
+export async function requireAdminPage() {
+  const supabase = createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/login?next=/sensei");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_admin, email, full_name, avatar_url")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const p: any = profile;
+  const ok = p && p.is_admin === true && isAdminEmail(user.email);
+  if (!ok) redirect("/dojo");
+  
+  return { supabase, user, profile: p };
+}

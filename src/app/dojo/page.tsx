@@ -23,6 +23,8 @@ import { planToBranchDays } from "@/lib/ai-plan/adapter";
 import type { PlanDay } from "@/lib/ai-plan/types";
 import { generatePlan, planInputFromProfile } from "@/lib/ai-plan";
 
+import { getUserSubscriptionStatus } from "@/lib/subscription";
+
 export const dynamic = "force-dynamic";
 
 /** Promise wrapper that turns rejection into `{ data: null }`. */
@@ -98,9 +100,14 @@ async function DojoStateRouter({ profile }: { profile: any }) {
   if (profile.subscription_status === "pending") {
     return <SenseiVerifying name={profile.full_name} initialStatus={profile.subscription_status} />;
   }
-  if (profile.subscription_status === "expired") return <LockedScreen reason="expired" />;
+  
+  const subStatus = await getUserSubscriptionStatus();
+  if (subStatus.isExpired) {
+    redirect("/upgrade");
+  }
 
-  if (profile.subscription_status === "active") {
+  // Active user (trial, core, elite, or old active)
+  if (profile.subscription_status === "active" || !subStatus.isExpired) {
     const supabase = createSupabaseServerClient();
 
     // Reset stale streak best-effort.

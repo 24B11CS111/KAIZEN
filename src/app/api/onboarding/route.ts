@@ -125,36 +125,43 @@ export async function POST(request: Request) {
     console.error("[onboarding] snapshot insert failed:", snapErr.message);
   }
 
-  // Auto-generate the user's first 30-day AI plan.
+  // Auto-generate the user's first 30-day AI plan via Google Gemini.
   let planMeta: { track_id: string; track_label: string; days: number } | null = null;
   try {
-    const branchRow = await admin
-      .from("profiles")
-      .select("branch")
-      .eq("id", user.id)
-      .maybeSingle();
-    const branch = (branchRow.data as any)?.branch ?? null;
+    const { generate30DayRoadmap } = await import("@/lib/gemini");
+    const generatedDays = await generate30DayRoadmap(data);
 
-    const planInput = planInputFromProfile({ ...data, branch });
-    const plan = generatePlan(planInput);
+    // Provide a dynamic track title based on the goal
+    const trackLabel = `${data.main_goal.replace(/_/g, ' ').toUpperCase()} MASTERY`;
 
     const { error: planErr } = await admin.from("ai_plans").insert({
       user_id: user.id,
-      track_id: plan.track_id,
-      track_label: plan.track_label,
-      generated_plan: plan.days,
-      source: plan.source,
-      version: 1
+      track_id: data.main_goal,
+      track_label: trackLabel,
+      generated_plan: generatedDays as any,
+      source: data as any,
+      version: 1,
+      generation_model: "gemini-2.5-pro",
+      llm_response_raw: generatedDays as any
     } as any);
 
     if (planErr) {
       console.error("[onboarding] plan insert failed:", planErr.message);
     } else {
       planMeta = {
-        track_id: plan.track_id,
-        track_label: plan.track_label,
-        days: plan.days.length
+        track_id: data.main_goal,
+        track_label: trackLabel,
+        days: generatedDays.length
       };
+
+      // Add welcome notification
+      await admin.from("notifications").insert({
+        user_id: user.id,
+        type: "reminder",
+        title: "Your mission awaits",
+        message: "Your AI roadmap has been generated. The clock is ticking. Execute Day 1.",
+        action_url: "/dojo"
+      } as any);
     }
   } catch (e) {
     console.error("[onboarding] plan generation failed:", e);

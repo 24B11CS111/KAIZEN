@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useAuthSession } from "@/lib/useAuthSession";
 import { ProfileMenu } from "./ProfileMenu";
+import { NotificationCenter } from "./NotificationCenter";
 
 const KAIZEN_LOGO = "https://res.cloudinary.com/dsvfrlwt1/image/upload/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png";
 
@@ -116,7 +117,10 @@ export function Navbar() {
           {status === "loading" && <AuthSkeleton />}
           {status === "unauthenticated" && <GuestCta />}
           {status === "authenticated" && (
-            <ProfileMenu firstName={firstName} profile={profile} />
+            <>
+              <NotificationCenter />
+              <ProfileMenu firstName={firstName} profile={profile} />
+            </>
           )}
 
           {/* Mobile menu trigger */}

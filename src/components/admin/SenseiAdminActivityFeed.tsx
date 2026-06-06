@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { type SenseiActivityEntry } from "@/components/SenseiVerificationDashboard";
+export interface SenseiActivityEntry {
+  id: string;
+  type: string;
+  label: string;
+  detail: string;
+  user_id: string | null;
+  created_at: string | null;
+}
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, CreditCard, Dumbbell, Rocket, ShieldCheck, Target, UserPlus, Zap } from "lucide-react";

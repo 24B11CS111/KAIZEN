@@ -7,7 +7,7 @@ import {
   User, Cake, UserCircle2, Briefcase, GraduationCap, Clock,
   Sparkles, Target, Sword, Cpu, Brain, Wrench, BookOpen,
   Hammer, FlaskConical, Sigma, RadioTower, Zap, Cog,
-  Database, ShieldCheck, Building2, Rocket
+  Database, ShieldCheck, Building2, Rocket, Dumbbell
 } from "lucide-react";
 import { OnboardingSchema } from "@/lib/validation";
 
@@ -33,6 +33,12 @@ type Goal =
   | "prepare_exams"
   | "other";
 
+type WorkoutPreference = "gym" | "home_workout" | "calisthenics" | "cardio" | "none";
+type SleepTiming = "early_bird" | "night_owl" | "irregular";
+type ProductivityHabits = "pomodoro" | "deep_work" | "multitasking" | "chaotic";
+type DisciplineLevel = "poor" | "average" | "good" | "elite";
+type StudyTiming = "morning" | "afternoon" | "evening" | "late_night";
+
 interface State {
   full_name: string;
   age: string;
@@ -43,8 +49,12 @@ interface State {
   skill_level: Skill | "";
   main_goal: Goal | "";
   main_goal_other: string;
+  workout_preference: WorkoutPreference | "";
+  sleep_timing: SleepTiming | "";
+  productivity_habits: ProductivityHabits | "";
+  discipline_level: DisciplineLevel | "";
+  study_timing: StudyTiming | "";
 }
-
 // ---------------- Static option sets ----------------
 
 const GENDERS: { value: Gender; label: string; icon: any }[] = [
@@ -101,10 +111,46 @@ const GOALS: { value: Goal; label: string; icon: any; hint: string }[] = [
   { value: "other",              label: "Something else",         icon: Sparkles,   hint: "I'll tell you" }
 ];
 
-const TOTAL_STEPS = 8;
+const WORKOUTS: { value: WorkoutPreference; label: string; icon: any }[] = [
+  { value: "gym", label: "Gym (Weights)", icon: Dumbbell },
+  { value: "home_workout", label: "Home Workout", icon: Target },
+  { value: "calisthenics", label: "Calisthenics", icon: Sword },
+  { value: "cardio", label: "Cardio / Running", icon: Zap },
+  { value: "none", label: "None yet", icon: User }
+];
+
+const SLEEP: { value: SleepTiming; label: string; icon: any }[] = [
+  { value: "early_bird", label: "Early Bird", icon: Sparkles },
+  { value: "night_owl", label: "Night Owl", icon: Clock },
+  { value: "irregular", label: "Irregular", icon: AlertTriangle }
+];
+
+const HABITS: { value: ProductivityHabits; label: string; icon: any }[] = [
+  { value: "pomodoro", label: "Pomodoro Focus", icon: Target },
+  { value: "deep_work", label: "Long Deep Work", icon: Brain },
+  { value: "multitasking", label: "Multitasking", icon: Zap },
+  { value: "chaotic", label: "No system (Chaotic)", icon: AlertTriangle }
+];
+
+const DISCIPLINE: { value: DisciplineLevel; label: string; icon: any }[] = [
+  { value: "poor", label: "Poor (Procrastinate a lot)", icon: AlertTriangle },
+  { value: "average", label: "Average (Inconsistent)", icon: User },
+  { value: "good", label: "Good (Mostly consistent)", icon: Check },
+  { value: "elite", label: "Elite (Unbreakable)", icon: ShieldCheck }
+];
+
+const STUDY: { value: StudyTiming; label: string; icon: any }[] = [
+  { value: "morning", label: "Morning", icon: Sparkles },
+  { value: "afternoon", label: "Afternoon", icon: Clock },
+  { value: "evening", label: "Evening", icon: Zap },
+  { value: "late_night", label: "Late Night", icon: Target }
+];
+
+const TOTAL_STEPS = 13;
 const STEP_LABELS = [
   "Name", "Age", "Gender", "Occupation",
-  "Field", "Time", "Level", "Goal"
+  "Field", "Time", "Level", "Goal",
+  "Workout", "Sleep", "Habits", "Discipline", "Focus Time"
 ];
 
 // ---------------- Helpers ----------------
@@ -138,10 +184,15 @@ export function OnboardingFlow({ defaultEmail, defaultName }: Props) {
     gender: "",
     occupation: "",
     field_of_study: "",
-    daily_time_min: 0,
+    daily_time_min: 120,
     skill_level: "",
     main_goal: "",
-    main_goal_other: ""
+    main_goal_other: "",
+    workout_preference: "",
+    sleep_timing: "",
+    productivity_habits: "",
+    discipline_level: "",
+    study_timing: ""
   });
 
   // Reset error whenever step changes so a stale error doesn't bleed across panes.
@@ -168,6 +219,11 @@ export function OnboardingFlow({ defaultEmail, defaultName }: Props) {
         if (state.main_goal === "") return false;
         if (state.main_goal === "other" && state.main_goal_other.trim().length < 2) return false;
         return true;
+      case 9: return state.workout_preference !== "";
+      case 10: return state.sleep_timing !== "";
+      case 11: return state.productivity_habits !== "";
+      case 12: return state.discipline_level !== "";
+      case 13: return state.study_timing !== "";
       default: return false;
     }
   }, [step, state]);
@@ -196,7 +252,12 @@ export function OnboardingFlow({ defaultEmail, defaultName }: Props) {
       daily_time_min: state.daily_time_min,
       skill_level: state.skill_level as Skill,
       main_goal: state.main_goal as Goal,
-      main_goal_other: state.main_goal === "other" ? state.main_goal_other.trim() : null
+      main_goal_other: state.main_goal === "other" ? state.main_goal_other.trim() : null,
+      workout_preference: state.workout_preference as WorkoutPreference,
+      sleep_timing: state.sleep_timing as SleepTiming,
+      productivity_habits: state.productivity_habits as ProductivityHabits,
+      discipline_level: state.discipline_level as DisciplineLevel,
+      study_timing: state.study_timing as StudyTiming
     };
     const parsed = OnboardingSchema.safeParse(payload);
     if (!parsed.success) {
@@ -443,6 +504,89 @@ export function OnboardingFlow({ defaultEmail, defaultName }: Props) {
                     />
                   </motion.div>
                 )}
+              </Pane>
+            )}
+
+            {step === 9 && (
+              <Pane key="9" icon={Dumbbell} eyebrow="Fitness" title="How do you stay active?" subtitle="We will schedule workouts into your roadmap.">
+                <CardGrid cols={2}>
+                  {WORKOUTS.map((w) => (
+                    <ChoiceCard
+                      key={w.value}
+                      selected={state.workout_preference === w.value}
+                      onClick={() => { update("workout_preference", w.value); setTimeout(advance, 180); }}
+                      icon={w.icon}
+                      label={w.label}
+                    />
+                  ))}
+                </CardGrid>
+              </Pane>
+            )}
+
+            {step === 10 && (
+              <Pane key="10" icon={Clock} eyebrow="Recovery" title="When do you sleep?" subtitle="Optimizing your circadian rhythm.">
+                <CardGrid cols={1}>
+                  {SLEEP.map((s) => (
+                    <ChoiceCard
+                      key={s.value}
+                      selected={state.sleep_timing === s.value}
+                      onClick={() => { update("sleep_timing", s.value); setTimeout(advance, 180); }}
+                      icon={s.icon}
+                      label={s.label}
+                      wide
+                    />
+                  ))}
+                </CardGrid>
+              </Pane>
+            )}
+
+            {step === 11 && (
+              <Pane key="11" icon={Brain} eyebrow="Systems" title="How do you currently work?" subtitle="Understanding your productivity habits.">
+                <CardGrid cols={1}>
+                  {HABITS.map((h) => (
+                    <ChoiceCard
+                      key={h.value}
+                      selected={state.productivity_habits === h.value}
+                      onClick={() => { update("productivity_habits", h.value); setTimeout(advance, 180); }}
+                      icon={h.icon}
+                      label={h.label}
+                      wide
+                    />
+                  ))}
+                </CardGrid>
+              </Pane>
+            )}
+
+            {step === 12 && (
+              <Pane key="12" icon={ShieldCheck} eyebrow="Reality Check" title="Current discipline level?" subtitle="Be honest. The AI adapts to this.">
+                <CardGrid cols={1}>
+                  {DISCIPLINE.map((d) => (
+                    <ChoiceCard
+                      key={d.value}
+                      selected={state.discipline_level === d.value}
+                      onClick={() => { update("discipline_level", d.value); setTimeout(advance, 180); }}
+                      icon={d.icon}
+                      label={d.label}
+                      wide
+                    />
+                  ))}
+                </CardGrid>
+              </Pane>
+            )}
+
+            {step === 13 && (
+              <Pane key="13" icon={Target} eyebrow="Execution" title="When are you most focused?" subtitle="We will slot your hardest missions here.">
+                <CardGrid cols={2}>
+                  {STUDY.map((s) => (
+                    <ChoiceCard
+                      key={s.value}
+                      selected={state.study_timing === s.value}
+                      onClick={() => { update("study_timing", s.value); setTimeout(advance, 180); }}
+                      icon={s.icon}
+                      label={s.label}
+                    />
+                  ))}
+                </CardGrid>
               </Pane>
             )}
           </AnimatePresence>

@@ -80,7 +80,10 @@ export function NotificationCenter() {
     });
 
     return () => {
-      if (sub) supabase.removeChannel(sub);
+      if (sub) {
+        try { sub.unsubscribe(); } catch {}
+        try { supabase.removeChannel(sub); } catch {}
+      }
     };
   }, []);
 

@@ -8,6 +8,8 @@ export function GlobalPresence() {
   const pathname = usePathname();
 
   useEffect(() => {
+    if (pathname.startsWith("/sensei")) return;
+
     let cancelled = false;
     const supabase = createSupabaseBrowserClient();
     let channel: any = null;
@@ -37,14 +39,29 @@ export function GlobalPresence() {
         config: { presence: { key: user.id } }
       });
 
+      channel.on("presence", { event: "sync" }, () => {
+        // Listener is intentionally registered before subscribe. Tracking
+        // happens after SUBSCRIBED so Supabase accepts the presence payload.
+      });
+
       channel.subscribe(async (status: string) => {
         if (status !== "SUBSCRIBED") return;
-        await channel?.track(payload);
-        await supabase.rpc("upsert_online_session", {
-          p_channel_key: user.id,
-          p_pathname: pathname,
-          p_metadata: payload
-        } as any).catch(() => null);
+        try {
+          await channel?.track(payload);
+        } catch {
+          // Presence is best-effort and must never crash app rendering.
+        }
+
+        try {
+          const { error } = await supabase.rpc("upsert_online_session", {
+            p_channel_key: user.id,
+            p_pathname: pathname,
+            p_metadata: payload
+          } as any);
+          if (error) console.warn("[presence] online session rpc failed:", error.message);
+        } catch (error) {
+          console.warn("[presence] online session rpc threw:", error);
+        }
       });
     }
 
@@ -53,8 +70,9 @@ export function GlobalPresence() {
     return () => {
       cancelled = true;
       if (channel) {
-        channel.untrack();
-        supabase.removeChannel(channel);
+        try { channel.untrack(); } catch {}
+        try { channel.unsubscribe(); } catch {}
+        try { supabase.removeChannel(channel); } catch {}
       }
     };
   }, [pathname]);

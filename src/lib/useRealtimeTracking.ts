@@ -62,7 +62,8 @@ export function useRealtimeTracking({ userId, onChange, pollMs = 0 }: Args) {
     return () => {
       cancelled = true;
       if (timer) clearInterval(timer);
-      supabase.removeChannel(channel);
+      try { channel.unsubscribe(); } catch {}
+      try { supabase.removeChannel(channel); } catch {}
       subscribedRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

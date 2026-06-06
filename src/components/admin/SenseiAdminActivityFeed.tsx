@@ -16,8 +16,11 @@ import { formatDistanceToNow, parseISO } from "date-fns";
 
 export function SenseiAdminActivityFeed({ initialFeed = [] }: { initialFeed?: SenseiActivityEntry[] }) {
   const [feed, setFeed] = useState<SenseiActivityEntry[]>(initialFeed);
+  const [realtimeError, setRealtimeError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     let cancelled = false;
     const supabase = createSupabaseBrowserClient();
 
@@ -63,11 +66,23 @@ export function SenseiAdminActivityFeed({ initialFeed = [] }: { initialFeed?: Se
         setFeed(prev => [entry, ...prev].slice(0, 50));
       });
 
-    activityChannel.subscribe();
+    try {
+      activityChannel.subscribe((status) => {
+        if (cancelled) return;
+        if (status === "SUBSCRIBED") setRealtimeError(null);
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          setRealtimeError("Live activity is temporarily unavailable.");
+        }
+      });
+    } catch (error) {
+      console.warn("[sensei-activity-feed] realtime setup failed:", error);
+      setRealtimeError("Live activity is temporarily unavailable.");
+    }
 
     return () => {
       cancelled = true;
-      supabase.removeChannel(activityChannel);
+      try { activityChannel.unsubscribe(); } catch {}
+      try { supabase.removeChannel(activityChannel); } catch {}
     };
   }, []);
 
@@ -85,6 +100,11 @@ export function SenseiAdminActivityFeed({ initialFeed = [] }: { initialFeed?: Se
       </div>
 
       <div className="flex-1 overflow-y-auto pr-2 space-y-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        {realtimeError && (
+          <div className="rounded-2xl border border-amber-300/20 bg-amber-300/[0.04] p-3 text-xs text-amber-200/80">
+            {realtimeError}
+          </div>
+        )}
         <AnimatePresence initial={false}>
           {feed.map((entry) => {
             const icon = getIconForType(entry.type);
@@ -104,7 +124,7 @@ export function SenseiAdminActivityFeed({ initialFeed = [] }: { initialFeed?: Se
                   <p className="text-xs text-white/50 truncate mt-0.5">{entry.detail}</p>
                 </div>
                 <span className="text-[10px] uppercase font-bold text-white/30 whitespace-nowrap">
-                  {entry.created_at ? formatDistanceToNow(parseISO(entry.created_at), { addSuffix: true }) : "Just now"}
+                  {mounted ? formatRelativeTime(entry.created_at) : "-"}
                 </span>
               </motion.div>
             );
@@ -135,4 +155,13 @@ function formatMetadata(metadata: any) {
   if (metadata.day) return `Day ${metadata.day}`;
   if (metadata.pathname) return String(metadata.pathname);
   return "System recorded event";
+}
+
+function formatRelativeTime(value: string | null) {
+  if (!value) return "Just now";
+  try {
+    return formatDistanceToNow(parseISO(value), { addSuffix: true });
+  } catch {
+    return "Just now";
+  }
 }

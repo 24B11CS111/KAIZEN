@@ -19,8 +19,11 @@ interface OnlineUser {
 export function SenseiLiveRadar() {
   const [onlineUsers, setOnlineUsers] = useState<Record<string, OnlineUser>>({});
   const [loading, setLoading] = useState(true);
+  const [realtimeError, setRealtimeError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     let cancelled = false;
     const supabase = createSupabaseBrowserClient();
     
@@ -28,44 +31,68 @@ export function SenseiLiveRadar() {
     // For MVP, we just connect to presence and wait for sync
     const channel = (supabase as any).channel("kaizen-presence");
 
-    channel.on("presence", { event: "sync" }, () => {
-      if (cancelled) return;
-      const state = channel.presenceState();
-      const users: Record<string, OnlineUser> = {};
-      
-      for (const [key, p] of Object.entries(state)) {
-        const presences = p as any[];
-        if (presences && presences.length > 0) {
-          // Take the most recent presence for this user
-          users[key] = presences[presences.length - 1] as OnlineUser;
+    try {
+      channel.on("presence", { event: "sync" }, () => {
+        if (cancelled) return;
+        try {
+          const state = channel.presenceState();
+          const users: Record<string, OnlineUser> = {};
+
+          for (const [key, p] of Object.entries(state)) {
+            const presences = p as any[];
+            if (presences && presences.length > 0) {
+              users[key] = normalizePresence(key, presences[presences.length - 1]);
+            }
+          }
+          setOnlineUsers(users);
+          setRealtimeError(null);
+        } catch (error) {
+          console.warn("[sensei-live-radar] presence sync failed:", error);
+          setRealtimeError("Realtime presence is temporarily unavailable.");
         }
-      }
-      setOnlineUsers(users);
-      setLoading(false);
-    });
-
-    channel.on("presence", { event: "join" }, ({ key, newPresences }: any) => {
-      if (cancelled) return;
-      setOnlineUsers(prev => ({
-        ...prev,
-        [key]: newPresences[0] as OnlineUser
-      }));
-    });
-
-    channel.on("presence", { event: "leave" }, ({ key }: any) => {
-      if (cancelled) return;
-      setOnlineUsers(prev => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
+        setLoading(false);
       });
-    });
 
-    channel.subscribe();
+      channel.on("presence", { event: "join" }, ({ key, newPresences }: any) => {
+        if (cancelled) return;
+        const presence = Array.isArray(newPresences) ? newPresences[0] : null;
+        if (!presence) return;
+        setOnlineUsers(prev => ({
+          ...prev,
+          [key]: normalizePresence(key, presence)
+        }));
+      });
+
+      channel.on("presence", { event: "leave" }, ({ key }: any) => {
+        if (cancelled) return;
+        setOnlineUsers(prev => {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+      });
+
+      channel.subscribe((status: string) => {
+        if (cancelled) return;
+        if (status === "SUBSCRIBED") {
+          setLoading(false);
+          setRealtimeError(null);
+        }
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          setLoading(false);
+          setRealtimeError("Realtime presence is temporarily unavailable.");
+        }
+      });
+    } catch (error) {
+      console.warn("[sensei-live-radar] realtime setup failed:", error);
+      setLoading(false);
+      setRealtimeError("Realtime presence is temporarily unavailable.");
+    }
 
     return () => {
       cancelled = true;
-      supabase.removeChannel(channel);
+      try { channel.unsubscribe(); } catch {}
+      try { supabase.removeChannel(channel); } catch {}
     };
   }, []);
 
@@ -106,6 +133,10 @@ export function SenseiLiveRadar() {
           <div className="space-y-3">
             {loading ? (
               <div className="py-12 text-center text-white/40">Syncing radar...</div>
+            ) : realtimeError ? (
+              <div className="py-12 text-center text-white/40 border border-dashed border-amber-300/20 bg-amber-300/[0.04] rounded-2xl">
+                {realtimeError}
+              </div>
             ) : usersList.length === 0 ? (
               <div className="py-12 text-center text-white/40 border border-dashed border-white/10 rounded-2xl">
                 No users currently online.
@@ -142,7 +173,7 @@ export function SenseiLiveRadar() {
                         <span className="text-xs font-semibold uppercase tracking-wider text-white/30 mb-1">Duration</span>
                         <div className="flex items-center gap-1.5 text-sm font-medium text-white/80">
                           <Clock className="h-3 w-3" />
-                          {user.online_at ? formatDistanceToNow(parseISO(user.online_at)) : "Just now"}
+                          {mounted ? formatRelativeTime(user.online_at) : "-"}
                         </div>
                       </div>
                     </div>
@@ -155,6 +186,27 @@ export function SenseiLiveRadar() {
       </StaggerItem>
     </StaggerGroup>
   );
+}
+
+function normalizePresence(key: string, presence: any): OnlineUser {
+  const now = new Date().toISOString();
+  return {
+    user_id: String(presence?.user_id ?? key),
+    email: presence?.email ?? null,
+    full_name: presence?.full_name ?? null,
+    pathname: String(presence?.pathname ?? "/"),
+    online_at: String(presence?.online_at ?? now),
+    last_seen_at: String(presence?.last_seen_at ?? presence?.online_at ?? now)
+  };
+}
+
+function formatRelativeTime(value: string | null) {
+  if (!value) return "Just now";
+  try {
+    return formatDistanceToNow(parseISO(value));
+  } catch {
+    return "Just now";
+  }
 }
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number }) {

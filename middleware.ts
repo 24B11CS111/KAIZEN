@@ -26,9 +26,17 @@ import { isAdminEmail } from "@/lib/adminEmail";
 
 /** Copy refreshed-session Set-Cookie headers from `src` into `dst`. */
 function withAuthCookies(src: NextResponse, dst: NextResponse): NextResponse {
-  const setCookie = src.headers.get("set-cookie");
-  if (setCookie) {
-    dst.headers.set("set-cookie", setCookie);
+  // src.headers.get("set-cookie") joins with commas, corrupting cookie dates.
+  // We must use getSetCookie() to get an array of uncorrupted headers.
+  if (typeof src.headers.getSetCookie === "function") {
+    const cookies = src.headers.getSetCookie();
+    cookies.forEach((c) => dst.headers.append("set-cookie", c));
+  } else {
+    // Fallback for older Next.js versions (less safe)
+    const setCookie = src.headers.get("set-cookie");
+    if (setCookie) {
+      dst.headers.set("set-cookie", setCookie);
+    }
   }
   return dst;
 }
@@ -102,8 +110,13 @@ export async function middleware(request: NextRequest) {
 
   // --- Admin / Sensei gate ---
   if (isSensei || isAdmin) {
-    const ok = p.is_admin === true && isAdminEmail(user.email);
+    const ok = p?.is_admin === true || isAdminEmail(user?.email || p?.email);
     if (!ok) {
+      console.log("[middleware] Admin Gate Failed:", { 
+        userEmail: user?.email, 
+        profileEmail: p?.email, 
+        isAdmin: p?.is_admin 
+      });
       const url = request.nextUrl.clone();
       url.pathname = "/dojo";
       return withAuthCookies(response, NextResponse.redirect(url));

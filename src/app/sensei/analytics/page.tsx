@@ -2,6 +2,7 @@ import { requireAdminPage } from "@/lib/admin";
 import { getSenseiDirectoryUsers } from "@/lib/adminData";
 import { SenseiAnalyticsClient } from "./SenseiAnalyticsClient";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { ErrorBoundary } from "@/components/admin/ErrorBoundary";
 
 export const dynamic = "force-dynamic";
 
@@ -70,14 +71,16 @@ export default async function AnalyticsPage() {
         <p className="text-white/50 text-sm mt-1">Growth metrics, retention analytics, and platform health.</p>
       </div>
 
-      <SenseiAnalyticsClient 
-        totalRevenue={totalRevenue}
-        activeSubscribers={activeSubscribers}
-        branchDistribution={branchDistribution}
-        planDistribution={planDistribution}
-        monthlyRevenue={monthlyRevenue}
-        usersGrowth={usersGrowth}
-      />
+      <ErrorBoundary name="Analytics Charts">
+        <SenseiAnalyticsClient 
+          totalRevenue={totalRevenue}
+          activeSubscribers={activeSubscribers}
+          branchDistribution={branchDistribution}
+          planDistribution={planDistribution}
+          monthlyRevenue={monthlyRevenue}
+          usersGrowth={usersGrowth}
+        />
+      </ErrorBoundary>
     </div>
   );
 }

@@ -94,7 +94,8 @@ export function SenseiVerifying({ name, initialStatus = "pending" }: Props) {
       cancelled = true;
       if (timer) { clearInterval(timer); timer = null; }
       if (channel) {
-        supabase.removeChannel(channel);
+        try { channel.unsubscribe(); } catch {}
+        try { supabase.removeChannel(channel); } catch {}
         channel = null;
       }
       subscribedRef.current = false;

@@ -20,7 +20,7 @@ export async function requireAdmin() {
     .maybeSingle();
 
   const p: any = profile;
-  const ok = p && p.is_admin === true && isAdminEmail(user.email);
+  const ok = p && (p.is_admin === true || isAdminEmail(user?.email || p?.email));
   if (!ok) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   return { supabase, user, profile: p };
 }
@@ -39,8 +39,16 @@ export async function requireAdminPage() {
     .maybeSingle();
 
   const p: any = profile;
-  const ok = p && p.is_admin === true && isAdminEmail(user.email);
-  if (!ok) redirect("/dojo");
+  const ok = p && (p.is_admin === true || isAdminEmail(user?.email || p?.email));
+  
+  if (!ok) {
+    console.log("[requireAdminPage] Admin Gate Failed:", { 
+      userEmail: user?.email, 
+      profileEmail: p?.email,
+      isAdmin: p?.is_admin 
+    });
+    redirect("/dojo");
+  }
   
   return { supabase, user, profile: p };
 }

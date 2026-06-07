@@ -21,28 +21,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
 import { useAuthSession } from "@/lib/useAuthSession";
 import { ProfileMenu } from "./ProfileMenu";
-import { NotificationCenter } from "./NotificationCenter";
 
 const KAIZEN_LOGO = "https://res.cloudinary.com/dsvfrlwt1/image/upload/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png";
 
-const GUEST_LINKS = [
-  { href: "/",          label: "Home" },
-  { href: "/#pricing",  label: "Pricing" },
-  { href: "/#how",      label: "How it works" }
-];
-
-const AUTH_LINKS = [
-  { href: "/dojo",     label: "Dashboard" },
-  { href: "/progress", label: "Progress" },
-  { href: "/profile",  label: "Profile" }
-];
-
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const { status, profile, firstName } = useAuthSession();
 
   useEffect(() => {
@@ -53,15 +38,14 @@ export function Navbar() {
   }, []);
 
   const isAuthed = status === "authenticated";
-  const links = isAuthed ? AUTH_LINKS : GUEST_LINKS;
 
   return (
     <header
       className={
         "fixed top-0 inset-x-0 z-40 transition-all duration-300 " +
         (scrolled
-          ? "bg-obsidian/85 backdrop-blur-xl border-b border-white/[0.08] shadow-[0_8px_30px_-12px_rgba(0,0,0,0.7)]"
-          : "bg-gradient-to-b from-obsidian/60 to-transparent backdrop-blur-md border-b border-transparent")
+          ? "bg-obsidian/95 backdrop-blur-xl border-b border-white/[0.05] shadow-lg"
+          : "bg-transparent")
       }
     >
       {/* hairline accent — subtle red glow at the bottom edge when scrolled */}
@@ -76,7 +60,7 @@ export function Navbar() {
         />
       )}
 
-      <nav className="container-page h-16 flex items-center justify-between gap-3">
+      <nav className="px-4 h-14 flex items-center justify-between gap-3 max-w-md mx-auto">
         {/* Brand */}
         <Link
           href={isAuthed ? "/dojo" : "/"}
@@ -98,88 +82,15 @@ export function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop links */}
-        <ul className="hidden md:flex items-center gap-7 text-[13px]">
-          {links.map((l) => (
-            <li key={l.href}>
-              <Link
-                href={l.href}
-                className="text-white/70 hover:text-white transition-colors btn-tap"
-              >
-                {l.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-
         {/* Auth area */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {status === "loading" && <AuthSkeleton />}
           {status === "unauthenticated" && <GuestCta />}
           {status === "authenticated" && (
-            <>
-              <NotificationCenter />
-              <ProfileMenu firstName={firstName} profile={profile} />
-            </>
+            <ProfileMenu firstName={firstName} profile={profile} />
           )}
-
-          {/* Mobile menu trigger */}
-          <button
-            type="button"
-            onClick={() => setMobileOpen((v) => !v)}
-            className="md:hidden btn-tap h-9 w-9 grid place-items-center rounded-md border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition-colors"
-            aria-expanded={mobileOpen}
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-          >
-            {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </button>
         </div>
       </nav>
-
-      {/* Mobile menu drawer */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="md:hidden overflow-hidden border-t border-white/[0.06] bg-obsidian/95 backdrop-blur-xl"
-          >
-            <ul className="container-page py-3 space-y-1">
-              {links.map((l) => (
-                <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="block py-3 px-2 text-[14px] text-white/85 hover:text-white hover:bg-white/[0.04] rounded-md transition-colors"
-                  >
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-              {!isAuthed && status === "unauthenticated" && (
-                <li className="pt-2 flex gap-2">
-                  <Link
-                    href="/auth/login"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex-1 btn-secondary text-center btn-tap py-3"
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    href="/auth/signup"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex-1 btn-primary text-center btn-tap py-3"
-                  >
-                    Sign up
-                  </Link>
-                </li>
-              )}
-            </ul>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </header>
   );
 }
@@ -200,7 +111,7 @@ function GuestCta() {
     <>
       <Link
         href="/auth/login"
-        className="hidden sm:inline-flex text-[13px] text-white/75 hover:text-white px-3 py-1.5 rounded-md transition-colors btn-tap"
+        className="text-[13px] text-white/75 hover:text-white px-3 py-1.5 rounded-md transition-colors btn-tap"
       >
         Sign in
       </Link>

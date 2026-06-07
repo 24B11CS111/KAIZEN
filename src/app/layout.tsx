@@ -60,7 +60,7 @@ export const viewport: Viewport = {
   colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5,
+  maximumScale: 1,
   userScalable: false,
   viewportFit: "cover"
 };
@@ -82,14 +82,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/png" sizes="16x16" href={ICON_16} />
         <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
       </head>
-      <body className="min-h-screen bg-obsidian text-white antialiased">
-        <DevBypassBanner />
-        <IntroLoader />
-        <GlobalPresence />
-        {children}
-        <BottomNavGate />
-        <InstallPrompt />
-        <ServiceWorkerRegistrar />
+      <body className="text-white antialiased">
+        <div className="app-shell">
+          <DevBypassBanner />
+          <IntroLoader />
+          <GlobalPresence />
+          <div className="app-scroll-container" id="app-scroll-container">
+            {children}
+          </div>
+          <BottomNavGate />
+          <InstallPrompt />
+          <ServiceWorkerRegistrar />
+        </div>
       </body>
     </html>
   );

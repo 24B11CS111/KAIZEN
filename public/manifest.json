@@ -7,11 +7,11 @@
   "id": "/?source=pwa",
   "display": "standalone",
   "display_override": [
-    "window-controls-overlay",
     "standalone",
+    "fullscreen",
     "minimal-ui"
   ],
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "background_color": "#050505",
   "theme_color": "#050505",
   "categories": [
@@ -101,18 +101,6 @@
       "short_name": "Progress",
       "description": "See your 30-day progress",
       "url": "/progress",
-      "icons": [
-        {
-          "src": "https://res.cloudinary.com/dsvfrlwt1/image/upload/w_192,h_192,c_pad,b_rgb:050505/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png",
-          "sizes": "192x192"
-        }
-      ]
-    },
-    {
-      "name": "Branches",
-      "short_name": "Branches",
-      "description": "Browse the 7 B.Tech paths",
-      "url": "/branches",
       "icons": [
         {
           "src": "https://res.cloudinary.com/dsvfrlwt1/image/upload/w_192,h_192,c_pad,b_rgb:050505/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png",

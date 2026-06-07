@@ -27,54 +27,28 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Document scroll (single scroll container = html) ─────── */
+/* ── Document scroll (disabled for app shell) ─────── */
 html {
-  background-color: var(--bg);
+  background-color: #000000;
   color: var(--text);
   font-family: var(--font-sans);
 
-  /* Horizontal overflow prevention — clip doesn't create a scroll container */
-  overflow-x: clip;
-
-  /* Disable iOS pull-to-refresh while keeping vertical scroll */
-  overscroll-behavior-y: none;
-
-  /* Momentum scrolling on iOS */
-  -webkit-overflow-scrolling: touch;
-
-  /* Prevent iOS text-size boost */
+  /* Prevent all zooming, bouncing, and scrolling on html/body */
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
   -webkit-text-size-adjust: 100%;
-
-  /* Smooth scroll (disabled on iOS keyboard focus to prevent jank) */
-  scroll-behavior: smooth;
 }
 
 body {
-  min-height: 100%;
-  background-color: var(--bg);
-
-  /* Subtle cinematic top glow — fixed so it doesn't scroll */
-  background-image: radial-gradient(
-    1200px 500px at 50% -200px,
-    rgba(208, 0, 0, 0.08),
-    transparent 70%
-  );
-  background-attachment: fixed;
-
-  /* Horizontal clip on body too */
-  overflow-x: clip;
-
-  /* Body must NOT be a vertical scroll container — html handles scroll */
-  overflow-y: visible;
-
-  /* Safe-area bottom padding (home indicator on iPhone) */
-  padding-bottom: env(safe-area-inset-bottom);
-
-  /* Kill tap highlight on Android */
+  height: 100svh;
+  height: 100dvh;
+  width: 100vw;
+  background-color: #000000;
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
-
-  /* Faster touch response */
-  touch-action: manipulation;
 }
 
 /* ── iOS Safari scroll fix ────────────────────────────────── */
@@ -164,19 +138,43 @@ main {
     animation-duration: 0ms !important;
     transition-duration: 0ms !important;
   }
-  main { animation: none; }
 }
 
-/* ── Dynamic viewport helpers ─────────────────────────────── */
-.h-app     { height: 100svh; height: 100dvh; }
-.min-h-app { min-height: 100svh; min-height: 100dvh; }
+/* ── Mobile App Shell Container ──────────────────────────── */
+.app-shell {
+  width: 100%;
+  max-width: 440px; /* Constrain desktop to mobile width */
+  margin: 0 auto;
+  height: 100svh;
+  height: 100dvh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg);
+  box-shadow: 0 0 50px rgba(0,0,0,0.8);
+  border-inline: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
 
-/* ── Scrollable containers ────────────────────────────────── */
-.scroll-y {
+  /* Subtle cinematic top glow inside the app shell */
+  background-image: radial-gradient(
+    800px 400px at 50% 0px,
+    rgba(208, 0, 0, 0.08),
+    transparent 70%
+  );
+  background-attachment: local;
+}
+
+.app-scroll-container {
+  flex: 1 1 auto;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+  touch-action: pan-y;
+  scroll-behavior: smooth;
 }
+
+/* ── Scrollable containers ────────────────────────────────── */
 .scroll-x {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -191,13 +189,6 @@ main {
 }
 .snap-lane > * { scroll-snap-align: start; }
 
-/* ── PWA standalone: extra bottom clearance ───────────────── */
-@media all and (display-mode: standalone) {
-  body {
-    padding-bottom: max(env(safe-area-inset-bottom), 16px);
-  }
-}
-
 /* ============================================================
    COMPONENT LAYER
    ============================================================ */
@@ -205,17 +196,15 @@ main {
 
   /* Page container */
   .container-page {
-    @apply max-w-6xl mx-auto px-6;
+    @apply px-4 mx-auto w-full;
   }
   .container-app {
-    @apply mx-auto px-4 md:px-6 max-w-6xl;
-    padding-left:  max(1rem, env(safe-area-inset-left));
-    padding-right: max(1rem, env(safe-area-inset-right));
+    @apply px-4 mx-auto w-full;
   }
 
   /* Bottom-nav clearance */
   .pb-bottom-nav {
-    padding-bottom: max(80px, calc(76px + env(safe-area-inset-bottom)));
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
   }
 
   /* Cards */
@@ -319,8 +308,8 @@ main {
   }
 
   /* Section rhythm */
-  .section       { @apply py-16 md:py-20; }
-  .section-tight { @apply py-12 md:py-16; }
+  .section       { @apply py-8 md:py-10; }
+  .section-tight { @apply py-6 md:py-8; }
 
   /* Skeleton shimmer */
   .skeleton {
@@ -351,15 +340,9 @@ main {
 
   /* Glow text underline */
   .glow-underline { text-shadow: 0 0 18px rgba(208,0,0,0.35); }
-
-  /* Mobile app shell (full-height flex column) */
-  .shell-app {
-    min-height: 100svh;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-  }
 }
+
+
 
 /* ============================================================
    ANIMATIONS

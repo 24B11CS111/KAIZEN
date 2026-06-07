@@ -240,6 +240,7 @@ async function DojoStateRouter({ profile }: { profile: any }) {
         aiPlanDays={rawPlanDays}
         aiTrackLabel={aiTrackLabel}
         missedDays={missedDays}
+        tier={subStatus.tier}
       />
     );
   }

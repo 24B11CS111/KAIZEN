@@ -102,7 +102,7 @@ export function LockedScreen({ reason = "expired" }: { reason?: "expired" | "rej
           <a href={upiLink} className="btn-ghost text-xs justify-center">
             Open UPI app
           </a>
-          <Link href="/enroll" className="btn-blood text-xs justify-center">
+          <Link href="/upgrade" className="btn-blood text-xs justify-center">
             <RefreshCcw className="h-3.5 w-3.5" />
             {reason === "rejected" ? "Re-submit" : "Renew"}
           </Link>

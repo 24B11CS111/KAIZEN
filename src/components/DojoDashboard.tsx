@@ -47,6 +47,8 @@ interface Props {
   aiPlanDays?: PlanDay[] | null;
   /** Full calendar days since the last sealed day (0 = today, -1 = never). */
   missedDays?: number;
+  /** Subscription tier to determine feature access */
+  tier?: string;
 }
 
 const FREE_LIMIT = 3;
@@ -56,7 +58,8 @@ export function DojoDashboard({
   sealedToday = false, streakBroken = false,
   aiCurriculum = null, aiTrackLabel = null,
   aiPlanDays = null,
-  missedDays = -1
+  missedDays = -1,
+  tier = "trial"
 }: Props) {
   const [gateDone, setGateDone] = useState(!showGate);
   const [completed, setCompleted] = useState<Set<number>>(
@@ -112,6 +115,8 @@ export function DojoDashboard({
   const planLocked = currentDay > planMaxDay && !allDone;
   const cycleLocked = currentDay > cycleDay && !planLocked && !allDone;
   const cardLocked = (planLocked || cycleLocked) && !allDone;
+  
+  const isCore = tier === "core";
 
   // Gamification
   const xp = useMemo(() => computeXpState(completedCount, currentStreak), [completedCount, currentStreak]);
@@ -374,7 +379,7 @@ export function DojoDashboard({
           <div className="card p-3 border-blood-500/30 text-xs text-white/80 flex items-center gap-2">
             <Lock className="h-3.5 w-3.5 text-blood-500 shrink-0" />
             <span className="flex-1">Free preview - first {FREE_LIMIT} days unlocked.</span>
-            <Link href="/enroll" className="text-blood-500 font-semibold whitespace-nowrap">Upgrade</Link>
+            <Link href="/upgrade" className="text-blood-500 font-semibold whitespace-nowrap">Upgrade</Link>
           </div>
         )}
 
@@ -383,7 +388,19 @@ export function DojoDashboard({
             · Workout · Discipline · Recovery). When no AI plan exists
             yet (rare — auto-generation runs server-side) we fall back to
             the legacy MissionCard so the dashboard never goes blank. */}
-        <StaggerItem>{cardLocked || !dailyMission ? (
+        <StaggerItem>
+          {isCore ? (
+            <div className="card p-6 border-blood-500/30 flex flex-col items-center justify-center text-center">
+              <Lock className="h-8 w-8 text-blood-500 mb-3" />
+              <h3 className="text-lg font-bold mb-1">AI Roadmap Locked</h3>
+              <p className="text-sm text-white/60 mb-4 max-w-sm">
+                You are on the KAIZEN CORE plan. Upgrade to ELITE to unlock your adaptive AI missions and intelligent roadmap.
+              </p>
+              <Link href="/upgrade" className="btn-blood py-2 px-4 text-xs inline-flex items-center gap-2">
+                <Sparkles className="h-3 w-3" /> Upgrade to Elite
+              </Link>
+            </div>
+          ) : cardLocked || !dailyMission ? (
           <>
             <MissionCard
               day={displayDay}
@@ -391,7 +408,7 @@ export function DojoDashboard({
               data={dayData as any}
               locked={cardLocked}
               lockReason={planLocked ? "plan" : "cycle"}
-              upgradeHref="/enroll"
+              upgradeHref="/upgrade"
             />
             {!cardLocked && <WorkoutMissionCard mission={workoutMission} />}
           </>
@@ -463,15 +480,18 @@ export function DojoDashboard({
           <div className="card p-3 border-blood-500/40 text-xs text-blood-500">{errMsg}</div>
         )}
 
-        <StaggerItem><AIGuidancePanel
-          recommendation={dayData?.concept ? dayData.concept : "Take ten quiet minutes before you begin."}
-          focusArea={dayData?.title || (profile.branch ?? "Discipline")}
-          estimatedMinutes={45}
-        /></StaggerItem>
+        {!isCore && (
+          <StaggerItem><AIGuidancePanel
+            recommendation={dayData?.concept ? dayData.concept : "Take ten quiet minutes before you begin."}
+            focusArea={dayData?.title || (profile.branch ?? "Discipline")}
+            estimatedMinutes={45}
+          /></StaggerItem>
+        )}
 
         <StaggerItem><YouVsYou refreshKey={refreshKey} /></StaggerItem>
         <StaggerItem><AchievementGrid items={achievements} /></StaggerItem>
 
+        {!isCore && (
         <StaggerItem><section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold">30-Day Path</h2>
@@ -518,6 +538,7 @@ export function DojoDashboard({
             })}
           </div>
         </section></StaggerItem>
+        )}
         </StaggerGroup>
       </main>
     </motion.div>

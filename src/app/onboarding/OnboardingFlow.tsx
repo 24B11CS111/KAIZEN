@@ -65,25 +65,24 @@ const GENDERS: { value: Gender; label: string; icon: any }[] = [
 ];
 
 const OCCUPATIONS: { value: Occupation; label: string; icon: any; hint?: string }[] = [
-  { value: "school_student", label: "School student", icon: BookOpen, hint: "Class 9–10" },
-  { value: "intermediate_student", label: "Intermediate", icon: GraduationCap, hint: "Class 11–12" },
-  { value: "college_student", label: "College student", icon: Building2, hint: "B.Tech / B.Sc / etc." },
-  { value: "working_professional", label: "Working professional", icon: Briefcase },
-  { value: "job_seeker", label: "Job seeker", icon: Target },
-  { value: "self_employed", label: "Self-employed", icon: Rocket },
+  { value: "school_student", label: "High School Student", icon: BookOpen, hint: "Building early discipline" },
+  { value: "college_student", label: "University Student", icon: Building2, hint: "Degree / Academics" },
+  { value: "working_professional", label: "Working Professional", icon: Briefcase, hint: "Career growth" },
+  { value: "job_seeker", label: "Job Seeker", icon: Target, hint: "Skill building & hunting" },
+  { value: "self_employed", label: "Creator / Entrepreneur", icon: Rocket, hint: "Building my own thing" },
   { value: "other", label: "Other", icon: User }
 ];
 
 const FIELD_SUGGESTIONS = [
-  { label: "CSE", icon: Cpu },
-  { label: "AIML", icon: Brain },
-  { label: "Data Science", icon: Database },
-  { label: "ECE", icon: RadioTower },
-  { label: "EEE", icon: Zap },
-  { label: "Mechanical", icon: Cog },
-  { label: "Civil", icon: Hammer },
-  { label: "MPC", icon: Sigma },
-  { label: "BiPC", icon: FlaskConical }
+  { label: "Software Engineering", icon: Cpu },
+  { label: "Content Creation", icon: RadioTower },
+  { label: "Design", icon: Sparkles },
+  { label: "Business / Finance", icon: Database },
+  { label: "Fitness", icon: Dumbbell },
+  { label: "Marketing", icon: Zap },
+  { label: "Academics", icon: BookOpen },
+  { label: "Engineering", icon: Cog },
+  { label: "Other", icon: Target }
 ];
 
 const DAILY_TIMES = [
@@ -101,13 +100,11 @@ const SKILL_LEVELS: { value: Skill; label: string; hint: string; icon: any }[] =
 ];
 
 const GOALS: { value: Goal; label: string; icon: any; hint: string }[] = [
-  { value: "crack_placements",   label: "Crack placements",       icon: Target,     hint: "Land that offer" },
-  { value: "full_stack_dev",     label: "Become a full-stack dev", icon: Cpu,        hint: "Frontend + backend" },
   { value: "improve_discipline", label: "Improve discipline",     icon: ShieldCheck, hint: "Daily consistency" },
-  { value: "aiml_mastery",       label: "AI / ML mastery",        icon: Brain,      hint: "Models, math, ship" },
-  { value: "build_projects",     label: "Build real projects",    icon: Rocket,     hint: "Portfolio worth showing" },
-  { value: "learn_programming",  label: "Learn programming",      icon: BookOpen,   hint: "From zero to confident" },
-  { value: "prepare_exams",      label: "Prepare for exams",      icon: GraduationCap, hint: "JEE / EAMCET / GATE" },
+  { value: "build_projects",     label: "Build a product/business", icon: Rocket,     hint: "Launch something real" },
+  { value: "learn_programming",  label: "Learn technical skills", icon: Cpu,        hint: "Programming, AI, etc." },
+  { value: "crack_placements",   label: "Land a job / offer",     icon: Target,     hint: "Career breakthrough" },
+  { value: "prepare_exams",      label: "Clear an exam",          icon: GraduationCap, hint: "Academics / certifications" },
   { value: "other",              label: "Something else",         icon: Sparkles,   hint: "I'll tell you" }
 ];
 

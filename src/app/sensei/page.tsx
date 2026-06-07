@@ -42,17 +42,16 @@ export default async function SenseiOverviewPage() {
           href="/sensei/users"
         />
         <StatCard 
-          title="Premium (Core+Elite)" 
-          value={coreUsers + eliteUsers} 
-          icon={<ShieldCheck className="h-5 w-5 text-purple-400" />} 
+          title="KAIZEN ELITE" 
+          value={eliteUsers} 
+          icon={<ShieldCheck className="h-5 w-5 text-blood-500" />} 
           href="/sensei/users"
         />
         <StatCard 
-          title="Pending Approvals" 
-          value={pendingApprovals} 
-          icon={<AlertTriangle className="h-5 w-5 text-blood-500" />} 
-          alert={pendingApprovals > 0}
-          href="/sensei/approvals"
+          title="KAIZEN CORE" 
+          value={coreUsers} 
+          icon={<Users className="h-5 w-5 text-purple-400" />} 
+          href="/sensei/users"
         />
         <StatCard 
           title="Total Revenue" 
@@ -68,7 +67,6 @@ export default async function SenseiOverviewPage() {
             <h2 className="text-lg font-semibold text-white">Quick Actions</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <ActionCard title="Review UTRs" desc={`${pendingApprovals} pending`} href="/sensei/approvals" icon={<ShieldCheck />} />
             <ActionCard title="User CRM" desc="Manage users" href="/sensei/users" icon={<Users />} />
             <ActionCard title="View Analytics" desc="Growth metrics" href="/sensei/analytics" icon={<TrendingUp />} />
             <ActionCard title="Live Radar" desc="Realtime activity" href="/sensei/activity" icon={<Activity />} />

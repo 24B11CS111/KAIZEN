@@ -93,7 +93,7 @@ export function TracksSection() {
               ))}
             </ul>
 
-            <Link href="/enroll?plan=49" className="btn-secondary mt-7 w-full">
+            <Link href="/upgrade?plan=49" className="btn-secondary mt-7 w-full">
               Choose Intermediate <ArrowRight className="h-4 w-4" />
             </Link>
           </motion.div>
@@ -141,7 +141,7 @@ export function TracksSection() {
               ))}
             </ul>
 
-            <Link href="/enroll?plan=99" className="btn-primary mt-7 w-full">
+            <Link href="/upgrade?plan=99" className="btn-primary mt-7 w-full">
               Choose Engineering <ArrowRight className="h-4 w-4" />
             </Link>
           </motion.div>

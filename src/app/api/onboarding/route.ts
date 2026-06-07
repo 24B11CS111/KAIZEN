@@ -84,6 +84,9 @@ export async function POST(request: Request) {
     { onConflict: "id" }
   );
 
+  const trialExpiresAt = new Date();
+  trialExpiresAt.setDate(trialExpiresAt.getDate() + 3);
+
   const { error: profErr } = await admin
     .from("profiles")
     .update({
@@ -95,7 +98,10 @@ export async function POST(request: Request) {
       daily_time_min: data.daily_time_min,
       skill_level: data.skill_level,
       main_goal: data.main_goal,
-      onboarded_at: new Date().toISOString()
+      onboarded_at: new Date().toISOString(),
+      subscription_tier: "trial",
+      trial_expires_at: trialExpiresAt.toISOString(),
+      subscription_status: "active" // Make them active instantly for the trial
     } as any)
     .eq("id", user.id);
 

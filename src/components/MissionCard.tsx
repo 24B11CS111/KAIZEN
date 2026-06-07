@@ -24,7 +24,7 @@ interface Props {
 
 export function MissionCard({
   day, branch, data, locked,
-  lockReason = "plan", upgradeHref = "/enroll"
+  lockReason = "plan", upgradeHref = "/upgrade"
 }: Props) {
   const sections = [
     {

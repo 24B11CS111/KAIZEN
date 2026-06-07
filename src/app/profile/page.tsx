@@ -137,7 +137,7 @@ export default async function ProfilePage() {
             </div>
             {tier === "free" && (
               <Link
-                href="/enroll"
+                href="/upgrade"
                 className="btn-tap inline-flex items-center gap-1.5 rounded-lg bg-blood-500 text-white text-[11px] font-semibold px-3 py-1.5 shadow-[0_0_16px_-4px_rgba(208,0,0,0.55)]"
               >
                 Upgrade <ArrowRight className="h-3 w-3" />
@@ -242,7 +242,7 @@ export default async function ProfilePage() {
                 Open UPI app
               </a>
               <Link
-                href="/enroll"
+                href="/upgrade"
                 className="btn-tap inline-flex items-center justify-center gap-1.5 rounded-lg bg-blood-500 text-white text-[11px] font-semibold px-3.5 py-2 shadow-[0_0_16px_-4px_rgba(208,0,0,0.55)]"
               >
                 {status === "rejected" ? "Re-submit" : "Renew"} <ArrowRight className="h-3.5 w-3.5" />

@@ -141,7 +141,7 @@ export function SenseiVerifying({ name, initialStatus = "pending" }: Props) {
             <a href={upiLink} className="btn-ghost text-xs justify-center">
               Open UPI app
             </a>
-            <Link href="/enroll" className="btn-primary text-xs justify-center inline-flex items-center">
+            <Link href="/upgrade" className="btn-primary text-xs justify-center inline-flex items-center">
               Re-submit payment
             </Link>
           </div>

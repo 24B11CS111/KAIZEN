@@ -109,7 +109,7 @@ export function ProfileMenu({ firstName, profile }: Props) {
               <Item href="/dojo"     icon={Sparkles}    label="Dashboard" />
               <Item href="/profile"  icon={UserIcon}    label="My Profile" />
               <Item href="/progress" icon={BarChart3}   label="Progress" />
-              <Item href="/enroll"   icon={CreditCard}  label="Subscription" />
+              <Item href="/upgrade"   icon={CreditCard}  label="Subscription" />
             </nav>
 
             <div className="border-t border-white/[0.06] py-1.5">

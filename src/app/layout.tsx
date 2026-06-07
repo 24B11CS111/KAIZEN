@@ -80,6 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" sizes="180x180" href={ICON_180} />
         <link rel="icon" type="image/png" sizes="32x32" href={ICON_32} />
         <link rel="icon" type="image/png" sizes="16x16" href={ICON_16} />
+        <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
       </head>
       <body className="min-h-screen bg-obsidian text-white antialiased">
         <DevBypassBanner />

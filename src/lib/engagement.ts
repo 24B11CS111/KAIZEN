@@ -71,7 +71,7 @@ export function computeReminders(input: EngagementInput): Reminder[] {
         tone: "urgent",
         title: "Your access just expired",
         body: "Renew now to keep your streak alive and your plan intact.",
-        cta: { label: "Renew", href: "/enroll" },
+        cta: { label: "Renew", href: "/upgrade" },
         dismissTtlMs: 6 * 60 * 60 * 1000
       });
     } else if (days <= 3) {
@@ -83,7 +83,7 @@ export function computeReminders(input: EngagementInput): Reminder[] {
           ? "Subscription expires tomorrow"
           : days + " days until your subscription expires",
         body: "Renew now so your streak and progress don't reset.",
-        cta: { label: "Renew", href: "/enroll" },
+        cta: { label: "Renew", href: "/upgrade" },
         dismissTtlMs: 12 * 60 * 60 * 1000
       });
     }

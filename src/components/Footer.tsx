@@ -27,7 +27,7 @@ const PRODUCT = [
 const RESOURCES = [
   { href: "/#how",     label: "How it works" },
   { href: "/sensei",   label: "Sensei" },
-  { href: "/enroll",   label: "Subscribe" }
+  { href: "/upgrade",   label: "Subscribe" }
 ];
 
 const LEGAL = [

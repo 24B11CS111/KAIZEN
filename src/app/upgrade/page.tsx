@@ -2,9 +2,70 @@
 import { motion } from "framer-motion";
 import { Check, ShieldCheck, Zap, Lock, Crown, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
 
 export default function UpgradePage() {
+  const router = useRouter();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  const handlePayment = async (plan: "core" | "elite") => {
+    if (loadingPlan) return;
+    setLoadingPlan(plan);
+
+    try {
+      const res = await fetch("/api/razorpay/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan })
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error);
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "test_key", // Add this to env
+        amount: data.order.amount,
+        currency: "INR",
+        name: "KAIZEN.SYS",
+        description: `Unlock KAIZEN ${plan.toUpperCase()}`,
+        order_id: data.order.id,
+        handler: async function (response: any) {
+          const verifyRes = await fetch("/api/razorpay/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              plan
+            })
+          });
+
+          if (verifyRes.ok) {
+            router.push("/dojo");
+            router.refresh();
+          } else {
+            alert("Payment verification failed.");
+          }
+        },
+        theme: {
+          color: "#D00000"
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (response: any) {
+        alert(response.error.description);
+      });
+      rzp.open();
+    } catch (e: any) {
+      alert("Could not start payment. Please try again.");
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
   return (
     <main className="min-h-[100svh] bg-obsidian text-white flex flex-col">
       <Navbar />
@@ -57,13 +118,14 @@ export default function UpgradePage() {
                 <FeatureItem text="Basic In-App Reminders" />
               </ul>
 
-              <Link
-                href="/enroll?plan=core"
-                className="w-full btn-ghost py-4 inline-flex items-center justify-center gap-2 text-sm"
+              <button
+                onClick={() => handlePayment("core")}
+                disabled={loadingPlan !== null}
+                className="w-full btn-ghost py-4 inline-flex items-center justify-center gap-2 text-sm disabled:opacity-50"
               >
-                Unlock Core
+                {loadingPlan === "core" ? "Processing..." : "Unlock Core"}
                 <ArrowRight className="h-4 w-4" />
-              </Link>
+              </button>
             </motion.div>
 
             {/* Elite Plan */}
@@ -95,13 +157,14 @@ export default function UpgradePage() {
                 <FeatureItem text="Priority Mission Generation" />
               </ul>
 
-              <Link
-                href="/enroll?plan=elite"
-                className="w-full btn-blood py-4 inline-flex items-center justify-center gap-2 text-sm"
+              <button
+                onClick={() => handlePayment("elite")}
+                disabled={loadingPlan !== null}
+                className="w-full btn-blood py-4 inline-flex items-center justify-center gap-2 text-sm disabled:opacity-50"
               >
-                Become Elite
+                {loadingPlan === "elite" ? "Processing..." : "Become Elite"}
                 <Zap className="h-4 w-4 fill-current" />
-              </Link>
+              </button>
             </motion.div>
           </div>
         </div>

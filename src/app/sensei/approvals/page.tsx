@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { logSenseiFetch } from "@/lib/senseiLog";
 import { AdminApprovalList, type PendingRow } from "@/components/AdminApprovalList";
 import { ErrorBoundary } from "@/components/admin/ErrorBoundary";
+import { SenseiPage } from "@/components/admin/SenseiPage";
 
 export const dynamic = "force-dynamic";
 
@@ -43,12 +44,10 @@ export default async function ApprovalsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Payment Approvals</h1>
-        <p className="text-white/50 text-sm mt-1">Review and approve pending UTR submissions.</p>
-      </div>
-
+    <SenseiPage
+      title="Payment Approvals"
+      description="Review and approve pending UTR submissions."
+    >
       {fetchError && (
         <div className="rounded-2xl border border-amber-300/20 bg-amber-300/[0.04] p-4 text-sm text-amber-200/80">
           {fetchError} The dashboard will continue to load with an empty queue.
@@ -58,6 +57,6 @@ export default async function ApprovalsPage() {
       <ErrorBoundary name="Approvals">
         <AdminApprovalList rows={pendingRows} />
       </ErrorBoundary>
-    </div>
+    </SenseiPage>
   );
 }

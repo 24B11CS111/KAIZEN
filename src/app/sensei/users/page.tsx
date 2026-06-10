@@ -2,6 +2,7 @@ import { requireAdminPage } from "@/lib/admin";
 import { getSenseiDirectoryUsers } from "@/lib/adminData";
 import { SenseiUsersClient } from "./SenseiUsersClient";
 import { ErrorBoundary } from "@/components/admin/ErrorBoundary";
+import { SenseiPage } from "@/components/admin/SenseiPage";
 
 export const dynamic = "force-dynamic";
 
@@ -10,17 +11,14 @@ export default async function UsersPage() {
   const users = await getSenseiDirectoryUsers();
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 flex flex-col h-[calc(100svh-6rem)]">
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Warrior Directory</h1>
-        <p className="text-white/50 text-sm mt-1">Complete CRM visibility and management for all registered users.</p>
-      </div>
-
-      <div className="flex-1 min-h-0">
-        <ErrorBoundary name="User Directory">
-          <SenseiUsersClient initialUsers={users} />
-        </ErrorBoundary>
-      </div>
-    </div>
+    <SenseiPage
+      title="Warrior Directory"
+      description="Complete CRM visibility and management for all registered users."
+      fullHeight
+    >
+      <ErrorBoundary name="User Directory">
+        <SenseiUsersClient initialUsers={users} />
+      </ErrorBoundary>
+    </SenseiPage>
   );
 }

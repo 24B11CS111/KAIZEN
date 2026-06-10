@@ -164,6 +164,34 @@ main {
   background-attachment: local;
 }
 
+/* ── Admin / Sensei — full-width desktop dashboard shell ─── */
+.app-shell-admin {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  height: 100svh;
+  height: 100dvh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: #030303;
+  overflow: hidden;
+  border-inline: none;
+  box-shadow: none;
+}
+
+.app-shell-admin::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 120% 80% at 50% 0%, black 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 120% 80% at 50% 0%, black 20%, transparent 75%);
+}
+
 .app-scroll-container {
   flex: 1 1 auto;
   overflow-y: auto;
@@ -172,6 +200,16 @@ main {
   overscroll-behavior-y: contain;
   touch-action: pan-y;
   scroll-behavior: smooth;
+}
+
+.app-scroll-container-admin {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
 }
 
 /* ── Scrollable containers ────────────────────────────────── */
@@ -200,6 +238,17 @@ main {
   }
   .container-app {
     @apply px-4 mx-auto w-full;
+  }
+
+  /* Sensei admin — full-width page sections */
+  .sensei-stat-grid {
+    @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4;
+  }
+  .sensei-panel {
+    @apply rounded-2xl border border-white/[0.06] bg-white/[0.02];
+  }
+  .sensei-chart-panel {
+    @apply sensei-panel p-5 sm:p-6 flex flex-col h-[320px] sm:h-[380px] lg:h-[440px] xl:h-[480px];
   }
 
   /* Bottom-nav clearance */

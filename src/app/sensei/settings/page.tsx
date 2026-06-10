@@ -1,5 +1,6 @@
 import { requireAdminPage } from "@/lib/admin";
-import { Settings, ShieldCheck, Mail, Key, Bell, Database } from "lucide-react";
+import { ShieldCheck, Mail, Key, Bell, Database } from "lucide-react";
+import { SenseiPage } from "@/components/admin/SenseiPage";
 
 export const dynamic = "force-dynamic";
 
@@ -7,14 +8,12 @@ export default async function SettingsPage() {
   const { profile } = await requireAdminPage();
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Admin Settings</h1>
-        <p className="text-white/50 text-sm mt-1">Manage platform configuration and Sensei permissions.</p>
-      </div>
-
-      <div className="rounded-3xl border border-white/5 bg-white/[0.02] overflow-hidden">
-        <div className="p-6 border-b border-white/5 bg-black/20">
+    <SenseiPage
+      title="Admin Settings"
+      description="Manage platform configuration and Sensei permissions."
+    >
+      <div className="sensei-panel overflow-hidden max-w-4xl">
+        <div className="p-6 border-b border-white/[0.06] bg-black/20">
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-blood-500/30 bg-blood-500/10 text-2xl font-bold text-blood-400">
               {profile?.full_name?.charAt(0) || "S"}
@@ -33,7 +32,7 @@ export default async function SettingsPage() {
           <section>
             <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Account Security</h3>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-black/20">
+              <div className="flex items-center justify-between p-4 rounded-xl border border-white/[0.06] bg-black/20">
                 <div className="flex items-center gap-3">
                   <Mail className="h-5 w-5 text-white/40" />
                   <div>
@@ -45,7 +44,7 @@ export default async function SettingsPage() {
                   Locked
                 </button>
               </div>
-              <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-black/20">
+              <div className="flex items-center justify-between p-4 rounded-xl border border-white/[0.06] bg-black/20">
                 <div className="flex items-center gap-3">
                   <Key className="h-5 w-5 text-white/40" />
                   <div>
@@ -63,7 +62,7 @@ export default async function SettingsPage() {
           <section>
             <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Platform Config</h3>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-black/20">
+              <div className="flex items-center justify-between p-4 rounded-xl border border-white/[0.06] bg-black/20">
                 <div className="flex items-center gap-3">
                   <Bell className="h-5 w-5 text-white/40" />
                   <div>
@@ -76,8 +75,8 @@ export default async function SettingsPage() {
                   <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blood-500"></div>
                 </label>
               </div>
-              
-              <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-black/20">
+
+              <div className="flex items-center justify-between p-4 rounded-xl border border-white/[0.06] bg-black/20">
                 <div className="flex items-center gap-3">
                   <Database className="h-5 w-5 text-white/40" />
                   <div>
@@ -93,6 +92,6 @@ export default async function SettingsPage() {
           </section>
         </div>
       </div>
-    </div>
+    </SenseiPage>
   );
 }

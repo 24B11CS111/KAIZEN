@@ -1,11 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { IntroLoader } from "@/components/IntroLoader";
-import { BottomNavGate } from "@/components/BottomNavGate";
-import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
-import { InstallPrompt } from "@/components/InstallPrompt";
-import { DevBypassBanner } from "@/components/DevBypassBanner";
-import { GlobalPresence } from "@/components/GlobalPresence";
+import { AppShell } from "@/components/AppShell";
 
 // KAIZEN.SYS brand — new transparent logo served via Cloudinary CDN with
 // on-the-fly resize + obsidian background fills for browser icons/favicons.
@@ -83,17 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
       </head>
       <body className="text-white antialiased">
-        <div className="app-shell">
-          <DevBypassBanner />
-          <IntroLoader />
-          <GlobalPresence />
-          <div className="app-scroll-container" id="app-scroll-container">
-            {children}
-          </div>
-          <BottomNavGate />
-          <InstallPrompt />
-          <ServiceWorkerRegistrar />
-        </div>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

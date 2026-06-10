@@ -52,7 +52,7 @@ export function SenseiPaymentsClient({ initialPayments }: { initialPayments: Pay
   }, [initialPayments, search, statusFilter]);
 
   return (
-    <div className="flex flex-col h-full rounded-3xl border border-white/5 bg-white/[0.02] overflow-hidden">
+    <div className="flex flex-col h-full w-full sensei-panel overflow-hidden">
       {/* Filters Bar */}
       <div className="p-4 border-b border-white/5 flex flex-col sm:flex-row gap-4 items-center justify-between bg-black/20">
         <div className="relative w-full sm:max-w-xs">

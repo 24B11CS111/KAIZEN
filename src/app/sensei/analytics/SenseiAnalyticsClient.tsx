@@ -38,16 +38,16 @@ export function SenseiAnalyticsClient({
   const revenueDisplay = mounted ? `₹${totalRevenue.toLocaleString("en-IN")}` : "—";
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 flex flex-col justify-between">
+    <div className="space-y-6 w-full">
+      <div className="sensei-stat-grid">
+        <div className="sensei-panel p-5 sm:p-6 flex flex-col justify-between">
           <div className="flex items-center gap-3 text-white/50 mb-4">
             <IndianRupee className="h-4 w-4" />
             <h3 className="text-sm font-medium">Total Lifetime Revenue</h3>
           </div>
           <p className="text-3xl font-bold text-emerald-400">{revenueDisplay}</p>
         </div>
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 flex flex-col justify-between">
+        <div className="sensei-panel p-5 sm:p-6 flex flex-col justify-between">
           <div className="flex items-center gap-3 text-white/50 mb-4">
             <Users className="h-4 w-4" />
             <h3 className="text-sm font-medium">Active Subscribers</h3>
@@ -56,8 +56,8 @@ export function SenseiAnalyticsClient({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border border-white/5 bg-white/[0.02] p-6 h-[400px] flex flex-col">
+      <div className="grid gap-6 lg:grid-cols-2 2xl:grid-cols-2">
+        <div className="sensei-chart-panel">
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -92,7 +92,7 @@ export function SenseiAnalyticsClient({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/5 bg-white/[0.02] p-6 h-[400px] flex flex-col">
+        <div className="sensei-chart-panel">
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -121,7 +121,7 @@ export function SenseiAnalyticsClient({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/5 bg-white/[0.02] p-6 h-[400px] flex flex-col">
+        <div className="sensei-chart-panel">
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -151,7 +151,7 @@ export function SenseiAnalyticsClient({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/5 bg-white/[0.02] p-6 h-[400px] flex flex-col">
+        <div className="sensei-chart-panel">
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">

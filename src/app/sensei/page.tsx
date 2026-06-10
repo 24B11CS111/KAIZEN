@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Users, ShieldCheck, CreditCard, Activity, TrendingUp, Zap } from "lucide-react";
 import { requireAdminPage } from "@/lib/admin";
 import { logSenseiFetch } from "@/lib/senseiLog";
+import { SenseiPage } from "@/components/admin/SenseiPage";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -47,19 +48,18 @@ export default async function SenseiOverviewPage() {
     .reduce((sum: number, p) => sum + Number(p.plan_amount || 0), 0);
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">System Overview</h1>
-        <p className="text-white/50 text-sm mt-1">High-level telemetry for the KAIZEN platform.</p>
-      </div>
-
+    <SenseiPage
+      title="System Overview"
+      description="High-level telemetry for the KAIZEN platform."
+      className="space-y-8"
+    >
       {fetchError && (
         <div className="rounded-2xl border border-amber-300/20 bg-amber-300/[0.04] p-4 text-sm text-amber-200/80">
           {fetchError}
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="sensei-stat-grid">
         <StatCard
           title="Active Trials"
           value={activeTrials}
@@ -86,12 +86,12 @@ export default async function SenseiOverviewPage() {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-2">
+        <div className="sensei-panel p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white">Quick Actions</h2>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
             <ActionCard title="User CRM" desc="Manage users" href="/sensei/users" icon={<Users />} />
             <ActionCard title="View Analytics" desc="Growth metrics" href="/sensei/analytics" icon={<TrendingUp />} />
             <ActionCard title="Live Radar" desc="Realtime activity" href="/sensei/activity" icon={<Activity />} />
@@ -104,7 +104,7 @@ export default async function SenseiOverviewPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
+        <div className="sensei-panel p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white">System Status</h2>
           </div>
@@ -116,13 +116,13 @@ export default async function SenseiOverviewPage() {
           </div>
         </div>
       </div>
-    </div>
+    </SenseiPage>
   );
 }
 
 function StatCard({ title, value, icon, href }: { title: string; value: string | number; icon: React.ReactNode; href: string }) {
   return (
-    <Link href={href} className="block rounded-2xl border border-white/5 bg-white/[0.02] p-5 hover:bg-white/[0.04] transition-colors relative group overflow-hidden">
+    <Link href={href} className="block sensei-panel p-5 hover:bg-white/[0.04] transition-colors relative group overflow-hidden">
       <div className="flex items-center gap-3 mb-2">
         {icon}
         <h3 className="text-sm font-medium text-white/50">{title}</h3>

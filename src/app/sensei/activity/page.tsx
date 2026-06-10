@@ -4,6 +4,7 @@ import { SenseiAdminActivityFeed } from "@/components/admin/SenseiAdminActivityF
 import { ErrorBoundary } from "@/components/admin/ErrorBoundary";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { logSenseiFetch } from "@/lib/senseiLog";
+import { SenseiPage } from "@/components/admin/SenseiPage";
 
 export const dynamic = "force-dynamic";
 
@@ -63,30 +64,29 @@ export default async function ActivityPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 flex flex-col h-[calc(100svh-6rem)]">
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Live Radar</h1>
-        <p className="text-white/50 text-sm mt-1">Real-time platform telemetry and active user sessions.</p>
-      </div>
-
+    <SenseiPage
+      title="Live Radar"
+      description="Real-time platform telemetry and active user sessions."
+      fullHeight
+    >
       {fetchError && (
-        <div className="rounded-2xl border border-amber-300/20 bg-amber-300/[0.04] p-4 text-sm text-amber-200/80">
+        <div className="rounded-2xl border border-amber-300/20 bg-amber-300/[0.04] p-4 text-sm text-amber-200/80 mb-4">
           {fetchError} Live realtime feeds will still attempt to connect.
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3 flex-1 min-h-0">
-        <div className="lg:col-span-2 flex flex-col">
+      <div className="grid gap-6 lg:grid-cols-3 xl:grid-cols-[1fr_380px] 2xl:grid-cols-[1fr_420px] flex-1 min-h-0 h-full">
+        <div className="lg:col-span-2 flex flex-col min-h-0">
           <ErrorBoundary name="Live Radar">
             <SenseiLiveRadar />
           </ErrorBoundary>
         </div>
-        <div className="lg:col-span-1 flex flex-col">
+        <div className="lg:col-span-1 flex flex-col min-h-0">
           <ErrorBoundary name="Activity Feed">
             <SenseiAdminActivityFeed initialFeed={activityFeed} />
           </ErrorBoundary>
         </div>
       </div>
-    </div>
+    </SenseiPage>
   );
 }

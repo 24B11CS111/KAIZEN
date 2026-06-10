@@ -92,7 +92,7 @@ export function SenseiAdminActivityFeed({ initialFeed = [] }: { initialFeed?: Se
   }, []);
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-5 lg:p-6 h-[600px] flex flex-col">
+    <div className="sensei-panel p-5 lg:p-6 h-full min-h-[480px] lg:min-h-0 lg:h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-bold text-white flex items-center gap-2">
           <Zap className="h-5 w-5 text-blood-500" />

@@ -2,7 +2,7 @@
 import { usePathname } from "next/navigation";
 import { BottomNav } from "./BottomNav";
 
-const APP_ROUTES = ["/dojo", "/progress", "/notifications", "/profile", "/sensei"];
+const APP_ROUTES = ["/dojo", "/progress", "/notifications", "/profile"];
 
 export function BottomNavGate() {
   const pathname = usePathname() || "";

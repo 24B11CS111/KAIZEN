@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { Bell, Menu, Search, X, ShieldCheck, Zap } from "lucide-react";
+import { Bell, Menu, Search, X } from "lucide-react";
 import { AdminSidebar, ADMIN_NAV_LINKS } from "./AdminSidebar";
 
-export function AdminHeader({ adminProfile }: { adminProfile: any }) {
+export function AdminHeader({ adminProfile }: { adminProfile: { full_name?: string | null } | null }) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -15,75 +15,68 @@ export function AdminHeader({ adminProfile }: { adminProfile: any }) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-white/5 bg-black/50 backdrop-blur-xl px-4 sm:gap-x-6 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-40 flex h-14 sm:h-16 shrink-0 items-center gap-x-4 border-b border-white/[0.06] bg-[#030303]/80 backdrop-blur-xl px-4 sm:px-6 lg:px-8">
         <button
           type="button"
-          className="-m-2.5 p-2.5 text-white/70 hover:text-white lg:hidden"
+          className="-m-2.5 p-2.5 text-white/70 hover:text-white md:hidden"
           onClick={() => setMobileMenuOpen(true)}
         >
           <span className="sr-only">Open sidebar</span>
           <Menu className="h-5 w-5" aria-hidden="true" />
         </button>
 
-        {/* Separator */}
-        <div className="h-6 w-px bg-white/10 lg:hidden" aria-hidden="true" />
+        <div className="h-6 w-px bg-white/10 md:hidden" aria-hidden="true" />
 
-        <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-          <div className="flex flex-1 items-center gap-3">
-            <h1 className="text-lg font-semibold text-white tracking-tight hidden sm:block">
-              {currentLink?.name || "Dashboard"}
-            </h1>
-            
-            <div className="relative ml-auto sm:ml-6 flex w-full max-w-xs items-center">
-              <label htmlFor="search-field" className="sr-only">Search</label>
-              <Search className="pointer-events-none absolute inset-y-0 left-3 h-full w-4 text-white/40" aria-hidden="true" />
-              <input
-                id="search-field"
-                className="block h-9 w-full rounded-full border-0 bg-white/5 py-0 pl-10 pr-4 text-white placeholder:text-white/40 focus:ring-1 focus:ring-blood-500 sm:text-sm"
-                placeholder="Search users, UTRs..."
-                type="search"
-                name="search"
-              />
-            </div>
+        <div className="flex flex-1 items-center gap-x-4 lg:gap-x-8 min-w-0">
+          <h1 className="text-base sm:text-lg font-semibold text-white tracking-tight truncate shrink-0">
+            {currentLink?.name || "Dashboard"}
+          </h1>
+
+          <div className="relative ml-auto flex flex-1 max-w-md lg:max-w-xl items-center">
+            <label htmlFor="sensei-search" className="sr-only">Search</label>
+            <Search className="pointer-events-none absolute inset-y-0 left-3 h-full w-4 text-white/40" aria-hidden="true" />
+            <input
+              id="sensei-search"
+              className="block h-9 w-full rounded-lg border border-white/[0.06] bg-white/[0.04] py-0 pl-10 pr-4 text-white placeholder:text-white/40 focus:ring-1 focus:ring-blood-500/50 sm:text-sm"
+              placeholder="Search users, UTRs, activity..."
+              type="search"
+              name="search"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-x-3 lg:gap-x-5 shrink-0">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06]">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-xs font-medium text-emerald-400">Operational</span>
           </div>
 
-          <div className="flex items-center gap-x-4 lg:gap-x-6">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 hidden md:flex">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="text-xs font-medium text-emerald-400">System Nominal</span>
+          <button type="button" className="-m-2.5 p-2.5 text-white/60 hover:text-white">
+            <span className="sr-only">View notifications</span>
+            <Bell className="h-5 w-5" aria-hidden="true" />
+          </button>
+
+          <div className="hidden lg:block h-6 w-px bg-white/10" aria-hidden="true" />
+
+          <div className="flex items-center gap-x-2.5">
+            <div className="h-8 w-8 rounded-full bg-blood-500/20 border border-blood-500/30 flex items-center justify-center text-blood-400 font-bold text-sm">
+              {adminProfile?.full_name?.charAt(0) || "S"}
             </div>
-
-            <button type="button" className="-m-2.5 p-2.5 text-white/60 hover:text-white">
-              <span className="sr-only">View notifications</span>
-              <Bell className="h-5 w-5" aria-hidden="true" />
-            </button>
-
-            {/* Separator */}
-            <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-white/10" aria-hidden="true" />
-
-            <div className="flex items-center gap-x-3">
-              <span className="sr-only">Your profile</span>
-              <div className="h-8 w-8 rounded-full bg-blood-500/20 border border-blood-500/30 flex items-center justify-center text-blood-400 font-bold text-sm">
-                {adminProfile?.full_name?.charAt(0) || "S"}
-              </div>
-              <span className="hidden lg:flex lg:items-center">
-                <span className="text-sm font-semibold leading-6 text-white" aria-hidden="true">
-                  {adminProfile?.full_name || "Sensei"}
-                </span>
-              </span>
-            </div>
+            <span className="hidden xl:block text-sm font-semibold text-white truncate max-w-[140px]">
+              {adminProfile?.full_name || "Sensei"}
+            </span>
           </div>
         </div>
       </header>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile sidebar drawer */}
       {mobileMenuOpen && (
-        <div className="relative z-50 lg:hidden">
+        <div className="fixed inset-0 z-50 md:hidden">
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
-          <div className="fixed inset-y-0 left-0 w-64 bg-obsidian border-r border-white/5 shadow-2xl flex flex-col">
+          <div className="fixed inset-y-0 left-0 w-[min(280px,85vw)] bg-[#030303] border-r border-white/[0.06] shadow-2xl flex flex-col">
             <div className="absolute right-0 top-0 -mr-12 pt-4">
               <button
                 type="button"

@@ -109,9 +109,9 @@ export function SenseiLiveRadar() {
     : "/";
 
   return (
-    <StaggerGroup delayBetween={0.06} className="space-y-6">
+    <StaggerGroup delayBetween={0.06} className="space-y-6 w-full">
       <StaggerItem>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="sensei-stat-grid">
           <StatCard icon={<Users className="h-5 w-5 text-emerald-400" />} label="Live Users" value={usersList.length} />
           <StatCard icon={<Activity className="h-5 w-5 text-blood-400" />} label="Active Sessions" value={usersList.length} />
           <StatCard icon={<Globe className="h-5 w-5 text-blue-400" />} label="Top Active Path" value={topPath} />
@@ -120,7 +120,7 @@ export function SenseiLiveRadar() {
       </StaggerItem>
 
       <StaggerItem>
-        <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-5 lg:p-8">
+        <div className="sensei-panel p-5 lg:p-8 h-full min-h-[480px] lg:min-h-[560px]">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <span className="flex h-3 w-3 relative">
@@ -214,7 +214,7 @@ function formatRelativeTime(value: string | null) {
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
   return (
-    <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5">
+    <div className="sensei-panel p-5">
       <div className="flex items-center gap-3 mb-2">
         {icon}
         <h3 className="text-sm font-medium text-white/50">{label}</h3>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAuthBypassed } from "@/lib/devBypass";
 import { requireAdmin } from "@/lib/admin";
+import { safeRpc } from "@/lib/safeRpc";
 import { AdminActionSchema } from "@/lib/validation";
 
 export const runtime = "nodejs";
@@ -16,7 +17,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "user_id required" }, { status: 400 });
   }
 
-  const { error } = await supabase.rpc("reset_progress", { p_user_id: parsed.data.user_id });
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  const { error } = await safeRpc(supabase, "reset_progress", { p_user_id: parsed.data.user_id }, "admin/reset");
+  if (error) return NextResponse.json({ error }, { status: 400 });
   return NextResponse.json({ ok: true });
 }

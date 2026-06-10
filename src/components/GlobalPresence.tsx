@@ -1,16 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { safeRpc } from "@/lib/safeRpc";
+import { cleanupChannel, createFreshChannel } from "@/lib/realtime";
 
 export function GlobalPresence() {
   const pathname = usePathname();
+  const activeRef = useRef(false);
 
   useEffect(() => {
     if (pathname.startsWith("/sensei")) return;
 
     let cancelled = false;
+    activeRef.current = true;
     const supabase = createSupabaseBrowserClient();
     let channel: any = null;
 
@@ -35,33 +39,33 @@ export function GlobalPresence() {
         last_seen_at: onlineAt
       };
 
-      channel = (supabase as any).channel("kaizen-presence", {
+      channel = createFreshChannel(supabase, "kaizen-presence", {
         config: { presence: { key: user.id } }
       });
 
+      // All listeners MUST be registered before subscribe().
       channel.on("presence", { event: "sync" }, () => {
-        // Listener is intentionally registered before subscribe. Tracking
-        // happens after SUBSCRIBED so Supabase accepts the presence payload.
+        /* sync handled by track() after SUBSCRIBED */
       });
 
       channel.subscribe(async (status: string) => {
-        if (status !== "SUBSCRIBED") return;
+        if (cancelled || status !== "SUBSCRIBED") return;
         try {
           await channel?.track(payload);
-        } catch {
-          // Presence is best-effort and must never crash app rendering.
+        } catch (err) {
+          console.warn("[presence] track failed:", err);
         }
 
-        try {
-          const { error } = await supabase.rpc("upsert_online_session", {
+        await safeRpc(
+          supabase,
+          "upsert_online_session",
+          {
             p_channel_key: user.id,
             p_pathname: pathname,
             p_metadata: payload
-          } as any);
-          if (error) console.warn("[presence] online session rpc failed:", error.message);
-        } catch (error) {
-          console.warn("[presence] online session rpc threw:", error);
-        }
+          },
+          "presence/upsert_online_session"
+        );
       });
     }
 
@@ -69,10 +73,11 @@ export function GlobalPresence() {
 
     return () => {
       cancelled = true;
+      activeRef.current = false;
       if (channel) {
-        try { channel.untrack(); } catch {}
-        try { channel.unsubscribe(); } catch {}
-        try { supabase.removeChannel(channel); } catch {}
+        try { void channel.untrack(); } catch { /* best-effort */ }
+        cleanupChannel(supabase, channel);
+        channel = null;
       }
     };
   }, [pathname]);

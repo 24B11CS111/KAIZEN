@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { safeRpc } from "@/lib/safeRpc";
 import { z } from "zod";
 import { isAuthBypassed } from "@/lib/devBypass";
 import { requireAdmin } from "@/lib/admin";
@@ -67,8 +68,8 @@ export async function POST(req: Request) {
   }
 
   if (body.action === "reset_progress") {
-    const { error } = await admin.rpc("reset_progress", { p_user_id: body.user_id } as any);
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    const { error } = await safeRpc(admin, "reset_progress", { p_user_id: body.user_id }, "admin/user-control/reset");
+    if (error) return NextResponse.json({ error }, { status: 400 });
     return NextResponse.json({ ok: true });
   }
 

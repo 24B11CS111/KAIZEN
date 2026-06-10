@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { cleanupChannel, createFreshChannel } from "@/lib/realtime";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Clock, Globe, MapPin, Monitor, Smartphone, Users } from "lucide-react";
+import { Activity, Clock, Globe, MapPin, Monitor, Users } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { StaggerGroup, StaggerItem } from "@/components/PageTransition";
 
@@ -26,12 +27,11 @@ export function SenseiLiveRadar() {
     setMounted(true);
     let cancelled = false;
     const supabase = createSupabaseBrowserClient();
-    
-    // First fetch historical active sessions or just rely on real-time presence sync
-    // For MVP, we just connect to presence and wait for sync
-    const channel = (supabase as any).channel("kaizen-presence");
+    let channel: any = null;
 
     try {
+      channel = createFreshChannel(supabase, "kaizen-presence");
+
       channel.on("presence", { event: "sync" }, () => {
         if (cancelled) return;
         try {
@@ -39,7 +39,7 @@ export function SenseiLiveRadar() {
           const users: Record<string, OnlineUser> = {};
 
           for (const [key, p] of Object.entries(state)) {
-            const presences = p as any[];
+            const presences = p as unknown[];
             if (presences && presences.length > 0) {
               users[key] = normalizePresence(key, presences[presences.length - 1]);
             }
@@ -53,7 +53,7 @@ export function SenseiLiveRadar() {
         setLoading(false);
       });
 
-      channel.on("presence", { event: "join" }, ({ key, newPresences }: any) => {
+      channel.on("presence", { event: "join" }, ({ key, newPresences }: { key: string; newPresences: unknown }) => {
         if (cancelled) return;
         const presence = Array.isArray(newPresences) ? newPresences[0] : null;
         if (!presence) return;
@@ -63,7 +63,7 @@ export function SenseiLiveRadar() {
         }));
       });
 
-      channel.on("presence", { event: "leave" }, ({ key }: any) => {
+      channel.on("presence", { event: "leave" }, ({ key }: { key: string }) => {
         if (cancelled) return;
         setOnlineUsers(prev => {
           const next = { ...prev };
@@ -81,6 +81,7 @@ export function SenseiLiveRadar() {
         if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
           setLoading(false);
           setRealtimeError("Realtime presence is temporarily unavailable.");
+          console.warn("[sensei-live-radar] channel status:", status);
         }
       });
     } catch (error) {
@@ -91,32 +92,33 @@ export function SenseiLiveRadar() {
 
     return () => {
       cancelled = true;
-      try { channel.unsubscribe(); } catch {}
-      try { supabase.removeChannel(channel); } catch {}
+      cleanupChannel(supabase, channel);
+      channel = null;
     };
   }, []);
 
   const usersList = Object.values(onlineUsers);
-  
-  // Aggregate stats
+
   const activePaths = usersList.reduce((acc, user) => {
     acc[user.pathname] = (acc[user.pathname] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
+  const topPath = mounted
+    ? Object.keys(activePaths).sort((a, b) => activePaths[b] - activePaths[a])[0] || "/"
+    : "/";
+
   return (
     <StaggerGroup delayBetween={0.06} className="space-y-6">
-      {/* Top Stats */}
       <StaggerItem>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard icon={<Users className="h-5 w-5 text-emerald-400" />} label="Live Users" value={usersList.length} />
           <StatCard icon={<Activity className="h-5 w-5 text-blood-400" />} label="Active Sessions" value={usersList.length} />
-          <StatCard icon={<Globe className="h-5 w-5 text-blue-400" />} label="Top Active Path" value={Object.keys(activePaths).sort((a,b) => activePaths[b] - activePaths[a])[0] || "/"} />
+          <StatCard icon={<Globe className="h-5 w-5 text-blue-400" />} label="Top Active Path" value={topPath} />
           <StatCard icon={<Monitor className="h-5 w-5 text-purple-400" />} label="Realtime Latency" value="~15ms" />
         </div>
       </StaggerItem>
 
-      {/* Main Radar Feed */}
       <StaggerItem>
         <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-5 lg:p-8">
           <div className="flex items-center justify-between mb-6">
@@ -160,7 +162,7 @@ export function SenseiLiveRadar() {
                         <p className="text-xs text-white/50">{user.email}</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-6 sm:justify-end">
                       <div className="flex flex-col items-end">
                         <span className="text-xs font-semibold uppercase tracking-wider text-white/30 mb-1">Current Page</span>
@@ -188,15 +190,16 @@ export function SenseiLiveRadar() {
   );
 }
 
-function normalizePresence(key: string, presence: any): OnlineUser {
+function normalizePresence(key: string, presence: unknown): OnlineUser {
+  const p = presence as Record<string, unknown> | null;
   const now = new Date().toISOString();
   return {
-    user_id: String(presence?.user_id ?? key),
-    email: presence?.email ?? null,
-    full_name: presence?.full_name ?? null,
-    pathname: String(presence?.pathname ?? "/"),
-    online_at: String(presence?.online_at ?? now),
-    last_seen_at: String(presence?.last_seen_at ?? presence?.online_at ?? now)
+    user_id: String(p?.user_id ?? key),
+    email: (p?.email as string | null) ?? null,
+    full_name: (p?.full_name as string | null) ?? null,
+    pathname: String(p?.pathname ?? "/"),
+    online_at: String(p?.online_at ?? now),
+    last_seen_at: String(p?.last_seen_at ?? p?.online_at ?? now)
   };
 }
 
@@ -209,7 +212,7 @@ function formatRelativeTime(value: string | null) {
   }
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number }) {
+function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
   return (
     <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5">
       <div className="flex items-center gap-3 mb-2">

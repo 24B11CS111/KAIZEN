@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireAdminPage } from "@/lib/admin";
+import { safeRpc } from "@/lib/safeRpc";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { ErrorBoundary } from "@/components/admin/ErrorBoundary";
@@ -9,10 +10,8 @@ export const dynamic = "force-dynamic";
 export default async function SenseiLayout({ children }: { children: React.ReactNode }) {
   const { profile } = await requireAdminPage();
 
-  try {
-    const supabase = createSupabaseServerClient();
-    await (supabase as any).rpc("touch_all_expired_subscriptions");
-  } catch {}
+  const supabase = createSupabaseServerClient();
+  await safeRpc(supabase, "touch_all_expired_subscriptions", undefined, "sensei/layout");
 
   return (
     <div className="flex h-[100svh] overflow-hidden bg-obsidian text-white selection:bg-blood-500/30">

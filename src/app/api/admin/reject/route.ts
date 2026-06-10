@@ -13,11 +13,19 @@ export async function POST(req: Request) {
   const { supabase } = guard;
 
   const parsed = AdminActionSchema.safeParse(await req.json().catch(() => ({})));
-  if (!parsed.success || !parsed.data.user_id) {
-    return NextResponse.json({ error: "user_id required" }, { status: 400 });
+  if (!parsed.success || !parsed.data.utr_id) {
+    return NextResponse.json({ error: "utr_id required" }, { status: 400 });
   }
 
-  const { error } = await safeRpc(supabase, "ban_user", { p_user_id: parsed.data.user_id }, "admin/ban");
+  const { error } = await safeRpc(
+    supabase,
+    "reject_utr",
+    {
+      p_utr_id: parsed.data.utr_id,
+      p_reason: parsed.data.rejection_reason ?? null
+    },
+    "admin/reject"
+  );
   if (error) return NextResponse.json({ error }, { status: 400 });
   return NextResponse.json({ ok: true });
 }

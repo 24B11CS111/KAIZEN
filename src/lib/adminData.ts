@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { logSenseiFetch } from "@/lib/senseiLog";
 export interface SenseiPaymentHistoryEntry {
   id: string;
   utr_number: string;
@@ -55,23 +56,40 @@ type GenericRow = Record<string, any>;
 
 export async function getSenseiDirectoryUsers(): Promise<SenseiUserRecord[]> {
   const supabase = createSupabaseServerClient();
-  
-  const [profilesRes, streaksRes, paymentsRes, onboardingRes, aiPlansRes] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id,email,avatar_url,full_name,whatsapp,created_at,last_active_at,path_type,branch,occupation,field_of_study,daily_time_min,skill_level,main_goal,main_goal_other,subscription_status,expiry_date,plan_amount,age,gender,workout_location,fitness_level,is_suspended")
-      .order("created_at", { ascending: false }),
-    supabase.from("streaks").select("user_id,current_streak,longest_streak,last_completed_date,updated_at"),
-    supabase.from("utr_logs").select("id,user_id,utr_number,plan_amount,status,created_at,reviewed_at,rejection_reason").order("created_at", { ascending: false }),
-    supabase.from("onboarding_data").select("user_id,full_name,age,gender,occupation,field_of_study,daily_time_min,skill_level,main_goal,main_goal_other,raw,created_at").order("created_at", { ascending: false }),
-    supabase.from("ai_plans").select("user_id,track_id,track_label,version,created_at").order("created_at", { ascending: false }),
-  ]);
 
-  const profiles = ((profilesRes.data as GenericRow[] | null) ?? []).filter((profile) => profile.email !== "hrixofficial@gmail.com");
-  const streaks = (streaksRes.data as GenericRow[] | null) ?? [];
-  const payments = (paymentsRes.data as GenericRow[] | null) ?? [];
-  const onboardingEntries = (onboardingRes.data as GenericRow[] | null) ?? [];
-  const aiPlans = (aiPlansRes.data as GenericRow[] | null) ?? [];
+  let profiles: GenericRow[] = [];
+  let streaks: GenericRow[] = [];
+  let payments: GenericRow[] = [];
+  let onboardingEntries: GenericRow[] = [];
+  let aiPlans: GenericRow[] = [];
+
+  try {
+    const [profilesRes, streaksRes, paymentsRes, onboardingRes, aiPlansRes] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id,email,avatar_url,full_name,whatsapp,created_at,last_active_at,path_type,branch,occupation,field_of_study,daily_time_min,skill_level,main_goal,main_goal_other,subscription_status,expiry_date,plan_amount,age,gender,workout_location,fitness_level,is_suspended")
+        .order("created_at", { ascending: false }),
+      supabase.from("streaks").select("user_id,current_streak,longest_streak,last_completed_date,updated_at"),
+      supabase.from("utr_logs").select("id,user_id,utr_number,plan_amount,status,created_at,reviewed_at,rejection_reason").order("created_at", { ascending: false }),
+      supabase.from("onboarding_data").select("user_id,full_name,age,gender,occupation,field_of_study,daily_time_min,skill_level,main_goal,main_goal_other,raw,created_at").order("created_at", { ascending: false }),
+      supabase.from("ai_plans").select("user_id,track_id,track_label,version,created_at").order("created_at", { ascending: false }),
+    ]);
+
+    if (profilesRes.error) logSenseiFetch("adminData/profiles", profilesRes.error);
+    if (streaksRes.error) logSenseiFetch("adminData/streaks", streaksRes.error);
+    if (paymentsRes.error) logSenseiFetch("adminData/utr_logs", paymentsRes.error);
+    if (onboardingRes.error) logSenseiFetch("adminData/onboarding_data", onboardingRes.error);
+    if (aiPlansRes.error) logSenseiFetch("adminData/ai_plans", aiPlansRes.error);
+
+    profiles = ((profilesRes.data as GenericRow[] | null) ?? []).filter((profile) => profile.email !== "hrixofficial@gmail.com");
+    streaks = (streaksRes.data as GenericRow[] | null) ?? [];
+    payments = (paymentsRes.data as GenericRow[] | null) ?? [];
+    onboardingEntries = (onboardingRes.data as GenericRow[] | null) ?? [];
+    aiPlans = (aiPlansRes.data as GenericRow[] | null) ?? [];
+  } catch (err) {
+    logSenseiFetch("adminData", err);
+    return [];
+  }
 
   const streakMap = new Map<string, GenericRow>();
   for (const row of streaks) streakMap.set(String(row.user_id), row);

@@ -111,9 +111,12 @@ async function DojoStateRouter({ profile }: { profile: any }) {
     const supabase = createSupabaseServerClient();
 
     // Reset stale streak best-effort.
-    const reset = await resetStaleStreak(supabase as any).catch(() => ({
-      was_reset: false, current_streak: 0, longest_streak: 0
-    }));
+    let reset = { was_reset: false, current_streak: 0, longest_streak: 0 };
+    try {
+      reset = await resetStaleStreak(supabase as any);
+    } catch {
+      /* best-effort */
+    }
 
     // Three parallel reads, each individually fault-tolerant. A missing
     // migration / table / column won't blank the dashboard — we'll just

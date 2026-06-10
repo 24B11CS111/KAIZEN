@@ -23,13 +23,24 @@ type Phase = "brand" | "tagline" | "done";
  *   t=3.0s  HARD FAILSAFE -> "done"    (no matter what, overlay must clear)
  */
 export function IntroLoader() {
-  const [phase, setPhase] = useState<Phase>(() => {
-    if (typeof window === "undefined") return "brand";
-    return sessionStorage.getItem("kaizen.intro.shown") === "1" ? "done" : "brand";
-  });
+  // Always start with "brand" so server and client initial HTML match (prevents hydration #418).
+  const [phase, setPhase] = useState<Phase>("brand");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (phase === "done") return;
+    setReady(true);
+    try {
+      if (sessionStorage.getItem("kaizen.intro.shown") === "1") {
+        setPhase("done");
+        return;
+      }
+    } catch {
+      /* sessionStorage unavailable */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!ready || phase === "done") return;
 
     const t1 = window.setTimeout(() => setPhase("tagline"), 1000);
     const t2 = window.setTimeout(() => {
@@ -46,13 +57,13 @@ export function IntroLoader() {
       clearTimeout(t2);
       clearTimeout(failsafe);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [ready, phase]);
+
+  if (!ready || phase === "done") return null;
 
   return (
     <AnimatePresence mode="wait">
-      {phase !== "done" && (
-        <motion.div
+      <motion.div
           key="intro"
           className="fixed inset-0 z-[200] grid place-items-center bg-obsidian overflow-hidden"
           initial={{ opacity: 1 }}
@@ -189,7 +200,6 @@ export function IntroLoader() {
             />
           ))}
         </motion.div>
-      )}
     </AnimatePresence>
   );
 }

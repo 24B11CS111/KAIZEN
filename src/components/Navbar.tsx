@@ -44,18 +44,17 @@ export function Navbar() {
       className={
         "fixed top-0 inset-x-0 z-40 transition-all duration-300 " +
         (scrolled
-          ? "bg-obsidian/95 backdrop-blur-xl border-b border-white/[0.05] shadow-lg"
+          ? "bg-surface/90 backdrop-blur-xl border-b border-[var(--border)] shadow-lg"
           : "bg-transparent")
       }
     >
-      {/* hairline accent — subtle red glow at the bottom edge when scrolled */}
       {scrolled && (
         <span
           aria-hidden
           className="pointer-events-none absolute inset-x-0 -bottom-px h-px"
           style={{
             background:
-              "linear-gradient(90deg, transparent 0%, rgba(208,0,0,0.45) 50%, transparent 100%)"
+              "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)"
           }}
         />
       )}
@@ -117,7 +116,7 @@ function GuestCta() {
       </Link>
       <Link
         href="/auth/signup"
-        className="btn-primary btn-sm btn-tap shadow-[0_0_18px_-4px_rgba(208,0,0,0.55)] hover:shadow-[0_0_24px_-2px_rgba(208,0,0,0.75)] transition-shadow"
+        className="btn-primary btn-sm btn-tap"
       >
         Sign up
       </Link>

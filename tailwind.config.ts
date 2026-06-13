@@ -5,7 +5,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        obsidian: "#050505",
+        obsidian: "#0B0B0D",
+        surface: "#111114",
+        elevated: "#17171B",
         blood: {
           DEFAULT: "#D00000",
           50: "#ffe5e5",
@@ -14,7 +16,7 @@ const config: Config = {
           600: "#a80000",
           700: "#7a0000"
         },
-        glass: "rgba(255,255,255,0.05)"
+        glass: "rgba(255,255,255,0.04)"
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],

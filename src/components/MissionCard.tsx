@@ -64,7 +64,6 @@ export function MissionCard({
   return (
     <div
       className={"card p-4 sm:p-5 mt-5 relative overflow-hidden " + (locked ? "select-none" : "")}
-      style={{ boxShadow: "0 0 28px -10px rgba(208,0,0,0.25)" }}
     >
       {locked && (
         <div className="absolute inset-0 z-10 flex items-center justify-center backdrop-blur-md bg-black/55 px-5">
@@ -154,12 +153,12 @@ export function MissionCard({
               <Tag
                 {...linkProps}
                 className={
-                  "tap-card w-full text-left flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] transition-all p-3.5 sm:p-4 min-h-[64px] sm:min-h-[68px] " +
-                  (isLink ? "hover:border-blood-500/45 active:scale-[0.97]" : "")
+                  "tap-card w-full text-left flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] transition-all p-3.5 sm:p-4 min-h-[64px] sm:min-h-[68px] " +
+                  (isLink ? "hover:border-[var(--border-light)] hover:bg-white/[0.03] active:scale-[0.97]" : "")
                 }
               >
-                <span className="grid place-items-center h-10 w-10 rounded-md bg-blood-500/10 border border-blood-500/30 shrink-0">
-                  <s.icon className="h-5 w-5 text-blood-500" />
+                <span className="grid place-items-center h-10 w-10 rounded-md bg-white/[0.03] border border-[var(--border)] shrink-0">
+                  <s.icon className="h-5 w-5 text-[var(--text-muted)]" />
                 </span>
                 <span className="flex-1 min-w-0">
                   <span className="block text-sm font-semibold">{s.label}</span>

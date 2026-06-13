@@ -56,18 +56,18 @@ export function AchievementGrid({ items }: Props) {
               className={
                 "rounded-lg border p-2.5 text-center transition-all " +
                 (a.unlocked
-                  ? "border-blood-500/45 bg-blood-500/10"
-                  : "border-white/8 bg-white/[0.02] opacity-60")
+                  ? "border-[var(--border-light)] bg-white/5"
+                  : "border-[var(--border)] bg-transparent opacity-60")
               }
-              style={a.unlocked ? { boxShadow: "0 0 12px -4px rgba(208,0,0,0.5)" } : undefined}
+              style={a.unlocked ? { boxShadow: "0 0 12px -4px rgba(255,255,255,0.1)" } : undefined}
               title={a.hint}
             >
               <span className={
                 "mx-auto grid place-items-center h-9 w-9 rounded-md " +
-                (a.unlocked ? "bg-blood-500/15 border border-blood-500/40" : "bg-white/5 border border-white/8")
+                (a.unlocked ? "bg-[var(--bg-elevated)] border border-[var(--border)]" : "bg-white/5 border border-white/8")
               }>
                 {a.unlocked
-                  ? <Icon className="h-4 w-4 text-blood-500" />
+                  ? <Icon className="h-4 w-4 text-[var(--text)]" />
                   : <Lock className="h-4 w-4 text-white/40" />}
               </span>
               <div className={"mt-1.5 text-[10px] truncate " + (a.unlocked ? "text-white/85" : "text-white/45")}>

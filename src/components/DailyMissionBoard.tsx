@@ -55,7 +55,7 @@ export function DailyMissionBoard({ mission }: Props) {
           className="pointer-events-none absolute inset-0 opacity-50"
           style={{
             background:
-              "radial-gradient(120% 80% at 0% 0%, rgba(208,0,0,0.10), transparent 60%)"
+              "radial-gradient(120% 80% at 0% 0%, rgba(255,255,255,0.05), transparent 60%)"
           }}
         />
         <div className="relative flex items-start justify-between gap-3">
@@ -68,8 +68,8 @@ export function DailyMissionBoard({ mission }: Props) {
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
               {mission.trackLabel && (
-                <span className="inline-flex items-center gap-1 text-blood-500 font-semibold">
-                  <Target className="h-3 w-3" /> {mission.trackLabel}
+                <span className="inline-flex items-center gap-1 text-[var(--text)] font-semibold">
+                  <Target className="h-3 w-3 text-[var(--text-muted)]" /> {mission.trackLabel}
                 </span>
               )}
               <span className="text-white/55">
@@ -106,7 +106,7 @@ export function DailyMissionBoard({ mission }: Props) {
               key={i}
               className="text-[12.5px] text-white/85 leading-snug flex items-start gap-2"
             >
-              <span className="text-blood-500 mt-1 shrink-0">▸</span>
+              <span className="text-[var(--text-muted)] mt-1 shrink-0">▸</span>
               <span>{it}</span>
             </li>
           ))}
@@ -162,13 +162,13 @@ function Section({
         <span
           className={
             "grid place-items-center h-9 w-9 rounded-md shrink-0 border " +
-            "bg-blood-500/10 border-blood-500/35 text-blood-500"
+            "bg-[var(--bg-elevated)] border-[var(--border)] text-[var(--text-muted)]"
           }
         >
           <Icon className="h-4 w-4" />
         </span>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-blood-500 font-semibold">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)] font-semibold">
             {LABELS[k]}
           </div>
         </div>
@@ -211,7 +211,7 @@ function RecoveryRow({
 }: { icon: React.ComponentType<{ className?: string }>; text: string }) {
   return (
     <li className="flex items-start gap-2.5 text-[12.5px] text-white/85 leading-snug">
-      <Icon className="h-3.5 w-3.5 text-blood-500/85 mt-0.5 shrink-0" />
+      <Icon className="h-3.5 w-3.5 text-[var(--text-muted)] mt-0.5 shrink-0" />
       <span>{text}</span>
     </li>
   );
@@ -239,7 +239,7 @@ function WorkoutBlock({ mission }: { mission: DailyMission }) {
         <ul className="mt-3 space-y-1.5">
           {w.exercises.map((ex, i) => (
             <li key={i} className="text-[11.5px] text-white/80 leading-snug flex items-start gap-2">
-              <span className="text-blood-500 mt-0.5 shrink-0 font-semibold">{i + 1}.</span>
+              <span className="text-[var(--text-muted)] mt-0.5 shrink-0 font-semibold">{i + 1}.</span>
               <span>
                 <span className="text-white">{ex.name}</span>
                 <span className="text-white/50"> — {ex.sets}×{ex.reps}, rest {ex.rest}</span>

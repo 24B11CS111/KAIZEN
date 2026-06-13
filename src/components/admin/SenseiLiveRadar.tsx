@@ -32,47 +32,45 @@ export function SenseiLiveRadar() {
     try {
       channel = createFreshChannel(supabase, "kaizen-presence");
 
-      channel.on("presence", { event: "sync" }, () => {
-        if (cancelled) return;
-        try {
-          const state = channel.presenceState();
-          const users: Record<string, OnlineUser> = {};
+      channel
+        .on("presence", { event: "sync" }, () => {
+          if (cancelled) return;
+          try {
+            const state = channel.presenceState();
+            const users: Record<string, OnlineUser> = {};
 
-          for (const [key, p] of Object.entries(state)) {
-            const presences = p as unknown[];
-            if (presences && presences.length > 0) {
-              users[key] = normalizePresence(key, presences[presences.length - 1]);
+            for (const [key, p] of Object.entries(state)) {
+              const presences = p as unknown[];
+              if (presences && presences.length > 0) {
+                users[key] = normalizePresence(key, presences[presences.length - 1]);
+              }
             }
+            setOnlineUsers(users);
+            setRealtimeError(null);
+          } catch (error) {
+            console.warn("[sensei-live-radar] presence sync failed:", error);
+            setRealtimeError("Realtime presence is temporarily unavailable.");
           }
-          setOnlineUsers(users);
-          setRealtimeError(null);
-        } catch (error) {
-          console.warn("[sensei-live-radar] presence sync failed:", error);
-          setRealtimeError("Realtime presence is temporarily unavailable.");
-        }
-        setLoading(false);
-      });
-
-      channel.on("presence", { event: "join" }, ({ key, newPresences }: { key: string; newPresences: unknown }) => {
-        if (cancelled) return;
-        const presence = Array.isArray(newPresences) ? newPresences[0] : null;
-        if (!presence) return;
-        setOnlineUsers(prev => ({
-          ...prev,
-          [key]: normalizePresence(key, presence)
-        }));
-      });
-
-      channel.on("presence", { event: "leave" }, ({ key }: { key: string }) => {
-        if (cancelled) return;
-        setOnlineUsers(prev => {
-          const next = { ...prev };
-          delete next[key];
-          return next;
-        });
-      });
-
-      channel.subscribe((status: string) => {
+          setLoading(false);
+        })
+        .on("presence", { event: "join" }, ({ key, newPresences }: { key: string; newPresences: unknown }) => {
+          if (cancelled) return;
+          const presence = Array.isArray(newPresences) ? newPresences[0] : null;
+          if (!presence) return;
+          setOnlineUsers(prev => ({
+            ...prev,
+            [key]: normalizePresence(key, presence)
+          }));
+        })
+        .on("presence", { event: "leave" }, ({ key }: { key: string }) => {
+          if (cancelled) return;
+          setOnlineUsers(prev => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+          });
+        })
+        .subscribe((status: string) => {
         if (cancelled) return;
         if (status === "SUBSCRIBED") {
           setLoading(false);
@@ -107,6 +105,14 @@ export function SenseiLiveRadar() {
   const topPath = mounted
     ? Object.keys(activePaths).sort((a, b) => activePaths[b] - activePaths[a])[0] || "/"
     : "/";
+
+  if (!mounted) {
+    return (
+      <div className="w-full h-full min-h-[480px] py-12 text-center text-white/40 border border-dashed border-white/10 rounded-2xl flex items-center justify-center">
+        Loading radar...
+      </div>
+    );
+  }
 
   return (
     <StaggerGroup delayBetween={0.06} className="space-y-6 w-full">

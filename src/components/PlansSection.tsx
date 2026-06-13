@@ -7,25 +7,27 @@ import { formatINR } from "@/lib/utils";
 const plans = [
   {
     amount: 49,
-    name: "Shoshin",
-    tagline: "The beginner's mind.",
+    name: "Essential Growth",
+    tagline: "Manual workflow and tracking.",
     features: [
-      "30-day drip — Days 1 to 30",
-      "Daily streak & progress",
-      "Dojo dashboard access",
-      "WhatsApp activation alerts"
+      "Manual Workflow & Habit Tracking",
+      "Smart Push Notifications",
+      "Strength Training & Fitness",
+      "Productivity & Focus Sessions",
+      "Daily Reflection System"
     ]
   },
   {
     amount: 99,
-    name: "Bushi",
-    tagline: "The disciplined warrior.",
+    name: "AI Growth Assistant",
+    tagline: "Your personal 24/7 AI coach.",
     featured: true,
     features: [
-      "Everything in Shoshin",
-      "Priority sensei verification",
-      "Cinematic gate-opening intro",
-      "Renewal-ready next-month tier"
+      "Everything in Essential Growth",
+      "AI-Powered Task Execution",
+      "Daily 1% Improvement Engine",
+      "Advanced Predictive Insights",
+      "Complete Life Operating System"
     ]
   }
 ];

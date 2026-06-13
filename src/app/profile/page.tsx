@@ -26,14 +26,14 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; glow: string
 };
 
 function planLabel(amount: number | null | undefined): string {
-  if (amount === 49) return "Intermediate Plan — \u20b949";
-  if (amount === 99) return "B.Tech Plan — \u20b999";
+  if (amount === 49) return "Essential Growth Plan — \u20b949";
+  if (amount === 99) return "AI Growth Assistant Plan — \u20b999";
   return "Free";
 }
 
-function planTier(amount: number | null | undefined): "free" | "intermediate" | "btech" {
-  if (amount === 49) return "intermediate";
-  if (amount === 99) return "btech";
+function planTier(amount: number | null | undefined): "free" | "core" | "elite" {
+  if (amount === 49) return "core";
+  if (amount === 99) return "elite";
   return "free";
 }
 
@@ -90,7 +90,7 @@ export default async function ProfilePage() {
         className="pointer-events-none fixed inset-x-0 top-0 h-72 z-0"
         style={{
           background:
-            "radial-gradient(70% 55% at 50% -10%, rgba(208,0,0,0.09), transparent 70%)"
+            "radial-gradient(70% 55% at 50% -10%, rgba(255,255,255,0.03), transparent 70%)"
         }}
       />
 
@@ -129,7 +129,7 @@ export default async function ProfilePage() {
         </div>
 
         {/* Plan card */}
-        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden mb-3">
+        <div className="card overflow-hidden mb-3 p-0">
           <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.05]">
             <div className="flex items-center gap-2.5">
               <CreditCard className="h-4 w-4 text-blood-500" />
@@ -167,7 +167,7 @@ export default async function ProfilePage() {
         </div>
 
         {/* Account details card */}
-        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden mb-3">
+        <div className="card overflow-hidden mb-3 p-0">
           <div className="flex items-center gap-2.5 px-5 py-4 border-b border-white/[0.05]">
             <User className="h-4 w-4 text-white/40" />
             <span className="text-[10px] uppercase tracking-[0.20em] text-white/45">Account</span>
@@ -255,16 +255,16 @@ export default async function ProfilePage() {
         <div className="mt-1 space-y-2">
           <Link
             href="/dojo"
-            className="btn-tap flex items-center justify-between rounded-2xl border border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04] transition-all px-5 py-4"
+            className="btn-tap flex items-center justify-between card hover:border-[var(--border-light)] hover:bg-white/[0.04] transition-all px-5 py-4"
           >
             <div className="flex items-center gap-3">
-              <Sword className="h-4 w-4 text-blood-500" />
+              <Sword className="h-4 w-4 text-[var(--text-muted)]" />
               <span className="text-sm font-medium">Go to Dojo</span>
             </div>
             <ArrowRight className="h-4 w-4 text-white/30" />
           </Link>
 
-          <div className="rounded-2xl border border-blood-500/15 bg-blood-500/[0.03] px-5 py-1.5">
+          <div className="card px-5 py-1.5">
             <LogoutButton />
           </div>
         </div>

@@ -28,7 +28,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="absolute bottom-0 inset-x-0 z-40 border-t border-white/10 bg-obsidian/85 backdrop-blur-xl"
+      className="absolute bottom-0 inset-x-0 z-40 border-t border-[var(--border)] bg-[var(--bg-surface)]/80 backdrop-blur-xl"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label="Primary"
     >
@@ -48,18 +48,18 @@ export function BottomNav() {
                 {active && (
                   <motion.span
                     layoutId="bottomnav-glow"
-                    className="absolute -top-px left-6 right-6 h-px bg-blood-500"
-                    style={{ boxShadow: "0 0 12px rgba(208,0,0,0.8)" }}
+                    className="absolute -top-px left-8 right-8 h-px bg-white/30"
+                    style={{ boxShadow: "0 0 12px rgba(255,255,255,0.4)" }}
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
                 <motion.span
-                  animate={{ scale: active ? 1.08 : 1, color: active ? "#d00000" : "rgba(255,255,255,0.4)" }}
+                  animate={{ scale: active ? 1.08 : 1, color: active ? "var(--text)" : "var(--text-muted)" }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 >
                   <t.icon className="h-5 w-5" />
                 </motion.span>
-                <span className={active ? "text-white" : "text-white/40"}>{t.label}</span>
+                <span className={active ? "text-[var(--text)] font-semibold" : "text-[var(--text-muted)]"}>{t.label}</span>
               </Link>
             </li>
           );

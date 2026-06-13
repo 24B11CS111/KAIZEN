@@ -17,16 +17,16 @@ export function HeroStatusPanel({ firstName, xp, currentStreak, todayProgressPct
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-2xl border border-blood-500/30 p-5 sm:p-6"
+      className="relative overflow-hidden card p-5 sm:p-6"
       style={{
         background:
-          "radial-gradient(800px 220px at 0% 0%, rgba(208,0,0,0.18), transparent 60%), linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.0))"
+          "radial-gradient(800px 220px at 0% 0%, rgba(255,255,255,0.03), transparent 60%), linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.0))"
       }}
     >
       {/* Ambient pulse behind */}
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute -top-12 -right-12 h-48 w-48 rounded-full bg-blood-500/15 blur-3xl"
+        className="pointer-events-none absolute -top-12 -right-12 h-48 w-48 rounded-full bg-white/5 blur-3xl"
         animate={{ opacity: [0.4, 0.7, 0.4] }}
         transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
       />
@@ -41,7 +41,7 @@ export function HeroStatusPanel({ firstName, xp, currentStreak, todayProgressPct
             {firstName}
           </h1>
           <div className="mt-2 inline-flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-blood-500/40 bg-blood-500/10 px-2.5 py-1 text-[11px] font-semibold tracking-wide">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 py-1 text-[11px] font-semibold tracking-wide">
               <Sparkles className="h-3 w-3 text-blood-500" />
               {xp.rank.name}
             </span>
@@ -88,8 +88,8 @@ export function HeroStatusPanel({ firstName, xp, currentStreak, todayProgressPct
             initial={{ width: 0 }}
             animate={{ width: `${xp.rankProgress * 100}%` }}
             transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-            className="h-full bg-blood-500"
-            style={{ boxShadow: "0 0 14px rgba(208,0,0,0.55)" }}
+            className="h-full bg-white"
+            style={{ boxShadow: "0 0 14px rgba(255,255,255,0.55)" }}
           />
         </div>
       </div>
@@ -106,14 +106,14 @@ export function HeroStatusPanel({ firstName, xp, currentStreak, todayProgressPct
           </div>
           <div className="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
             <div
-              className="h-full bg-blood-500 transition-all duration-500"
-              style={{ width: todayProgressPct + "%", boxShadow: "0 0 8px rgba(208,0,0,0.5)" }}
+              className="h-full bg-white transition-all duration-500"
+              style={{ width: todayProgressPct + "%", boxShadow: "0 0 8px rgba(255,255,255,0.5)" }}
             />
           </div>
         </div>
         <div className="card p-3 sm:col-span-2 flex items-start gap-2.5">
-          <span className="grid place-items-center h-7 w-7 rounded-md bg-blood-500/10 border border-blood-500/30 shrink-0 mt-0.5">
-            <Sparkles className="h-3.5 w-3.5 text-blood-500" />
+          <span className="grid place-items-center h-7 w-7 rounded-md bg-[var(--bg-elevated)] border border-[var(--border)] shrink-0 mt-0.5">
+            <Sparkles className="h-3.5 w-3.5 text-[var(--text-muted)]" />
           </span>
           <div className="min-w-0 flex-1">
             <div className="text-[10px] uppercase tracking-[0.18em] text-white/55">

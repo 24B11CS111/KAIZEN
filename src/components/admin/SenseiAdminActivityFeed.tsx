@@ -69,9 +69,8 @@ export function SenseiAdminActivityFeed({ initialFeed = [] }: { initialFeed?: Se
             created_at: String(row.created_at)
           };
           setFeed(prev => [entry, ...prev].slice(0, 50));
-        });
-
-      activityChannel.subscribe((status: string) => {
+        })
+        .subscribe((status: string) => {
         if (cancelled) return;
         if (status === "SUBSCRIBED") setRealtimeError(null);
         if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
@@ -90,6 +89,14 @@ export function SenseiAdminActivityFeed({ initialFeed = [] }: { initialFeed?: Se
       activityChannel = null;
     };
   }, []);
+
+  if (!mounted) {
+    return (
+      <div className="sensei-panel p-5 lg:p-6 h-full min-h-[480px] lg:min-h-0 lg:h-full flex items-center justify-center text-white/40 border-dashed border border-white/10">
+        Loading activity...
+      </div>
+    );
+  }
 
   return (
     <div className="sensei-panel p-5 lg:p-6 h-full min-h-[480px] lg:min-h-0 lg:h-full flex flex-col">

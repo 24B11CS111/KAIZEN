@@ -31,9 +31,8 @@ export function WorkoutMissionCard({ mission }: Props) {
     <div
       className={
         "card p-4 sm:p-5 mt-4 relative overflow-hidden " +
-        (isRest ? "border-white/12" : "")
+        (isRest ? "border-[var(--border)] opacity-80" : "")
       }
-      style={{ boxShadow: "0 0 24px -12px rgba(208,0,0,0.32)" }}
     >
       {/* Header — tap to expand */}
       <button
@@ -43,10 +42,7 @@ export function WorkoutMissionCard({ mission }: Props) {
       >
         <span
           className={
-            "grid place-items-center h-10 w-10 rounded-md shrink-0 border " +
-            (isRest
-              ? "bg-white/[0.04] border-white/15 text-white/70"
-              : "bg-blood-500/10 border-blood-500/35 text-blood-500")
+            "grid place-items-center h-10 w-10 rounded-md shrink-0 border bg-[var(--bg-elevated)] border-[var(--border)] text-[var(--text-muted)]"
           }
         >
           {isRest ? <Bed className="h-5 w-5" /> : <Dumbbell className="h-5 w-5" />}
@@ -57,7 +53,7 @@ export function WorkoutMissionCard({ mission }: Props) {
             <span className="text-[10px] uppercase tracking-[0.18em] text-white/55">
               Workout · Day {mission.cycle_day} / 7
             </span>
-            <span className="text-[10px] uppercase tracking-[0.18em] text-blood-500/85 font-semibold">
+            <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)] font-semibold">
               {mission.track_label}
             </span>
           </div>
@@ -92,8 +88,8 @@ export function WorkoutMissionCard({ mission }: Props) {
             className="overflow-hidden"
           >
             {/* Strategy */}
-            <div className="mt-4 rounded-lg border border-white/10 bg-white/[0.02] p-3">
-              <div className="text-[10px] uppercase tracking-[0.18em] text-blood-500 font-semibold mb-1.5">
+            <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+              <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)] font-semibold mb-1.5">
                 Focus
               </div>
               <p className="text-[12.5px] text-white/85 leading-relaxed">
@@ -107,10 +103,10 @@ export function WorkoutMissionCard({ mission }: Props) {
                 {d.exercises.map((ex, i) => (
                   <li
                     key={i}
-                    className="rounded-lg border border-white/[0.06] bg-white/[0.015] p-3"
+                    className="rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] p-3"
                   >
                     <div className="flex items-start gap-3">
-                      <span className="grid place-items-center h-6 w-6 rounded-md bg-white/[0.04] border border-white/10 text-[10px] font-semibold text-white/65 shrink-0 mt-0.5">
+                      <span className="grid place-items-center h-6 w-6 rounded-md bg-[var(--bg-surface)] border border-[var(--border)] text-[10px] font-semibold text-[var(--text-muted)] shrink-0 mt-0.5">
                         {i + 1}
                       </span>
                       <div className="flex-1 min-w-0">
@@ -134,16 +130,15 @@ export function WorkoutMissionCard({ mission }: Props) {
               </ul>
             )}
 
-            {/* Recovery + Motivation */}
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div className="rounded-lg border border-white/[0.06] bg-white/[0.015] p-3">
-                <div className="text-[10px] uppercase tracking-[0.18em] text-white/45 mb-1 inline-flex items-center gap-1.5">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)] mb-1 inline-flex items-center gap-1.5">
                   <CheckCircle2 className="h-3 w-3" /> Recovery
                 </div>
-                <p className="text-[12px] text-white/75 leading-snug">{d.recovery}</p>
+                <p className="text-[12px] text-[var(--text-muted)] leading-snug">{d.recovery}</p>
               </div>
-              <div className="rounded-lg border border-blood-500/25 bg-blood-500/[0.04] p-3">
-                <div className="text-[10px] uppercase tracking-[0.18em] text-blood-500 font-semibold mb-1 inline-flex items-center gap-1.5">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)] font-semibold mb-1 inline-flex items-center gap-1.5">
                   <Flame className="h-3 w-3" /> Cue
                 </div>
                 <p className="text-[12px] text-white/85 leading-snug italic">
@@ -157,9 +152,9 @@ export function WorkoutMissionCard({ mission }: Props) {
               {d.target.map((t) => (
                 <span
                   key={t}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border border-white/10 bg-white/[0.03] text-white/65"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-muted)]"
                 >
-                  <Sparkles className="h-2.5 w-2.5 text-blood-500/85" />
+                  <Sparkles className="h-2.5 w-2.5" />
                   {t}
                 </span>
               ))}

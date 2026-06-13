@@ -28,8 +28,8 @@ function formatDate(iso: string | null) {
 }
 
 function formatPlan(amount: number | null) {
-  if (amount === 49) return "Intermediate · Rs 49";
-  if (amount === 99) return "B.Tech · Rs 99";
+  if (amount === 49) return "Essential Growth · Rs 49";
+  if (amount === 99) return "AI Growth Assistant · Rs 99";
   return "Free";
 }
 

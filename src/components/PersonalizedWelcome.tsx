@@ -46,15 +46,14 @@ export function PersonalizedWelcome({
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-xl border border-white/[0.08] bg-gradient-to-br from-white/[0.03] via-transparent to-blood-500/[0.04] p-4 sm:p-5"
+      className="relative overflow-hidden card p-4 sm:p-5"
     >
       {/* subtle radial accent */}
       <span
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-50"
         style={{
-          background:
-            "radial-gradient(110% 70% at 100% 0%, rgba(208,0,0,0.10), transparent 60%)"
+            "radial-gradient(110% 70% at 100% 0%, rgba(255,255,255,0.03), transparent 60%)"
         }}
       />
       <div className="relative flex items-start gap-3">
@@ -69,7 +68,7 @@ export function PersonalizedWelcome({
 
         <div className="min-w-0 flex-1">
           {/* eyebrow */}
-          <div className="text-[10px] uppercase tracking-[0.18em] text-blood-500 font-semibold">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)] font-semibold">
             {v.eyebrow}
           </div>
           {/* headline */}
@@ -89,8 +88,8 @@ export function PersonalizedWelcome({
               </span>
             )}
             {streak > 0 && (
-              <span className="inline-flex items-center gap-1 text-blood-500/85 font-semibold">
-                <Flame className="h-3 w-3" /> {streak}-day streak
+              <span className="inline-flex items-center gap-1 text-[var(--text)] font-semibold">
+                <Flame className="h-3 w-3 text-blood-500" /> {streak}-day streak
               </span>
             )}
           </div>
@@ -128,8 +127,8 @@ const COPY: Record<
     eyebrow:   "The path opens",
     headline:  "Welcome, " + name + ". Your discipline journey begins now.",
     icon:      Sparkles,
-    iconWrap:  "bg-blood-500/15 border-blood-500/45",
-    iconColor: "text-blood-500"
+    iconWrap:  "bg-[var(--bg-elevated)] border-[var(--border)]",
+    iconColor: "text-white"
   }),
   active: (name, day, streak) => ({
     eyebrow:   "Today's mission",
@@ -137,21 +136,21 @@ const COPY: Record<
       ? "Welcome back, " + name + ". Day " + day + " · " + streak + "-day fire."
       : "Welcome back, " + name + ". Day " + day + " awaits.",
     icon:      Flame,
-    iconWrap:  "bg-blood-500/15 border-blood-500/45",
-    iconColor: "text-blood-500"
+    iconWrap:  "bg-[var(--bg-elevated)] border-[var(--border)]",
+    iconColor: "text-white"
   }),
   returning: (name, day) => ({
     eyebrow:   "Reset the line",
     headline:  "Welcome back, " + name + ". Day " + day + " — reseal the line.",
     icon:      FlameKindling,
-    iconWrap:  "bg-blood-500/15 border-blood-500/50",
-    iconColor: "text-blood-500"
+    iconWrap:  "bg-[var(--bg-elevated)] border-[var(--border)]",
+    iconColor: "text-white"
   }),
   sealed_today: (name, day) => ({
     eyebrow:   "Sealed today",
     headline:  "Well done, " + name + ". Day " + day + " is in the books.",
     icon:      Sun,
-    iconWrap:  "bg-emerald-400/12 border-emerald-400/35",
-    iconColor: "text-emerald-300"
+    iconWrap:  "bg-[var(--bg-elevated)] border-[var(--border)]",
+    iconColor: "text-white"
   })
 };

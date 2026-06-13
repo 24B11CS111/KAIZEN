@@ -157,7 +157,7 @@ export default function NotificationsPage() {
                 )}
                 <div className="flex gap-4">
                   <div className={`mt-0.5 grid place-items-center h-10 w-10 shrink-0 rounded-xl border ${
-                    !n.is_read ? 'border-blood-500/30 bg-blood-500/10' : 'border-white/10 bg-white/5'
+                    !n.is_read ? 'border-[var(--border-light)] bg-[var(--bg-elevated)]' : 'border-[var(--border)] bg-[var(--bg-surface)]'
                   }`}>
                     {getIcon(n.type)}
                   </div>
@@ -169,7 +169,7 @@ export default function NotificationsPage() {
                       {n.message}
                     </p>
                     {n.action_url && (
-                      <Link href={n.action_url} className="mt-3 inline-flex items-center gap-1.5 text-xs text-blood-500 hover:text-blood-400 uppercase tracking-widest font-bold transition-colors">
+                      <Link href={n.action_url} className="mt-3 inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-white uppercase tracking-widest font-bold transition-colors">
                         Execute <ChevronRight className="h-3 w-3" />
                       </Link>
                     )}

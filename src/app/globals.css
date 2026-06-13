@@ -9,12 +9,14 @@
 
 /* ── Design tokens ────────────────────────────────────────── */
 :root {
-  --bg:           #050505;
-  --bg-elev:      #0a0a0a;
-  --accent:       #d00000;
-  --text:         #ffffff;
-  --muted:        rgba(255, 255, 255, 0.6);
-  --border:       rgba(255, 255, 255, 0.08);
+  --bg:           #0B0B0D;
+  --bg-surface:   #111114;
+  --bg-elevated:  #17171B;
+  --accent:       #D00000;
+  --text:         #FFFFFF;
+  --text-muted:   rgba(255, 255, 255, 0.45);
+  --border:       rgba(255, 255, 255, 0.04);
+  --border-light: rgba(255, 255, 255, 0.08);
   --font-sans:    ui-sans-serif, system-ui, "Inter", -apple-system, sans-serif;
 }
 
@@ -29,7 +31,7 @@
 
 /* ── Document scroll (disabled for app shell) ─────── */
 html {
-  background-color: #000000;
+  background-color: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
 
@@ -44,7 +46,7 @@ body {
   height: 100svh;
   height: 100dvh;
   width: 100vw;
-  background-color: #000000;
+  background-color: var(--bg);
   overflow: hidden;
   touch-action: none;
   overscroll-behavior: none;
@@ -67,7 +69,7 @@ img, svg, video {
 
 /* ── Text selection ───────────────────────────────────────── */
 ::selection {
-  background: rgba(208, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.15);
   color: #fff;
 }
 
@@ -158,7 +160,7 @@ main {
   /* Subtle cinematic top glow inside the app shell */
   background-image: radial-gradient(
     800px 400px at 50% 0px,
-    rgba(208, 0, 0, 0.08),
+    rgba(255, 255, 255, 0.02),
     transparent 70%
   );
   background-attachment: local;
@@ -258,27 +260,32 @@ main {
 
   /* Cards */
   .card {
-    @apply rounded-xl border border-white/[0.07] bg-white/[0.02];
-    transition: border-color 200ms ease, box-shadow 200ms ease;
+    @apply rounded-2xl border bg-[var(--bg-surface)];
+    border-color: var(--border);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.02), 
+                0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 250ms ease, border-color 250ms ease;
   }
   .card-hover:hover {
-    border-color: rgba(208, 0, 0, 0.4);
-    box-shadow: 0 8px 32px -12px rgba(208, 0, 0, 0.2);
+    border-color: var(--border-light);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 
+                0 12px 32px rgba(0, 0, 0, 0.4);
   }
 
   /* Glass surface */
   .glass-surface {
-    background: rgba(5, 5, 5, 0.75);
+    background: rgba(17, 17, 20, 0.6);
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border);
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.04), 0 8px 32px rgba(0, 0, 0, 0.4);
   }
   .glass-premium {
-    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+    background: linear-gradient(180deg, rgba(23, 23, 27, 0.8), rgba(17, 17, 20, 0.8));
     backdrop-filter: blur(14px) saturate(140%);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid var(--border-light);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.06), 0 12px 40px rgba(0, 0, 0, 0.5);
   }
 
   /* Primary button */
@@ -286,26 +293,27 @@ main {
     @apply inline-flex items-center justify-center gap-2 rounded-lg
            px-5 py-2.5 text-sm font-semibold
            bg-blood-500 text-white
-           hover:bg-blood-600
            focus:outline-none focus:ring-2 focus:ring-blood-500/40 focus:ring-offset-2 focus:ring-offset-obsidian
-           transition-all;
-    box-shadow: 0 0 22px -6px rgba(208, 0, 0, 0.55);
+           transition-all duration-250;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 4px 12px rgba(208, 0, 0, 0.2);
   }
   .btn-primary:hover {
-    box-shadow: 0 0 30px -4px rgba(208, 0, 0, 0.7);
+    @apply bg-blood-600;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 6px 16px rgba(208, 0, 0, 0.3);
   }
-  .btn-primary:active { transform: scale(0.96); transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1); }
+  .btn-primary:active { transform: scale(0.97); transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1); }
 
   /* Secondary button */
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 rounded-lg
-           px-5 py-2.5 text-sm font-semibold
-           border border-white/15 text-white
-           hover:border-white/30 hover:bg-white/[0.05]
+           px-5 py-2.5 text-sm font-medium
+           border border-white/10 bg-[var(--bg-elevated)] text-white
+           hover:border-white/20 hover:bg-white/[0.08]
            focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-obsidian
-           transition-all;
+           transition-all duration-250;
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.02), 0 2px 4px rgba(0, 0, 0, 0.2);
   }
-  .btn-secondary:active { transform: scale(0.96); transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1); }
+  .btn-secondary:active { transform: scale(0.97); transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1); }
 
   /* Small variant */
   .btn-sm { @apply px-4 py-1.5 text-xs; }
@@ -321,10 +329,10 @@ main {
 
   /* Tap-scale card */
   .tap-card {
-    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s ease;
     -webkit-tap-highlight-color: transparent;
   }
-  .tap-card:active { transform: scale(0.96); }
+  .tap-card:active { transform: scale(0.97); }
 
   /* Sticky CTA for mobile */
   .cta-pinned {
@@ -335,25 +343,25 @@ main {
   /* Typography */
   .h1 {
     @apply text-4xl sm:text-5xl md:text-6xl lg:text-7xl
-           font-bold tracking-[-0.035em] leading-[1.02];
+           font-bold tracking-[-0.04em] leading-tight;
   }
   .h2 {
-    @apply text-[28px] sm:text-3xl md:text-[40px]
-           font-semibold tracking-[-0.02em] leading-[1.08];
+    @apply text-2xl sm:text-3xl md:text-4xl
+           font-semibold tracking-[-0.03em] leading-tight;
   }
   .h3 {
-    @apply text-lg md:text-xl font-semibold tracking-tight;
+    @apply text-lg md:text-xl font-medium tracking-[-0.02em];
   }
   .lead {
-    @apply text-base md:text-lg text-white/65 leading-relaxed;
+    @apply text-base md:text-lg text-[var(--text-muted)] leading-relaxed;
   }
   .eyebrow {
-    @apply inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-white/55;
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)];
   }
   .pill-tag {
-    @apply inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium
-           border border-white/10 bg-white/[0.03] text-white/85
-           hover:border-blood-500/40 hover:text-white transition-colors;
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium
+           border border-[var(--border)] bg-[var(--bg-elevated)] text-white/80
+           transition-colors duration-250;
   }
 
   /* Section rhythm */
@@ -378,14 +386,14 @@ main {
     transition: box-shadow 250ms ease, border-color 250ms ease;
   }
   .glow-ring:hover {
-    box-shadow: 0 0 0 1px rgba(208,0,0,0.4), 0 0 24px -6px rgba(208,0,0,0.4);
-    border-color: rgba(208,0,0,0.5);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 8px 24px -8px rgba(0,0,0,0.4);
+    border-color: rgba(255,255,255,0.15);
   }
 
   /* Depth layers */
-  .depth-1 { box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 16px -8px rgba(0,0,0,0.55); }
-  .depth-2 { box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 12px 40px -16px rgba(0,0,0,0.7); }
-  .depth-3 { box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 80px -24px rgba(0,0,0,0.85); }
+  .depth-1 { box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.02), 0 4px 16px -4px rgba(0,0,0,0.4); }
+  .depth-2 { box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.04), 0 8px 32px -8px rgba(0,0,0,0.6); }
+  .depth-3 { box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.06), 0 16px 48px -12px rgba(0,0,0,0.8); }
 
   /* Glow text underline */
   .glow-underline { text-shadow: 0 0 18px rgba(208,0,0,0.35); }
@@ -501,7 +509,7 @@ main > section::before {
   top: 0; inset-inline: 0;
   height: 40%;
   pointer-events: none;
-  background: radial-gradient(120% 100% at 50% 0%, rgba(208,0,0,0.04), transparent 55%);
+  background: radial-gradient(120% 100% at 50% 0%, rgba(255,255,255,0.02), transparent 55%);
   z-index: 0;
 }
 main > section > * {
@@ -514,5 +522,5 @@ main > section + section::after {
   top: 0; inset-inline: 15%;
   height: 1px;
   pointer-events: none;
-  background: linear-gradient(90deg, transparent 0%, rgba(208,0,0,0.28) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
 }

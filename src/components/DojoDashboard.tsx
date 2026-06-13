@@ -364,10 +364,10 @@ export function DojoDashboard({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.05 }}
-            className="card p-4 border-blood-500/30 flex items-center gap-3"
+            className="card p-4 flex items-center gap-3"
           >
-            <span className="grid place-items-center h-9 w-9 rounded-md bg-blood-500/15 border border-blood-500/40 shrink-0">
-              <Sparkles className="h-4 w-4 text-blood-500" />
+            <span className="grid place-items-center h-9 w-9 rounded-md bg-[var(--bg-surface)] border border-[var(--border)] shrink-0">
+              <Sparkles className="h-4 w-4 text-[var(--text-muted)]" />
             </span>
             <div className="min-w-0">
               <div className="text-sm font-semibold">Every master was once untrained</div>
@@ -376,10 +376,10 @@ export function DojoDashboard({
           </motion.div>
         )}
         {!isPaid && !noProgress && (
-          <div className="card p-3 border-blood-500/30 text-xs text-white/80 flex items-center gap-2">
-            <Lock className="h-3.5 w-3.5 text-blood-500 shrink-0" />
+          <div className="card p-3 text-xs text-white/80 flex items-center gap-2">
+            <Lock className="h-3.5 w-3.5 text-[var(--text-muted)] shrink-0" />
             <span className="flex-1">Free preview - first {FREE_LIMIT} days unlocked.</span>
-            <Link href="/upgrade" className="text-blood-500 font-semibold whitespace-nowrap">Upgrade</Link>
+            <Link href="/upgrade" className="text-white font-semibold whitespace-nowrap underline decoration-[var(--border-light)] underline-offset-4 hover:decoration-white transition-colors">Upgrade</Link>
           </div>
         )}
 
@@ -390,13 +390,13 @@ export function DojoDashboard({
             the legacy MissionCard so the dashboard never goes blank. */}
         <StaggerItem>
           {isCore ? (
-            <div className="card p-6 border-blood-500/30 flex flex-col items-center justify-center text-center">
-              <Lock className="h-8 w-8 text-blood-500 mb-3" />
+            <div className="card p-6 flex flex-col items-center justify-center text-center">
+              <Lock className="h-8 w-8 text-[var(--text-muted)] mb-3" />
               <h3 className="text-lg font-bold mb-1">AI Roadmap Locked</h3>
-              <p className="text-sm text-white/60 mb-4 max-w-sm">
+              <p className="text-sm text-[var(--text-muted)] mb-4 max-w-sm">
                 You are on the KAIZEN CORE plan. Upgrade to ELITE to unlock your adaptive AI missions and intelligent roadmap.
               </p>
-              <Link href="/upgrade" className="btn-blood py-2 px-4 text-xs inline-flex items-center gap-2">
+              <Link href="/upgrade" className="btn-primary py-2 px-4 text-xs inline-flex items-center gap-2">
                 <Sparkles className="h-3 w-3" /> Upgrade to Elite
               </Link>
             </div>
@@ -438,10 +438,10 @@ export function DojoDashboard({
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            className="card p-4 flex items-center gap-3 border-blood-500/40"
+            className="card p-4 flex items-center gap-3"
           >
-            <span className="grid place-items-center h-9 w-9 rounded-md bg-blood-500/15 border border-blood-500/40">
-              <Check className="h-4 w-4 text-blood-500" />
+            <span className="grid place-items-center h-9 w-9 rounded-md bg-[var(--bg-elevated)] border border-[var(--border)]">
+              <Check className="h-4 w-4 text-[var(--text-muted)]" />
             </span>
             <div>
               <div className="text-sm font-semibold">Day completed. Continue your ascent.</div>
@@ -454,10 +454,10 @@ export function DojoDashboard({
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            className="card p-4 flex items-center gap-3 border-blood-500/40"
+            className="card p-4 flex items-center gap-3"
           >
-            <span className="grid place-items-center h-9 w-9 rounded-md bg-blood-500/15 border border-blood-500/40">
-              <Check className="h-4 w-4 text-blood-500" />
+            <span className="grid place-items-center h-9 w-9 rounded-md bg-[var(--bg-elevated)] border border-[var(--border)]">
+              <Check className="h-4 w-4 text-[var(--text-muted)]" />
             </span>
             <div>
               <div className="text-sm font-semibold">Day {displayDay} sealed.</div>
@@ -466,9 +466,9 @@ export function DojoDashboard({
           </motion.div>
         )}
         {allDone && (
-          <div className="card p-4 flex items-center gap-3 border-blood-500/40">
-            <span className="grid place-items-center h-9 w-9 rounded-md bg-blood-500/15 border border-blood-500/40">
-              <Trophy className="h-4 w-4 text-blood-500" />
+          <div className="card p-4 flex items-center gap-3">
+            <span className="grid place-items-center h-9 w-9 rounded-md bg-[var(--bg-elevated)] border border-[var(--border)]">
+              <Trophy className="h-4 w-4 text-[var(--text-muted)]" />
             </span>
             <div>
               <div className="text-sm font-semibold">30 days complete.</div>

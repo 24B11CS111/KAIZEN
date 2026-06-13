@@ -39,7 +39,7 @@ export default async function ProgressPage() {
         className="pointer-events-none fixed inset-x-0 top-0 h-64 z-0"
         style={{
           background:
-            "radial-gradient(80% 60% at 50% -10%, rgba(208,0,0,0.10), transparent 70%)"
+            "radial-gradient(80% 60% at 50% -10%, rgba(255,255,255,0.03), transparent 70%)"
         }}
       />
 
@@ -47,8 +47,8 @@ export default async function ProgressPage() {
 
         {/* Header */}
         <header className="flex items-center gap-3 mb-8">
-          <span className="grid place-items-center h-11 w-11 rounded-xl bg-blood-500/10 border border-blood-500/25 shrink-0">
-            <BarChart3 className="h-5 w-5 text-blood-500" />
+          <span className="grid place-items-center h-11 w-11 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)] shrink-0">
+            <BarChart3 className="h-5 w-5 text-[var(--text-muted)]" />
           </span>
           <div>
             <p className="text-[10px] uppercase tracking-[0.20em] text-white/45">Progress</p>
@@ -58,9 +58,9 @@ export default async function ProgressPage() {
 
         {/* Zero-state CTA */}
         {completedCount === 0 && (
-          <div className="mb-5 rounded-2xl border border-blood-500/25 bg-blood-500/[0.05] p-5 flex items-center gap-4">
-            <span className="grid place-items-center h-11 w-11 rounded-xl bg-blood-500/15 border border-blood-500/35 shrink-0">
-              <Sparkles className="h-5 w-5 text-blood-500" />
+          <div className="mb-5 card p-5 flex items-center gap-4">
+            <span className="grid place-items-center h-11 w-11 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)] shrink-0">
+              <Sparkles className="h-5 w-5 text-[var(--text-muted)]" />
             </span>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold">Start your journey</div>
@@ -78,7 +78,7 @@ export default async function ProgressPage() {
         {/* Stats row */}
         <div className="grid grid-cols-2 gap-3 mb-3">
           {/* Completion */}
-          <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5 col-span-2">
+          <div className="card p-5 col-span-2">
             <div className="flex items-end justify-between mb-3">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.20em] text-white/45">Completed</p>
@@ -109,7 +109,7 @@ export default async function ProgressPage() {
           </div>
 
           {/* Streak */}
-          <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
+          <div className="card p-5">
             <div className="flex items-center gap-2 mb-2">
               <Flame className="h-4 w-4 text-blood-500" />
               <span className="text-[10px] uppercase tracking-[0.20em] text-white/45">Streak</span>
@@ -123,7 +123,7 @@ export default async function ProgressPage() {
           </div>
 
           {/* Best streak */}
-          <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
+          <div className="card p-5">
             <div className="flex items-center gap-2 mb-2">
               <Trophy className="h-4 w-4 text-amber-400" />
               <span className="text-[10px] uppercase tracking-[0.20em] text-white/45">Best</span>
@@ -138,7 +138,7 @@ export default async function ProgressPage() {
         </div>
 
         {/* 30-day grid */}
-        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5 mt-3">
+        <div className="card p-5 mt-3">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-white/40" />
@@ -168,8 +168,8 @@ export default async function ProgressPage() {
                     (done
                       ? "bg-blood-500/15 border-blood-500/40"
                       : current
-                      ? "border-blood-500/60 bg-blood-500/[0.08] shadow-[0_0_12px_-4px_rgba(208,0,0,0.5)]"
-                      : "border-white/[0.06] bg-transparent")
+                      ? "border-[var(--border-light)] bg-white/5 shadow-[0_0_12px_-4px_rgba(255,255,255,0.1)]"
+                      : "border-[var(--border)] bg-transparent")
                   }
                 >
                   {done ? (
@@ -208,7 +208,7 @@ export default async function ProgressPage() {
 
         {/* Motivational footer */}
         {completedCount > 0 && completedCount < TOTAL_DAYS && (
-          <div className="mt-4 rounded-2xl border border-white/[0.06] bg-white/[0.01] p-4 flex items-center gap-3">
+          <div className="mt-4 card p-4 flex items-center gap-3">
             <TrendingUp className="h-4 w-4 text-blood-500 shrink-0" />
             <p className="text-[12px] text-white/50 leading-relaxed">
               {pct >= 75

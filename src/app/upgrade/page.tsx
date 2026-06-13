@@ -103,19 +103,20 @@ export default function UpgradePage() {
               className="relative p-8 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
             >
               <div className="mb-6">
-                <h3 className="text-xl font-bold">KAIZEN CORE</h3>
+                <h3 className="text-xl font-bold">ESSENTIAL GROWTH</h3>
                 <div className="mt-2 flex items-baseline gap-2">
-                  <span className="text-3xl font-bold">₹99</span>
+                  <span className="text-3xl font-bold">₹49</span>
                   <span className="text-white/40 text-sm">/ month</span>
                 </div>
-                <p className="mt-3 text-sm text-white/50">For the focused operator.</p>
+                <p className="mt-3 text-sm text-white/50">Manual workflow and tracking.</p>
               </div>
 
               <ul className="space-y-4 mb-8 text-sm">
-                <FeatureItem text="Dynamic 30-Day AI Roadmaps" />
-                <FeatureItem text="Daily Progress Tracking" />
-                <FeatureItem text="Streak & Consistency Engine" />
-                <FeatureItem text="Basic In-App Reminders" />
+                <FeatureItem text="Manual Workflow & Habit Tracking" />
+                <FeatureItem text="Smart Push Notifications" />
+                <FeatureItem text="Strength Training & Fitness" />
+                <FeatureItem text="Productivity & Focus Sessions" />
+                <FeatureItem text="Daily Reflection System" />
               </ul>
 
               <button
@@ -123,7 +124,7 @@ export default function UpgradePage() {
                 disabled={loadingPlan !== null}
                 className="w-full btn-ghost py-4 inline-flex items-center justify-center gap-2 text-sm disabled:opacity-50"
               >
-                {loadingPlan === "core" ? "Processing..." : "Unlock Core"}
+                {loadingPlan === "core" ? "Processing..." : "Unlock Essential"}
                 <ArrowRight className="h-4 w-4" />
               </button>
             </motion.div>
@@ -141,20 +142,20 @@ export default function UpgradePage() {
               </div>
 
               <div className="mb-6">
-                <h3 className="text-xl font-bold text-blood-500">KAIZEN ELITE</h3>
+                <h3 className="text-xl font-bold text-blood-500">AI GROWTH ASSISTANT</h3>
                 <div className="mt-2 flex items-baseline gap-2">
-                  <span className="text-3xl font-bold">₹199</span>
+                  <span className="text-3xl font-bold">₹99</span>
                   <span className="text-white/40 text-sm">/ month</span>
                 </div>
-                <p className="mt-3 text-sm text-white/50">For the uncompromising elite.</p>
+                <p className="mt-3 text-sm text-white/50">Your personal 24/7 AI coach.</p>
               </div>
 
               <ul className="space-y-4 mb-8 text-sm">
-                <FeatureItem text="Adaptive Realtime AI Restructuring" />
-                <FeatureItem text="Aggressive Push & Email Reminders" />
-                <FeatureItem text="Premium Radar Telemetry Analytics" />
-                <FeatureItem text="Direct Sensei Protocol Access" />
-                <FeatureItem text="Priority Mission Generation" />
+                <FeatureItem text="Everything in Essential Growth" />
+                <FeatureItem text="AI-Powered Task Execution" />
+                <FeatureItem text="Daily 1% Improvement Engine" />
+                <FeatureItem text="Advanced Predictive Insights" />
+                <FeatureItem text="Complete Life Operating System" />
               </ul>
 
               <button
@@ -162,7 +163,7 @@ export default function UpgradePage() {
                 disabled={loadingPlan !== null}
                 className="w-full btn-blood py-4 inline-flex items-center justify-center gap-2 text-sm disabled:opacity-50"
               >
-                {loadingPlan === "elite" ? "Processing..." : "Become Elite"}
+                {loadingPlan === "elite" ? "Processing..." : "Unlock AI Assistant"}
                 <Zap className="h-4 w-4 fill-current" />
               </button>
             </motion.div>

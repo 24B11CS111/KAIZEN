@@ -7,7 +7,7 @@ const steps = [
     n: "01",
     icon: Compass,
     title: "Choose your path",
-    body: "Pick Intermediate or Engineering based on your stage. Subjects and roadmap auto-adjust."
+    body: "Pick Essential Growth or AI Growth Assistant based on your goals. The roadmap auto-adjusts."
   },
   {
     n: "02",

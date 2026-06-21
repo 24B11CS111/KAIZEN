@@ -59,7 +59,7 @@ export function Hero() {
             className="inline-flex items-center gap-2 rounded-full border border-blood-500/35 bg-blood-500/[0.06] px-3 py-1.5 text-[10px] uppercase tracking-[0.20em] text-blood-500 font-semibold backdrop-blur-sm"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-blood-500 pulse-dot" />
-            AI-powered discipline OS · For B.Tech students
+            AI-powered discipline OS · For the uncompromising
           </motion.div>
 
           <motion.h1
@@ -78,9 +78,9 @@ export function Hero() {
             variants={fade} initial="hidden" animate="show" custom={2}
             className="mt-6 text-[15px] sm:text-base lg:text-lg text-white/65 leading-relaxed max-w-xl"
           >
-            A 30-day execution system that turns chaotic learning into daily
-            disciplined missions — study, build, train. Personalized for your
-            branch and goal. Forged for the warrior in you.
+            A 30-day execution system that turns chaos into daily
+            disciplined missions — focus, build, train. Personalized for your
+            unique goals. Forged for the uncompromising.
           </motion.p>
 
           <motion.div
@@ -120,7 +120,7 @@ export function Hero() {
           >
             <Stat n="30" label="Day cycle" />
             <Divider />
-            <Stat n="7" label="B.Tech tracks" />
+            <Stat n="2" label="Premium tiers" />
             <Divider />
             <Stat n="6" label="Daily missions" />
           </motion.div>

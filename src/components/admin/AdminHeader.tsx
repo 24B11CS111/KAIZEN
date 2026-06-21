@@ -18,14 +18,14 @@ export function AdminHeader({ adminProfile }: { adminProfile: { full_name?: stri
       <header className="sticky top-0 z-40 flex h-14 sm:h-16 shrink-0 items-center gap-x-4 border-b border-white/[0.06] bg-[#030303]/80 backdrop-blur-xl px-4 sm:px-6 lg:px-8">
         <button
           type="button"
-          className="-m-2.5 p-2.5 text-white/70 hover:text-white md:hidden"
+          className="-m-2.5 p-2.5 text-white/70 hover:text-white lg:hidden"
           onClick={() => setMobileMenuOpen(true)}
         >
           <span className="sr-only">Open sidebar</span>
           <Menu className="h-5 w-5" aria-hidden="true" />
         </button>
 
-        <div className="h-6 w-px bg-white/10 md:hidden" aria-hidden="true" />
+        <div className="h-6 w-px bg-white/10 lg:hidden" aria-hidden="true" />
 
         <div className="flex flex-1 items-center gap-x-4 lg:gap-x-8 min-w-0">
           <h1 className="text-base sm:text-lg font-semibold text-white tracking-tight truncate shrink-0">
@@ -72,9 +72,9 @@ export function AdminHeader({ adminProfile }: { adminProfile: { full_name?: stri
         </div>
       </header>
 
-      {/* Mobile sidebar drawer */}
+      {/* Mobile / Tablet sidebar drawer */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden">
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
           <div className="fixed inset-y-0 left-0 w-[min(280px,85vw)] bg-[#030303] border-r border-white/[0.06] shadow-2xl flex flex-col">
             <div className="absolute right-0 top-0 -mr-12 pt-4">

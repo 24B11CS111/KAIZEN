@@ -145,16 +145,12 @@ main {
 /* ── Mobile App Shell Container ──────────────────────────── */
 .app-shell {
   width: 100%;
-  max-width: 440px; /* Constrain desktop to mobile width */
-  margin: 0 auto;
   height: 100svh;
   height: 100dvh;
   position: relative;
   display: flex;
   flex-direction: column;
   background-color: var(--bg);
-  box-shadow: 0 0 50px rgba(0,0,0,0.8);
-  border-inline: 1px solid rgba(255, 255, 255, 0.05);
   overflow: hidden;
 
   /* Subtle cinematic top glow inside the app shell */
@@ -235,11 +231,20 @@ main {
 @layer components {
 
   /* Page container */
+  .container-mobile {
+    @apply w-full px-4;
+  }
+  .container-tablet {
+    @apply w-full max-w-[900px] mx-auto px-6;
+  }
+  .container-desktop {
+    @apply w-full max-w-[1440px] mx-auto px-8;
+  }
   .container-page {
-    @apply px-4 mx-auto w-full;
+    @apply px-4 mx-auto w-full max-w-[1440px] md:px-8;
   }
   .container-app {
-    @apply px-4 mx-auto w-full;
+    @apply px-4 mx-auto w-full max-w-[1440px] md:px-8;
   }
 
   /* Sensei admin — full-width page sections */

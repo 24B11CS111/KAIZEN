@@ -59,7 +59,7 @@ export function Navbar() {
         />
       )}
 
-      <nav className="px-4 h-14 flex items-center justify-between gap-3 max-w-md mx-auto">
+      <nav className="container-app h-14 flex items-center justify-between gap-3 relative">
         {/* Brand */}
         <Link
           href={isAuthed ? "/dojo" : "/"}
@@ -80,6 +80,18 @@ export function Navbar() {
             KAIZEN<span className="text-blood-500">.</span>SYS
           </span>
         </Link>
+
+        {isAuthed && (
+          <div className="hidden lg:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
+            <Link href="/dojo" className="text-sm font-medium text-white/70 hover:text-white transition-colors">Dojo</Link>
+            <Link href="/progress" className="text-sm font-medium text-white/70 hover:text-white transition-colors">Progress</Link>
+            <Link href="/notifications" className="text-sm font-medium text-white/70 hover:text-white transition-colors">Alerts</Link>
+            <Link href="/profile" className="text-sm font-medium text-white/70 hover:text-white transition-colors">Profile</Link>
+            {(profile?.role === "admin" || (profile as any)?.is_admin) && (
+              <Link href="/sensei" className="text-sm font-medium text-blood-400 hover:text-blood-300 transition-colors">Sensei</Link>
+            )}
+          </div>
+        )}
 
         {/* Auth area */}
         <div className="flex items-center gap-3">

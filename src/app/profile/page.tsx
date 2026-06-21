@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LogoutButton } from "@/components/LogoutButton";
+import { Navbar } from "@/components/Navbar";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +85,7 @@ export default async function ProfilePage() {
 
   return (
     <main className="min-h-[100svh] bg-obsidian">
+      <Navbar />
       {/* Ambient glow */}
       <div
         aria-hidden
@@ -94,7 +96,7 @@ export default async function ProfilePage() {
         }}
       />
 
-      <div className="relative z-10 container-app max-w-md pt-8 pb-bottom-nav">
+      <div className="relative z-10 container-tablet pt-20 pb-bottom-nav">
 
         {/* Avatar + name block */}
         <div className="flex flex-col items-center text-center mb-8">

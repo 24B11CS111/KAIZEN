@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Bell, Flame, ShieldCheck, CheckCircle2, ChevronRight, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { Navbar } from "@/components/Navbar";
 
 export type NotificationType = "reminder" | "alert" | "streak" | "upgrade";
 
@@ -112,7 +113,8 @@ export default function NotificationsPage() {
 
   return (
     <main className="flex-1 flex flex-col pb-bottom-nav">
-      <div className="px-4 py-6">
+      <Navbar />
+      <div className="container-tablet pt-20 pb-6">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="h2 text-white">Alerts</h1>

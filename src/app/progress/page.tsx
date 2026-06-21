@@ -5,6 +5,7 @@ import {
   Trophy, Calendar, TrendingUp, Lock
 } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { Navbar } from "@/components/Navbar";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ export default async function ProgressPage() {
 
   return (
     <main className="min-h-[100svh] bg-obsidian">
+      <Navbar />
       {/* Top ambient glow */}
       <div
         aria-hidden
@@ -43,7 +45,7 @@ export default async function ProgressPage() {
         }}
       />
 
-      <div className="relative z-10 container-app max-w-md pt-8 pb-bottom-nav">
+      <div className="relative z-10 container-tablet pt-20 pb-bottom-nav">
 
         {/* Header */}
         <header className="flex items-center gap-3 mb-8">

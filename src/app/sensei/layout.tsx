@@ -15,8 +15,8 @@ export default async function SenseiLayout({ children }: { children: React.React
 
   return (
     <div className="flex h-full min-h-0 w-full overflow-hidden bg-[#030303] text-white selection:bg-blood-500/30">
-      {/* Desktop / tablet sidebar */}
-      <aside className="hidden md:flex md:w-60 lg:w-64 xl:w-72 shrink-0 flex-col border-r border-white/[0.06] bg-black/50 backdrop-blur-xl">
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex lg:w-64 xl:w-72 shrink-0 flex-col border-r border-white/[0.06] bg-black/50 backdrop-blur-xl">
         <AdminSidebar />
       </aside>
 

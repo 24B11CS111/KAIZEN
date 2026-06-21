@@ -8,5 +8,9 @@ export function BottomNavGate() {
   const pathname = usePathname() || "";
   const showNav = APP_ROUTES.some((p) => pathname === p || pathname.startsWith(p + "/"));
   if (!showNav) return null;
-  return <BottomNav />;
+  return (
+    <div className="lg:hidden">
+      <BottomNav />
+    </div>
+  );
 }

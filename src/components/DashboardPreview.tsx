@@ -107,7 +107,7 @@ export function DashboardPreview() {
                 </div>
                 <div>
                   <div className="text-white/50">Tier</div>
-                  <div className="text-white font-medium mt-1">Engineering</div>
+                  <div className="text-white font-medium mt-1">Elite</div>
                 </div>
                 <div>
                   <div className="text-white/50">Plan</div>

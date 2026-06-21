@@ -53,7 +53,7 @@ export function PersonalizedWelcome({
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-50"
         style={{
-            "radial-gradient(110% 70% at 100% 0%, rgba(255,255,255,0.03), transparent 60%)"
+            background: "radial-gradient(110% 70% at 100% 0%, rgba(255,255,255,0.03), transparent 60%)"
         }}
       />
       <div className="relative flex items-start gap-3">

@@ -1,7 +1,7 @@
 "use client";
 import { memo, useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Check, Lock, Sparkles, Trophy, FlameKindling } from "lucide-react";
+import { ArrowRight, Check, Lock, Sparkles, Trophy, FlameKindling, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GateOpening } from "./GateOpening";
@@ -252,7 +252,9 @@ export function DojoDashboard({
       {/* Sub-screen burst fires from the dashboard center on day completion */}
       <div className="fixed inset-0 pointer-events-none z-50 grid place-items-center">
         <CompletionBurst show={showBurst} />
-      </di      <main className="container-app pt-20 sm:pt-24 pb-bottom-nav">
+      </div>
+
+      <main className="container-app pt-20 sm:pt-24 pb-bottom-nav">
         <StaggerGroup delayBetween={0.08} className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
           
           {/* MAIN COLUMN */}

@@ -7,27 +7,31 @@ import { formatINR } from "@/lib/utils";
 const plans = [
   {
     amount: 49,
-    name: "Essential Growth",
-    tagline: "Manual workflow and tracking.",
+    name: "RONIN",
+    tagline: "Master discipline through consistency.",
     features: [
-      "Manual Workflow & Habit Tracking",
-      "Smart Push Notifications",
-      "Strength Training & Fitness",
-      "Productivity & Focus Sessions",
-      "Daily Reflection System"
+      "Manual mission creation",
+      "Daily work/task planner",
+      "Smart reminders & notifications",
+      "Workout section",
+      "1% Better Every Day system",
+      "Streak & progress tracking",
+      "Daily consistency score"
     ]
   },
   {
     amount: 99,
-    name: "AI Growth Assistant",
-    tagline: "Your personal 24/7 AI coach.",
+    name: "SHOGUN",
+    tagline: "Intelligence forged through execution.",
     featured: true,
     features: [
-      "Everything in Essential Growth",
-      "AI-Powered Task Execution",
-      "Daily 1% Improvement Engine",
-      "Advanced Predictive Insights",
-      "Complete Life Operating System"
+      "Everything in RONIN",
+      "AI analysis & optimization",
+      "Personalized monthly system",
+      "AI-generated missions",
+      "Remote work productivity analysis",
+      "Dynamic execution roadmap",
+      "Adaptive routines & insights"
     ]
   }
 ];
@@ -56,9 +60,13 @@ export function PlansSection() {
                 p.featured ? "border-blood-500/60 shadow-blood" : ""
               }`}
             >
-              {p.featured && (
+              {p.featured ? (
                 <span className="absolute -top-3 left-7 label-mono px-2 py-1 rounded bg-blood-500 text-white">
-                  Recommended
+                  Elite Path
+                </span>
+              ) : (
+                <span className="absolute -top-3 left-7 label-mono px-2 py-1 rounded border border-white/20 bg-black text-white/70">
+                  Foundation Path
                 </span>
               )}
               <div className="flex items-center gap-2 text-blood-500">

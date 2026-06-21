@@ -95,28 +95,33 @@ export default function UpgradePage() {
           </motion.div>
 
           <div className="mt-16 grid md:grid-cols-2 gap-6 items-start">
-            {/* Core Plan */}
+            {/* Core Plan (RONIN) */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
               className="relative p-8 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
             >
+              <div className="absolute top-0 right-8 -translate-y-1/2 px-3 py-1 rounded-full border border-white/20 bg-black text-white/70 text-[10px] uppercase font-bold tracking-wider">
+                Foundation Path
+              </div>
               <div className="mb-6">
-                <h3 className="text-xl font-bold">ESSENTIAL GROWTH</h3>
+                <h3 className="text-xl font-bold tracking-tight">RONIN</h3>
                 <div className="mt-2 flex items-baseline gap-2">
                   <span className="text-3xl font-bold">₹49</span>
                   <span className="text-white/40 text-sm">/ month</span>
                 </div>
-                <p className="mt-3 text-sm text-white/50">Manual workflow and tracking.</p>
+                <p className="mt-3 text-sm text-white/50">Master discipline through consistency.</p>
               </div>
 
               <ul className="space-y-4 mb-8 text-sm">
-                <FeatureItem text="Manual Workflow & Habit Tracking" />
-                <FeatureItem text="Smart Push Notifications" />
-                <FeatureItem text="Strength Training & Fitness" />
-                <FeatureItem text="Productivity & Focus Sessions" />
-                <FeatureItem text="Daily Reflection System" />
+                <FeatureItem text="Manual mission creation" />
+                <FeatureItem text="Daily work/task planner" />
+                <FeatureItem text="Smart reminders & notifications" />
+                <FeatureItem text="Workout section" />
+                <FeatureItem text="1% Better Every Day system" />
+                <FeatureItem text="Streak & progress tracking" />
+                <FeatureItem text="Daily consistency score" />
               </ul>
 
               <button
@@ -124,12 +129,12 @@ export default function UpgradePage() {
                 disabled={loadingPlan !== null}
                 className="w-full btn-ghost py-4 inline-flex items-center justify-center gap-2 text-sm disabled:opacity-50"
               >
-                {loadingPlan === "core" ? "Processing..." : "Unlock Essential"}
+                {loadingPlan === "core" ? "Processing..." : "Unlock Ronin"}
                 <ArrowRight className="h-4 w-4" />
               </button>
             </motion.div>
 
-            {/* Elite Plan */}
+            {/* Elite Plan (SHOGUN) */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -138,24 +143,26 @@ export default function UpgradePage() {
             >
               <div className="absolute top-0 right-8 -translate-y-1/2 px-3 py-1 rounded-full bg-blood-500 text-white text-[10px] uppercase font-bold tracking-wider inline-flex items-center gap-1.5">
                 <Crown className="h-3 w-3" />
-                Recommended
+                Elite Path
               </div>
 
               <div className="mb-6">
-                <h3 className="text-xl font-bold text-blood-500">AI GROWTH ASSISTANT</h3>
+                <h3 className="text-xl font-bold text-blood-500 tracking-tight">SHOGUN</h3>
                 <div className="mt-2 flex items-baseline gap-2">
                   <span className="text-3xl font-bold">₹99</span>
                   <span className="text-white/40 text-sm">/ month</span>
                 </div>
-                <p className="mt-3 text-sm text-white/50">Your personal 24/7 AI coach.</p>
+                <p className="mt-3 text-sm text-white/50">Intelligence forged through execution.</p>
               </div>
 
               <ul className="space-y-4 mb-8 text-sm">
-                <FeatureItem text="Everything in Essential Growth" />
-                <FeatureItem text="AI-Powered Task Execution" />
-                <FeatureItem text="Daily 1% Improvement Engine" />
-                <FeatureItem text="Advanced Predictive Insights" />
-                <FeatureItem text="Complete Life Operating System" />
+                <FeatureItem text="Everything in RONIN" />
+                <FeatureItem text="AI analysis & optimization" />
+                <FeatureItem text="Personalized monthly system" />
+                <FeatureItem text="AI-generated missions" />
+                <FeatureItem text="Remote work productivity analysis" />
+                <FeatureItem text="Dynamic execution roadmap" />
+                <FeatureItem text="Adaptive routines & insights" />
               </ul>
 
               <button
@@ -163,7 +170,7 @@ export default function UpgradePage() {
                 disabled={loadingPlan !== null}
                 className="w-full btn-blood py-4 inline-flex items-center justify-center gap-2 text-sm disabled:opacity-50"
               >
-                {loadingPlan === "elite" ? "Processing..." : "Unlock AI Assistant"}
+                {loadingPlan === "elite" ? "Processing..." : "Unlock Shogun"}
                 <Zap className="h-4 w-4 fill-current" />
               </button>
             </motion.div>

@@ -67,13 +67,13 @@ export default async function SenseiOverviewPage() {
           href="/sensei/users"
         />
         <StatCard
-          title="KAIZEN ELITE"
+          title="SHOGUN PATH"
           value={eliteUsers}
           icon={<ShieldCheck className="h-5 w-5 text-blood-500" />}
           href="/sensei/users"
         />
         <StatCard
-          title="KAIZEN CORE"
+          title="RONIN PATH"
           value={coreUsers}
           icon={<Users className="h-5 w-5 text-purple-400" />}
           href="/sensei/users"

@@ -27,8 +27,8 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; glow: string
 };
 
 function planLabel(amount: number | null | undefined): string {
-  if (amount === 49) return "Essential Growth Plan — \u20b949";
-  if (amount === 99) return "AI Growth Assistant Plan — \u20b999";
+  if (amount === 49) return "RONIN Plan — \u20b949";
+  if (amount === 99) return "SHOGUN Plan — \u20b999";
   return "Free";
 }
 

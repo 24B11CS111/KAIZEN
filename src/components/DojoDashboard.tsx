@@ -341,10 +341,13 @@ export function DojoDashboard({
             )}
 
             {!isPaid && !noProgress && (
-              <div className="card p-3 text-xs text-white/80 flex items-center gap-2">
-                <Lock className="h-3.5 w-3.5 text-[var(--text-muted)] shrink-0" />
-                <span className="flex-1">Free preview - first {FREE_LIMIT} days unlocked.</span>
-                <Link href="/upgrade" className="text-white font-semibold whitespace-nowrap underline decoration-[var(--border-light)] underline-offset-4 hover:decoration-white transition-colors">Upgrade</Link>
+              <div className="flex items-center justify-between text-xs font-semibold text-white/50 bg-white/5 px-3 py-1.5 rounded-full w-fit">
+                <span className="flex items-center gap-1.5 text-amber-500 mr-3">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  INITIATION Trial
+                </span>
+                <span className="flex-1">First {FREE_LIMIT} days unlocked. Experience SHOGUN features.</span>
+                <Link href="/upgrade" className="text-white font-semibold whitespace-nowrap underline decoration-[var(--border-light)] underline-offset-4 hover:decoration-white transition-colors ml-3">Upgrade</Link>
               </div>
             )}
 
@@ -354,10 +357,10 @@ export function DojoDashboard({
                   <Lock className="h-8 w-8 text-[var(--text-muted)] mb-3" />
                   <h3 className="text-lg font-bold mb-1">AI Roadmap Locked</h3>
                   <p className="text-sm text-[var(--text-muted)] mb-4 max-w-sm mx-auto">
-                    You are on the KAIZEN CORE plan. Upgrade to ELITE to unlock your adaptive AI missions and intelligent roadmap.
+                    You are on the KAIZEN RONIN plan. Upgrade to SHOGUN to unlock your adaptive AI missions and intelligent roadmap.
                   </p>
                   <Link href="/upgrade" className="btn-primary py-2 px-4 text-xs inline-flex items-center gap-2 mx-auto">
-                    <Sparkles className="h-3 w-3" /> Upgrade to Elite
+                    <Sparkles className="h-3 w-3" /> Upgrade to Shogun
                   </Link>
                 </div>
               ) : cardLocked || !dailyMission ? (

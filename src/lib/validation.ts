@@ -44,12 +44,10 @@ export const UtrSchema = z
   .transform(sanitize)
   .refine((s) => /^\d{12}$/.test(s), "UTR must be exactly 12 digits");
 
-export const PathTypeSchema = z.enum(["intermediate", "btech"]);
-export const IntermediateBranchSchema = z.enum(["MPC", "BiPC"]);
-export const BtechBranchSchema = z.enum([
-  "CSE", "AIML", "DS", "ECE", "EEE", "MECH", "CIVIL"
-]);
-export const BranchSchema = z.union([IntermediateBranchSchema, BtechBranchSchema]);
+export const PathTypeSchema = z.string();
+export const IntermediateBranchSchema = z.string();
+export const BtechBranchSchema = z.string();
+export const BranchSchema = z.string().nullable().optional();
 
 export const RegisterAccountSchema = z.object({
   full_name: NameSchema,
@@ -59,16 +57,7 @@ export const RegisterAccountSchema = z.object({
 });
 
 export const RegisterPathSchema = z
-  .object({ path_type: PathTypeSchema, branch: BranchSchema })
-  .superRefine((val, ctx) => {
-    if (val.path_type === "intermediate" && !["MPC", "BiPC"].includes(val.branch)) {
-      ctx.addIssue({ code: "custom", message: "Invalid branch for Intermediate path" });
-    }
-    if (val.path_type === "btech" &&
-        !["CSE","AIML","DS","ECE","EEE","MECH","CIVIL"].includes(val.branch)) {
-      ctx.addIssue({ code: "custom", message: "Invalid branch for B.Tech path" });
-    }
-  });
+  .object({ path_type: PathTypeSchema, branch: BranchSchema });
 
 export const EnrollmentSchema = z.object({
   full_name: NameSchema,

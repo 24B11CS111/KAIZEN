@@ -13,25 +13,10 @@ import {
   RegisterAccountSchema, RegisterPathSchema, EnrollmentSchema
 } from "@/lib/validation";
 
-type Step = 1 | 2 | 3 | 4 | 5;
-type PathType = "intermediate" | "btech";
+type Step = 1 | 2 | 3 | 4;
+type PathType = "ronin" | "shogun";
 
-const intermediateBranches = [
-  { code: "MPC",  name: "Maths, Physics, Chemistry",  icon: Sigma },
-  { code: "BiPC", name: "Biology, Physics, Chemistry", icon: FlaskConical }
-] as const;
-
-const btechBranches = [
-  { code: "CSE",   name: "Computer Science",         icon: Cpu },
-  { code: "AIML",  name: "AI & Machine Learning",    icon: Brain },
-  { code: "DS",    name: "Data Science",             icon: Database },
-  { code: "ECE",   name: "Electronics & Comm.",      icon: RadioTower },
-  { code: "EEE",   name: "Electrical & Electronics", icon: Zap },
-  { code: "MECH",  name: "Mechanical",               icon: Cog },
-  { code: "CIVIL", name: "Civil",                    icon: Hammer }
-] as const;
-
-const stepTitles = ["Account", "Path", "Stream", "Payment", "Sealed"];
+const stepTitles = ["Account", "Path", "Payment", "Sealed"];
 
 function describeError(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e);
@@ -65,7 +50,7 @@ export function RegistrationFlow() {
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    if (step === 4 && !pay.whatsapp && account.whatsapp) {
+    if (step === 3 && !pay.whatsapp && account.whatsapp) {
       setPay((p) => ({ ...p, whatsapp: account.whatsapp }));
     }
   }, [step, account.whatsapp, pay.whatsapp]);
@@ -77,7 +62,7 @@ export function RegistrationFlow() {
     setNotice(null);
   }, [step]);
 
-  const planAmount = path === "btech" ? 99 : 49;
+  const planAmount = path === "shogun" ? 99 : 49;
   const upi = process.env.NEXT_PUBLIC_UPI_ID || "kaizen@upi";
   const upiName = process.env.NEXT_PUBLIC_UPI_NAME || "KAIZEN.SYS";
   const qrPath = process.env.NEXT_PUBLIC_UPI_QR_PATH || "https://res.cloudinary.com/dzqfrwizz/image/upload/v1778002547/70f7bcee-4a22-41ea-b6c9-5af680bfc6a0_fjcl52.png";
@@ -145,17 +130,15 @@ export function RegistrationFlow() {
     }
   };
 
-  // STEP 3 -> STEP 4: save path + branch via the server endpoint, which
-  // accepts either a session cookie OR an email lookup as identification.
-  // Never blocks on missing session.
+  // STEP 2 -> STEP 3: save path via the server endpoint
   const savePath = async () => {
     setError(null);
     setNotice(null);
-    if (!path || !branch) {
-      setError("Pick a path and a stream");
+    if (!path) {
+      setError("Pick a path");
       return;
     }
-    const parsed = RegisterPathSchema.safeParse({ path_type: path, branch });
+    const parsed = RegisterPathSchema.safeParse({ path_type: path, branch: "general" });
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Invalid selection");
       return;
@@ -176,7 +159,7 @@ export function RegistrationFlow() {
       if (!res.ok) {
         throw new Error(json?.error || "Could not save path. Please try again.");
       }
-      setStep(4);
+      setStep(3);
     } catch (e) {
       console.error("[register] path save error:", e);
       setError(describeError(e));
@@ -185,7 +168,7 @@ export function RegistrationFlow() {
     }
   };
 
-  // STEP 4 -> STEP 5: submit UTR via /api/enroll
+  // STEP 3 -> STEP 4: submit UTR via /api/enroll
   const submitPayment = async () => {
     setError(null);
     const parsed = EnrollmentSchema.safeParse({
@@ -218,7 +201,7 @@ export function RegistrationFlow() {
       if (!res.ok) {
         throw new Error(json.error || ("Submission failed (HTTP " + res.status + ")."));
       }
-      setStep(5);
+      setStep(4);
     } catch (e) {
       console.error("[register] payment error:", e);
       setError(describeError(e));
@@ -276,78 +259,31 @@ export function RegistrationFlow() {
               </p>
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <PathCard
-                  selected={path === "intermediate"}
-                  onClick={() => { setPath("intermediate"); setBranch(null); }}
-                  title="Intermediate" subtitle="11th and 12th"
+                  selected={path === "ronin"}
+                  onClick={() => { setPath("ronin"); setBranch("general"); }}
+                  title="RONIN" subtitle="Foundation Path"
                   price="₹49 / month" icon={GraduationCap} />
                 <PathCard
-                  selected={path === "btech"}
-                  onClick={() => { setPath("btech"); setBranch(null); }}
-                  title="B.Tech" subtitle="Engineering students"
+                  selected={path === "shogun"}
+                  onClick={() => { setPath("shogun"); setBranch("general"); }}
+                  title="SHOGUN" subtitle="Elite Path"
                   price="₹99 / month" icon={Cpu} recommended />
               </div>
               {error && <Err msg={error} />}
-                {notice && <Ok msg={notice} />}
+              {notice && <Ok msg={notice} />}
               <div className="mt-7 flex justify-between">
                 <button onClick={() => setStep(1)} className="btn-secondary">
                   <ArrowLeft className="h-4 w-4" /> Back
                 </button>
-                <button disabled={!path} onClick={() => setStep(3)}
-                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
-                  Continue <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </Pane>
-          )}
-
-          {step === 3 && (
-            <Pane key="3">
-              <h2 className="h3">Select your stream</h2>
-              <p className="text-sm text-white/55 mt-1">
-                {path === "btech" ? "Engineering branches" : "Intermediate streams"}
-              </p>
-              <div className={
-                "mt-6 grid gap-3 " +
-                (path === "btech" ? "grid-cols-2 md:grid-cols-3" : "grid-cols-1 sm:grid-cols-2")
-              }>
-                {(path === "btech" ? btechBranches : intermediateBranches).map((b) => (
-                  <button
-                    key={b.code}
-                    onClick={() => setBranch(b.code)}
-                    className={
-                      "card p-4 text-left transition-all " +
-                      (branch === b.code
-                        ? "border-blood-500/70 bg-blood-500/[0.06]"
-                        : "card-hover")
-                    }
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span className="grid place-items-center h-8 w-8 rounded-md bg-blood-500/10 border border-blood-500/30">
-                        <b.icon className="h-4 w-4 text-blood-500" />
-                      </span>
-                      <div>
-                        <div className="text-sm font-semibold">{b.code}</div>
-                        <div className="text-[11px] text-white/55 mt-0.5">{b.name}</div>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              {error && <Err msg={error} />}
-                {notice && <Ok msg={notice} />}
-              <div className="mt-7 flex justify-between">
-                <button onClick={() => setStep(2)} className="btn-secondary">
-                  <ArrowLeft className="h-4 w-4" /> Back
-                </button>
-                <Submit onClick={savePath} busy={busy} disabled={!branch}>
+                <Submit onClick={savePath} busy={busy} disabled={!path}>
                   Continue
                 </Submit>
               </div>
             </Pane>
           )}
 
-          {step === 4 && (
-            <Pane key="4">
+          {step === 3 && (
+            <Pane key="3">
               <h2 className="h3">Pay ₹{planAmount} via UPI</h2>
               <p className="text-sm text-white/55 mt-1">
                 Scan, pay, then enter the 12-digit UTR.
@@ -391,8 +327,8 @@ export function RegistrationFlow() {
             </Pane>
           )}
 
-          {step === 5 && (
-            <Pane key="5">
+          {step === 4 && (
+            <Pane key="4">
               <div className="grid place-items-center text-center py-8">
                 <div className="grid place-items-center h-16 w-16 rounded-full bg-blood-500/15 border border-blood-500/40 mb-5">
                   <Check className="h-8 w-8 text-blood-500" />

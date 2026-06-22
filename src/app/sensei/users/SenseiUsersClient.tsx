@@ -76,8 +76,9 @@ export function SenseiUsersClient({ initialUsers }: { initialUsers: SenseiUserRe
           <thead className="sticky top-0 bg-obsidian border-b border-white/10 text-white/40 uppercase tracking-wider text-[10px] z-10 shadow-sm">
             <tr>
               <th className="px-6 py-4 font-semibold">User</th>
-              <th className="px-6 py-4 font-semibold">Status</th>
-              <th className="px-6 py-4 font-semibold">Branch</th>
+              <th className="px-6 py-4 font-semibold">Plan</th>
+              <th className="px-6 py-4 font-semibold">Profession</th>
+              <th className="px-6 py-4 font-semibold">Goal</th>
               <th className="px-6 py-4 font-semibold">Streak</th>
               <th className="px-6 py-4 font-semibold">Progress</th>
               <th className="px-6 py-4 text-right font-semibold">Actions</th>
@@ -86,7 +87,7 @@ export function SenseiUsersClient({ initialUsers }: { initialUsers: SenseiUserRe
           <tbody className="divide-y divide-white/5">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-white/40">
+                <td colSpan={7} className="px-6 py-12 text-center text-white/40">
                   No users found matching the current filters.
                 </td>
               </tr>
@@ -105,12 +106,15 @@ export function SenseiUsersClient({ initialUsers }: { initialUsers: SenseiUserRe
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-block rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-wider ${toneForStatus(user.subscription_status)}`}>
-                      {user.subscription_status || "pending"}
+                    <span className={`inline-block rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-wider ${toneForStatus(user.subscription_tier)}`}>
+                      {user.subscription_tier || "trial"}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-white/70">
-                    {user.branch || "—"}
+                    {user.occupation || "—"}
+                  </td>
+                  <td className="px-6 py-4 text-white/70 truncate max-w-[150px]" title={user.main_goal || ""}>
+                    {user.main_goal || "—"}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1.5">

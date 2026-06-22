@@ -1,31 +1,53 @@
 import { NextResponse } from "next/server";
 import { isAuthBypassed } from "@/lib/devBypass";
 import { requireAdmin } from "@/lib/admin";
-import { safeRpc } from "@/lib/safeRpc";
-import { AdminActionSchema } from "@/lib/validation";
+import { z } from "zod";
 
 export const runtime = "nodejs";
+
+const RejectSchema = z.object({
+  submission_id: z.string().uuid()
+});
 
 export async function POST(req: Request) {
   if (isAuthBypassed()) return NextResponse.json({ ok: true, bypassed: true });
   const guard = await requireAdmin();
   if (guard instanceof NextResponse) return guard;
-  const { supabase } = guard;
+  const { supabase, profile } = guard;
 
-  const parsed = AdminActionSchema.safeParse(await req.json().catch(() => ({})));
-  if (!parsed.success || !parsed.data.utr_id) {
-    return NextResponse.json({ error: "utr_id required" }, { status: 400 });
+  const parsed = RejectSchema.safeParse(await req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return NextResponse.json({ error: "submission_id required" }, { status: 400 });
   }
 
-  const { error } = await safeRpc(
-    supabase,
-    "reject_utr",
-    {
-      p_utr_id: parsed.data.utr_id,
-      p_reason: parsed.data.rejection_reason ?? null
-    },
-    "admin/reject"
-  );
-  if (error) return NextResponse.json({ error }, { status: 400 });
+  const submission_id = parsed.data.submission_id;
+
+  const { data: submission, error: subError } = await supabase
+    .from("payment_submissions")
+    .select("user_id, status")
+    .eq("id", submission_id)
+    .single();
+
+  if (subError || !submission) {
+    return NextResponse.json({ error: "Submission not found" }, { status: 404 });
+  }
+
+  if (submission.status !== "pending") {
+    return NextResponse.json({ error: "Submission is not pending" }, { status: 400 });
+  }
+
+  const { error: updateError } = await supabase
+    .from("payment_submissions")
+    .update({ 
+      status: "rejected", 
+      reviewed_by: profile.id, 
+      reviewed_at: new Date().toISOString() 
+    })
+    .eq("id", submission_id);
+
+  if (updateError) {
+    return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
   return NextResponse.json({ ok: true });
 }

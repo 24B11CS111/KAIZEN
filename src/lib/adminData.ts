@@ -38,13 +38,12 @@ export interface SenseiUserRecord {
   progress_percent: number;
   latest_activity_at: string | null;
   subscription_status: string | null;
+  subscription_tier: string | null;
   expiry_date: string | null;
   plan_amount: number | null;
   latest_payment_status: string | null;
-  latest_utr_id: string | null;
-  latest_utr_number: string | null;
+  latest_payment_id: string | null;
   latest_payment_created_at: string | null;
-  latest_rejection_reason: string | null;
   payment_history: SenseiPaymentHistoryEntry[];
   ai_track_label: string | null;
   ai_track_id: string | null;
@@ -67,17 +66,17 @@ export async function getSenseiDirectoryUsers(): Promise<SenseiUserRecord[]> {
     const [profilesRes, streaksRes, paymentsRes, onboardingRes, aiPlansRes] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id,email,avatar_url,full_name,whatsapp,created_at,last_active_at,path_type,branch,occupation,field_of_study,daily_time_min,skill_level,main_goal,main_goal_other,subscription_status,expiry_date,plan_amount,age,gender,workout_location,fitness_level,is_suspended")
+        .select("id,email,avatar_url,full_name,whatsapp,created_at,last_active_at,path_type,branch,occupation,field_of_study,daily_time_min,skill_level,main_goal,main_goal_other,subscription_status,subscription_tier,expiry_date,plan_amount,age,gender,workout_location,fitness_level,is_suspended")
         .order("created_at", { ascending: false }),
       supabase.from("streaks").select("user_id,current_streak,longest_streak,last_completed_date,updated_at"),
-      supabase.from("utr_logs").select("id,user_id,utr_number,plan_amount,status,created_at,reviewed_at,rejection_reason").order("created_at", { ascending: false }),
+      supabase.from("payment_submissions").select("id,user_id,transaction_id,amount,status,created_at,reviewed_at").order("created_at", { ascending: false }),
       supabase.from("onboarding_data").select("user_id,full_name,age,gender,occupation,field_of_study,daily_time_min,skill_level,main_goal,main_goal_other,raw,created_at").order("created_at", { ascending: false }),
       supabase.from("ai_plans").select("user_id,track_id,track_label,version,created_at").order("created_at", { ascending: false }),
     ]);
 
     if (profilesRes.error) logSenseiFetch("adminData/profiles", profilesRes.error);
     if (streaksRes.error) logSenseiFetch("adminData/streaks", streaksRes.error);
-    if (paymentsRes.error) logSenseiFetch("adminData/utr_logs", paymentsRes.error);
+    if (paymentsRes.error) logSenseiFetch("adminData/payment_submissions", paymentsRes.error);
     if (onboardingRes.error) logSenseiFetch("adminData/onboarding_data", onboardingRes.error);
     if (aiPlansRes.error) logSenseiFetch("adminData/ai_plans", aiPlansRes.error);
 
@@ -124,12 +123,12 @@ export async function getSenseiDirectoryUsers(): Promise<SenseiUserRecord[]> {
 
     const paymentHistory = userPayments.map((entry) => ({
       id: String(entry.id),
-      utr_number: entry.utr_number ?? "—",
-      plan_amount: Number(entry.plan_amount ?? 0),
+      utr_number: entry.transaction_id ?? "N/A",
+      plan_amount: Number(entry.amount ?? 0),
       status: entry.status ?? "pending",
       created_at: entry.created_at ?? null,
       reviewed_at: entry.reviewed_at ?? null,
-      rejection_reason: entry.rejection_reason ?? null
+      rejection_reason: null
     }));
 
     return {
@@ -156,18 +155,17 @@ export async function getSenseiDirectoryUsers(): Promise<SenseiUserRecord[]> {
       current_streak: Number(streak?.current_streak ?? 0),
       longest_streak: Number(streak?.longest_streak ?? 0),
       last_completed_date: (streak?.last_completed_date ?? null) as string | null,
-      completed_days: 0, // Migrated to progressMap logic separately for analytics
+      completed_days: 0,
       current_roadmap_day: 1,
       progress_percent: 0,
       latest_activity_at: null,
       subscription_status: (profile.subscription_status ?? "pending") as string | null,
+      subscription_tier: (profile.subscription_tier ?? "trial") as string | null,
       expiry_date: (profile.expiry_date ?? null) as string | null,
-      plan_amount: Number(profile.plan_amount ?? latestPayment?.plan_amount ?? 0) || null,
+      plan_amount: Number(latestPayment?.amount ?? 0) || null,
       latest_payment_status: latestPayment?.status ?? null,
-      latest_utr_id: latestPayment?.id ?? null,
-      latest_utr_number: latestPayment?.utr_number ?? null,
+      latest_payment_id: latestPayment?.id ?? null,
       latest_payment_created_at: latestPayment?.created_at ?? null,
-      latest_rejection_reason: latestPayment?.rejection_reason ?? null,
       payment_history: paymentHistory,
       ai_track_label: (latestPlan?.track_label ?? null) as string | null,
       ai_track_id: (latestPlan?.track_id ?? null) as string | null,

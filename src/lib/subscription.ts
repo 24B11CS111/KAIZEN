@@ -1,6 +1,6 @@
 import { createSupabaseServerClient } from "./supabase/server";
 
-export type SubscriptionTier = 'trial' | 'core' | 'elite' | 'expired';
+export type SubscriptionTier = 'trial' | 'ronin' | 'shogun' | 'expired';
 
 export interface SubscriptionStatus {
   tier: SubscriptionTier;
@@ -28,9 +28,9 @@ export async function getUserSubscriptionStatus(): Promise<SubscriptionStatus> {
 
   const tier = (data.subscription_tier as SubscriptionTier) || 'trial';
   
-  // If user is explicitly expired, core, or elite, no need for trial calc
+  // If user is explicitly expired, ronin, or shogun, no need for trial calc
   if (tier === 'expired') return { tier, isExpired: true, daysRemaining: 0 };
-  if (tier === 'core' || tier === 'elite') return { tier, isExpired: false, daysRemaining: 999 };
+  if (tier === 'ronin' || tier === 'shogun') return { tier, isExpired: false, daysRemaining: 999 };
 
   // Trial logic
   if (!data.trial_expires_at) {

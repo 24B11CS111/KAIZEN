@@ -32,15 +32,26 @@ export async function POST(req: Request) {
 
     if (reportError) throw reportError;
 
-    // 2. Fetch the active AI Plan to adapt tomorrow's missions
-    const { data: activePlan } = await supabase
-      .from("ai_plans")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(1)
+    // 2. Check User's Subscription Tier
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("subscription_tier")
+      .eq("id", session.user.id)
       .single();
+
+    const tier = profile?.subscription_tier || "expired";
+    const aiEnabled = tier === "shogun" || tier === "trial";
+
+    // 3. Fetch the active AI Plan to adapt tomorrow's missions (only if AI is enabled)
+    if (aiEnabled) {
+      const { data: activePlan } = await supabase
+        .from("ai_plans")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
 
     if (activePlan && activePlan.generated_plan) {
       const planData = activePlan.generated_plan as any;
@@ -71,6 +82,7 @@ export async function POST(req: Request) {
         // We do not throw here to ensure the report is still considered "saved"
       }
     }
+    } // End if (aiEnabled)
 
     return NextResponse.json({ ok: true, report });
   } catch (err: any) {

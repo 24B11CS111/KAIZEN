@@ -44,14 +44,42 @@ export function SenseiAdminActivityFeed({ initialFeed = [] }: { initialFeed?: Se
           };
           setFeed(prev => [entry, ...prev].slice(0, 50));
         })
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "utr_logs" }, (payload: { new: Record<string, unknown> }) => {
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "payment_submissions" }, (payload: { new: Record<string, unknown> }) => {
           if (cancelled) return;
           const row = payload.new as Record<string, unknown>;
           const entry: SenseiActivityEntry = {
-            id: `utr-${row.id}`,
+            id: `pay-${row.id}`,
             type: "payment",
             label: "New Payment Submitted",
-            detail: `UTR ${row.utr_number} / ₹${row.plan_amount}`,
+            detail: `${row.plan} / ₹${row.amount}`,
+            user_id: String(row.user_id),
+            created_at: String(row.created_at)
+          };
+          setFeed(prev => [entry, ...prev].slice(0, 50));
+        })
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "payment_submissions" }, (payload: { new: Record<string, unknown>, old: Record<string, unknown> }) => {
+          if (cancelled) return;
+          const row = payload.new as Record<string, unknown>;
+          if (row.status === "approved" && payload.old.status === "pending") {
+             const entry: SenseiActivityEntry = {
+              id: `appr-${row.id}`,
+              type: "premium_activation",
+              label: "Payment Approved",
+              detail: `User upgraded to ${row.plan}`,
+              user_id: String(row.user_id),
+              created_at: String(row.updated_at || new Date().toISOString())
+            };
+            setFeed(prev => [entry, ...prev].slice(0, 50));
+          }
+        })
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "daily_reports" }, (payload: { new: Record<string, unknown> }) => {
+          if (cancelled) return;
+          const row = payload.new as Record<string, unknown>;
+          const entry: SenseiActivityEntry = {
+            id: `dr-${row.id}`,
+            type: "roadmap_progress",
+            label: "Daily Report Submitted",
+            detail: `Completion: ${row.completion_percentage}%`,
             user_id: String(row.user_id),
             created_at: String(row.created_at)
           };

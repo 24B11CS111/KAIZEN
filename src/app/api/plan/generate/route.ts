@@ -1,109 +1,98 @@
 import { NextResponse } from "next/server";
-import {
-  createSupabaseServerClient,
-  createSupabaseAdminClient
-} from "@/lib/supabase/server";
-import { rateLimit, getClientIp } from "@/lib/rate-limit";
-import { isAuthBypassed } from "@/lib/devBypass";
-import { generatePlan, planInputFromProfile } from "@/lib/ai-plan";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { generateInitialPlan } from "@/lib/ai/planGenerator";
+import { generateDeterministicMissions } from "@/lib/ai/missionEngine";
+import { OnboardingSchema } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
-/**
- * POST /api/plan/generate
- *
- * Generates a fresh personalized 30-day plan for the authenticated user
- * from their current profile, and inserts a new row into user_plans.
- *
- * Called automatically by /api/onboarding on completion, and exposed as
- * a manual "Regenerate plan" trigger from settings if the user wants to
- * iterate on their answers.
- */
-export async function POST(request: Request) {
-  if (isAuthBypassed()) {
-    return NextResponse.json({ ok: true, bypassed: true });
-  }
-
-  const ip = getClientIp(request.headers);
-  const rl = rateLimit("plan-gen:" + ip, 10, 60 * 60 * 1000);
-  if (!rl.ok) {
-    return NextResponse.json(
-      { error: "Too many plan generations. Try again later." },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000))
-        }
-      }
-    );
-  }
-
+export async function POST(req: Request) {
   const supabase = createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json(
-      { error: "Authentication required." },
-      { status: 401 }
-    );
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let admin;
   try {
-    admin = createSupabaseAdminClient();
-  } catch {
+    const body = await req.json();
+    const profileData = OnboardingSchema.parse(body);
+
+    // Ensure all undefined options are passed cleanly
+    const aiPayload = {
+      full_name: profileData.full_name,
+      occupation: profileData.occupation,
+      main_goal: profileData.main_goal,
+      wake_time: profileData.wake_time,
+      sleep_time: profileData.sleep_time,
+      available_hours: profileData.available_hours,
+      discipline_level: profileData.discipline_level,
+      workout_preference: profileData.workout_preference,
+      energy_level: profileData.energy_level,
+      study_timing: profileData.study_timing,
+      work_type: profileData.work_type,
+      distractions: profileData.distractions,
+      skills_to_learn: profileData.skills_to_learn,
+    };
+
+    let generatedPlan;
+    let isFallback = false;
+
+    try {
+      generatedPlan = await generateInitialPlan(aiPayload);
+    } catch (aiError) {
+      console.error("AI Generation failed, falling back to deterministic:", aiError);
+      isFallback = true;
+      const fallbackMissions = generateDeterministicMissions(aiPayload);
+      generatedPlan = {
+        monthly_strategy: "Establish daily consistency through rigid structure.",
+        week_1: "Focus on hitting the daily tasks perfectly. Do not optimize yet.",
+        week_2: "Build momentum. Add 10% more volume to deep work.",
+        week_3: "Eliminate distractions. Refine the focus block.",
+        week_4: "Sustain and reflect. Prepare for the next cycle.",
+        daily_missions: fallbackMissions
+      };
+    }
+
+    // Insert into ai_plans
+    const { error: planError } = await supabase
+      .from("ai_plans")
+      .insert({
+        user_id: session.user.id,
+        plan_name: "Master Execution Protocol",
+        status: "active",
+        generated_plan: generatedPlan,
+        prompt_used: isFallback ? "deterministic_fallback" : "onboarding_v1",
+        generation_model: isFallback ? "none" : "gemini-2.5-flash",
+      });
+
+    if (planError) throw planError;
+
+    // Update profile
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({
+        wake_time: aiPayload.wake_time,
+        sleep_time: aiPayload.sleep_time,
+        available_hours: aiPayload.available_hours,
+        discipline_level: aiPayload.discipline_level,
+        workout_preference: aiPayload.workout_preference,
+        energy_level: aiPayload.energy_level,
+        study_timing: aiPayload.study_timing,
+        work_type: aiPayload.work_type,
+        distractions: aiPayload.distractions,
+        skills_to_learn: aiPayload.skills_to_learn,
+      })
+      .eq("id", session.user.id);
+
+    if (profileError) throw profileError;
+
+    return NextResponse.json({ ok: true, fallback: isFallback });
+  } catch (err: any) {
+    console.error("Plan Generation Error:", err);
     return NextResponse.json(
-      { error: "Could not initialize Supabase. Check SUPABASE_SERVICE_ROLE_KEY." },
+      { error: err.message || "Failed to generate plan" },
       { status: 500 }
     );
   }
-
-  const { data: profile, error: profErr } = await admin
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (profErr || !profile) {
-    return NextResponse.json(
-      { error: "Could not load your profile. Try again." },
-      { status: 500 }
-    );
-  }
-
-  const input = planInputFromProfile(profile);
-  const plan = generatePlan(input);
-
-  // Compute the next version number for this user.
-  const { data: lastRow } = await admin
-    .from("ai_plans")
-    .select("version")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const nextVersion = ((lastRow as any)?.version ?? 0) + 1;
-
-  const { error: insErr } = await admin.from("ai_plans").insert({
-    user_id:        user.id,
-    track_id:       plan.track_id,
-    track_label:    plan.track_label,
-    generated_plan: plan.days,
-    source:         plan.source,
-    version:        nextVersion
-  });
-
-  if (insErr) {
-    return NextResponse.json(
-      { error: "Could not save plan: " + insErr.message },
-      { status: 500 }
-    );
-  }
-
-  return NextResponse.json({
-    ok: true,
-    track_id: plan.track_id,
-    track_label: plan.track_label,
-    days: plan.days.length,
-    version: nextVersion
-  });
 }

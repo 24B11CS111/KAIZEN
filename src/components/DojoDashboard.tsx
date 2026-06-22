@@ -18,6 +18,7 @@ import type { EngagementInput } from "@/lib/engagement";
 import { WorkoutMissionCard } from "./WorkoutMissionCard";
 import { generateWorkout, workoutInputFromProfile } from "@/lib/workout";
 import { DailyMissionBoard } from "./DailyMissionBoard";
+import { AIAssistantWidget } from "./AIAssistantWidget";
 import { assembleDailyMission } from "@/lib/missions";
 import type { PlanDay } from "@/lib/ai-plan/types";
 import { PersonalizedWelcome } from "./PersonalizedWelcome";
@@ -49,6 +50,8 @@ interface Props {
   missedDays?: number;
   /** Subscription tier to determine feature access */
   tier?: string;
+  /** AI generated insights */
+  aiInsights?: any[];
 }
 
 const FREE_LIMIT = 3;
@@ -59,7 +62,8 @@ export function DojoDashboard({
   aiCurriculum = null, aiTrackLabel = null,
   aiPlanDays = null,
   missedDays = -1,
-  tier = "trial"
+  tier = "trial",
+  aiInsights = []
 }: Props) {
   const [gateDone, setGateDone] = useState(!showGate);
   const [completed, setCompleted] = useState<Set<number>>(
@@ -354,32 +358,42 @@ export function DojoDashboard({
             )}
 
             <StaggerItem>
-              {isCore ? (
-                <div className="card p-6 flex flex-col items-center justify-center text-center">
-                  <Lock className="h-8 w-8 text-[var(--text-muted)] mb-3" />
-                  <h3 className="text-lg font-bold mb-1">AI Roadmap Locked</h3>
-                  <p className="text-sm text-[var(--text-muted)] mb-4 max-w-sm mx-auto">
-                    You are on the KAIZEN RONIN plan. Upgrade to SHOGUN to unlock your adaptive AI missions and intelligent roadmap.
-                  </p>
-                  <Link href="/upgrade" className="btn-primary py-2 px-4 text-xs inline-flex items-center gap-2 mx-auto">
-                    <Sparkles className="h-3 w-3" /> Upgrade to Shogun
-                  </Link>
-                </div>
-              ) : cardLocked || !dailyMission ? (
-              <>
-                <MissionCard
-                  day={displayDay}
-                  branch={aiTrackLabel ?? profile.branch}
-                  data={dayData as any}
-                  locked={cardLocked}
-                  lockReason={planLocked ? "plan" : "cycle"}
-                  upgradeHref="/upgrade"
-                />
-                {!cardLocked && <WorkoutMissionCard mission={workoutMission} />}
-              </>
-            ) : (
-              <DailyMissionBoard mission={dailyMission} />
-            )}
+              {(() => {
+                const isNewFormat = aiPlanDays && aiPlanDays.length > 0 && "category" in aiPlanDays[0];
+                if (isNewFormat) {
+                  return <AIAssistantWidget missions={aiPlanDays as any} insights={aiInsights} />;
+                }
+                if (isCore) {
+                  return (
+                    <div className="card p-6 flex flex-col items-center justify-center text-center">
+                      <Lock className="h-8 w-8 text-[var(--text-muted)] mb-3" />
+                      <h3 className="text-lg font-bold mb-1">AI Roadmap Locked</h3>
+                      <p className="text-sm text-[var(--text-muted)] mb-4 max-w-sm mx-auto">
+                        You are on the KAIZEN RONIN plan. Upgrade to SHOGUN to unlock your adaptive AI missions and intelligent roadmap.
+                      </p>
+                      <Link href="/upgrade" className="btn-primary py-2 px-4 text-xs inline-flex items-center gap-2 mx-auto">
+                        <Sparkles className="h-3 w-3" /> Upgrade to Shogun
+                      </Link>
+                    </div>
+                  );
+                }
+                if (cardLocked || !dailyMission) {
+                  return (
+                    <>
+                      <MissionCard
+                        day={displayDay}
+                        branch={aiTrackLabel ?? profile.branch}
+                        data={dayData as any}
+                        locked={cardLocked}
+                        lockReason={planLocked ? "plan" : "cycle"}
+                        upgradeHref="/upgrade"
+                      />
+                      {!cardLocked && <WorkoutMissionCard mission={workoutMission} />}
+                    </>
+                  );
+                }
+                return <DailyMissionBoard mission={dailyMission} />;
+              })()}
             </StaggerItem>
 
             {!allDone && !cardLocked && !completed.has(displayDay) && !sealedTodayLocal && (

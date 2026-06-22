@@ -118,43 +118,25 @@ export const MainGoalSchema = z.enum([
   "other"
 ]);
 
-export const AgeSchema = z
-  .number({ invalid_type_error: "Age must be a number" })
-  .int("Age must be a whole number")
-  .min(10, "You must be at least 10")
-  .max(120, "Enter a valid age");
-
-export const DailyTimeSchema = z
-  .number({ invalid_type_error: "Pick a time commitment" })
-  .int()
-  .min(15, "At least 15 minutes a day")
-  .max(600, "Be realistic, warrior");
-
-export const FieldOfStudySchema = z
-  .string()
-  .min(2, "Tell us your field of study")
-  .max(80, "Too long");
-
+export const EnergyLevelSchema = z.enum(["low", "medium", "high"]);
+export const WorkTypeSchema = z.enum(["remote", "office", "hybrid", "student"]);
 export const WorkoutPreferenceSchema = z.enum(["gym", "home_workout", "calisthenics", "cardio", "none"]);
-export const SleepTimingSchema = z.enum(["early_bird", "night_owl", "irregular"]);
-export const ProductivityHabitsSchema = z.enum(["pomodoro", "deep_work", "multitasking", "chaotic"]);
 export const DisciplineLevelSchema = z.enum(["poor", "average", "good", "elite"]);
-export const StudyTimingSchema = z.enum(["morning", "afternoon", "evening", "late_night"]);
+export const StudyTimingSchema = z.enum(["morning", "afternoon", "evening", "late_night", "none"]);
 
 export const OnboardingSchema = z.object({
   full_name: NameSchema,
-  age: AgeSchema,
-  gender: GenderSchema,
   occupation: OccupationSchema,
-  field_of_study: FieldOfStudySchema,
-  daily_time_min: DailyTimeSchema,
-  skill_level: SkillLevelSchema,
   main_goal: MainGoalSchema,
-  main_goal_other: z.string().max(120).optional().nullable(),
-  workout_preference: WorkoutPreferenceSchema.optional(),
-  sleep_timing: SleepTimingSchema.optional(),
-  productivity_habits: ProductivityHabitsSchema.optional(),
-  discipline_level: DisciplineLevelSchema.optional(),
-  study_timing: StudyTimingSchema.optional()
+  wake_time: z.string().min(4, "Enter a valid time"),
+  sleep_time: z.string().min(4, "Enter a valid time"),
+  available_hours: z.number().min(1).max(24),
+  discipline_level: DisciplineLevelSchema,
+  workout_preference: WorkoutPreferenceSchema,
+  energy_level: EnergyLevelSchema,
+  study_timing: StudyTimingSchema,
+  work_type: WorkTypeSchema,
+  distractions: z.string().max(200).optional(),
+  skills_to_learn: z.string().max(200).optional()
 });
 export type OnboardingInput = z.infer<typeof OnboardingSchema>;

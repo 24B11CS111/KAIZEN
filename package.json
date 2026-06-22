@@ -17,7 +17,7 @@
     "android:aab": "cd android && ./gradlew bundleRelease"
   },
   "dependencies": {
-    "@google/genai": "^2.8.0",
+    "@google/genai": "^2.9.0",
     "@splinetool/react-spline": "^2.2.6",
     "@splinetool/runtime": "^1.9.0",
     "@supabase/ssr": "^0.5.2",

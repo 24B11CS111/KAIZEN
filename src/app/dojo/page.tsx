@@ -195,12 +195,19 @@ async function DojoStateRouter({ profile }: { profile: any }) {
       updated_at: new Date().toISOString()
     };
 
+    const generatedPlanObj = planRow?.generated_plan as any;
+    const isNewFormat = generatedPlanObj && !Array.isArray(generatedPlanObj) && generatedPlanObj.daily_missions;
+    
     const rawPlanDays: PlanDay[] | null =
-      Array.isArray(planRow?.generated_plan)
-        ? (planRow.generated_plan as PlanDay[])
+      isNewFormat
+        ? generatedPlanObj.daily_missions
+        : Array.isArray(generatedPlanObj)
+        ? (generatedPlanObj as PlanDay[])
         : null;
+
     const aiCurriculum = rawPlanDays ? planToBranchDays(rawPlanDays) : null;
     const aiTrackLabel: string | null = planRow?.track_label ?? null;
+    const aiInsights = isNewFormat && generatedPlanObj.insights ? generatedPlanObj.insights : [];
 
     const progress = logRows.map((r: any) => ({
       id:           r.id,
@@ -244,6 +251,7 @@ async function DojoStateRouter({ profile }: { profile: any }) {
         aiTrackLabel={aiTrackLabel}
         missedDays={missedDays}
         tier={subStatus.tier}
+        aiInsights={aiInsights}
       />
     );
   }

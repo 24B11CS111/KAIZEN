@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export default async function OnboardingPage() {
   if (isAuthBypassed()) {
-    return <OnboardingFlow defaultEmail="dev@kaizen.sys" />;
+    return <OnboardingFlow />;
   }
 
   const supabase = createSupabaseServerClient();
@@ -24,10 +24,5 @@ export default async function OnboardingPage() {
   const p: any = profile;
   if (p?.onboarded_at) redirect("/dojo");
 
-  return (
-    <OnboardingFlow
-      defaultEmail={user.email ?? ""}
-      defaultName={(user.user_metadata?.full_name as string) ?? p?.full_name ?? ""}
-    />
-  );
+  return <OnboardingFlow />;
 }

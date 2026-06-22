@@ -4,6 +4,7 @@ import { safeRpc } from "@/lib/safeRpc";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { ErrorBoundary } from "@/components/admin/ErrorBoundary";
+import { AdminRealtime } from "@/components/admin/AdminRealtime";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ export default async function SenseiLayout({ children }: { children: React.React
 
   return (
     <div className="flex h-full min-h-0 w-full overflow-hidden bg-[#030303] text-white selection:bg-blood-500/30">
+      <AdminRealtime />
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex lg:w-64 xl:w-72 shrink-0 flex-col border-r border-white/[0.06] bg-black/50 backdrop-blur-xl">
         <AdminSidebar />

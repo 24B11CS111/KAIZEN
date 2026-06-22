@@ -24,7 +24,11 @@ export default async function ApprovalsPage() {
     if (error) {
       console.error("[sensei approvals]", error);
       logSenseiFetch("approvals/payment_submissions", error);
-      fetchError = `Unable to load pending approvals: ${error.message || JSON.stringify(error)}`;
+      if (error.message?.includes("does not exist") || error.message?.includes("schema cache")) {
+        fetchError = "Payment system not initialized.";
+      } else {
+        fetchError = `Unable to load pending approvals: ${error.message || JSON.stringify(error)}`;
+      }
     } else {
       pendingRows = (data ?? []).map((row: any) => {
         const profile = row.profiles as { full_name?: string | null; whatsapp?: string | null } | null;

@@ -120,7 +120,7 @@ export function DojoDashboard({
   const cycleLocked = currentDay > cycleDay && !planLocked && !allDone;
   const cardLocked = (planLocked || cycleLocked) && !allDone;
   
-  const isCore = tier === "core";
+  const isRonin = tier === "ronin";
 
   // Gamification
   const xp = useMemo(() => computeXpState(completedCount, currentStreak), [completedCount, currentStreak]);
@@ -363,17 +363,19 @@ export function DojoDashboard({
                 if (isNewFormat) {
                   return <AIAssistantWidget missions={aiPlanDays as any} insights={aiInsights} />;
                 }
-                if (isCore) {
+                if (isRonin) {
                   return (
-                    <div className="card p-6 flex flex-col items-center justify-center text-center">
-                      <Lock className="h-8 w-8 text-[var(--text-muted)] mb-3" />
+                    <div className="card p-6 flex flex-col items-center justify-center text-center relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-obsidian/60 backdrop-blur-sm z-10 grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <Link href="/upgrade" className="btn-tap bg-blood-500 text-white font-bold py-3 px-6 rounded-xl shadow-[0_0_24px_-6px_rgba(208,0,0,0.6)]">
+                          Become Shogun
+                        </Link>
+                      </div>
+                      <Lock className="h-8 w-8 text-white/30 mb-3" />
                       <h3 className="text-lg font-bold mb-1">AI Roadmap Locked</h3>
-                      <p className="text-sm text-[var(--text-muted)] mb-4 max-w-sm mx-auto">
-                        You are on the KAIZEN RONIN plan. Upgrade to SHOGUN to unlock your adaptive AI missions and intelligent roadmap.
+                      <p className="text-sm text-white/50 mb-4 max-w-sm mx-auto">
+                        You are on the KAIZEN RONIN plan. Upgrade to SHOGUN to unlock adaptive AI missions and intelligent roadmaps.
                       </p>
-                      <Link href="/upgrade" className="btn-primary py-2 px-4 text-xs inline-flex items-center gap-2 mx-auto">
-                        <Sparkles className="h-3 w-3" /> Upgrade to Shogun
-                      </Link>
                     </div>
                   );
                 }
@@ -464,7 +466,7 @@ export function DojoDashboard({
               <div className="card p-3 border-blood-500/40 text-xs text-blood-500">{errMsg}</div>
             )}
 
-            {!isCore && (
+            {!isRonin && (
               <StaggerItem>
                 <AIGuidancePanel
                   recommendation={dayData?.concept ? dayData.concept : "Take ten quiet minutes before you begin."}
@@ -476,7 +478,7 @@ export function DojoDashboard({
 
             <StaggerItem><YouVsYou refreshKey={refreshKey} /></StaggerItem>
 
-            {!isCore && (
+            {!isRonin && (
               <StaggerItem>
                 <section>
                   <div className="flex items-center justify-between mb-3">

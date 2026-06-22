@@ -39,9 +39,7 @@ export async function POST(req: Request) {
   const { error: updateError } = await supabase
     .from("payment_submissions")
     .update({ 
-      status: "rejected", 
-      reviewed_by: profile.id, 
-      reviewed_at: new Date().toISOString() 
+      status: "rejected" 
     })
     .eq("id", submission_id);
 

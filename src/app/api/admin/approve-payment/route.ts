@@ -42,8 +42,8 @@ export async function POST(req: Request) {
     .from("payment_submissions")
     .update({ 
       status: "approved", 
-      reviewed_by: profile.id, 
-      reviewed_at: new Date().toISOString() 
+      approved_by: profile.id, 
+      approved_at: new Date().toISOString() 
     })
     .eq("id", submission_id);
 

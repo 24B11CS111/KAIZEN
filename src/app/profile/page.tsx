@@ -26,16 +26,10 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; glow: string
   banned:   { label: "Banned",     color: "text-blood-500",   glow: "shadow-[0_0_16px_-4px_rgba(208,0,0,0.4)]",    dot: "bg-blood-500" },
 };
 
-function planLabel(amount: number | null | undefined): string {
-  if (amount === 49) return "RONIN Plan — \u20b949";
-  if (amount === 99) return "SHOGUN Plan — \u20b999";
-  return "Free";
-}
-
-function planTier(amount: number | null | undefined): "free" | "core" | "elite" {
-  if (amount === 49) return "core";
-  if (amount === 99) return "elite";
-  return "free";
+function planLabel(tier: string | null | undefined): string {
+  if (tier === "ronin") return "RONIN Plan \u2014 \u20b949";
+  if (tier === "shogun") return "SHOGUN Plan \u2014 \u20b999";
+  return "TRIAL (3 Days)";
 }
 
 function formatDate(iso: string | null | undefined): string {
@@ -60,15 +54,35 @@ export default async function ProfilePage() {
     .eq("id", user.id)
     .maybeSingle();
 
+  const { data: latestSubmission } = await supabase
+    .from("payment_submissions")
+    .select("status, plan, created_at, approved_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   if (!profile) redirect("/");
 
   const name       = profile.full_name ?? "Warrior";
   const email      = profile.email ?? user.email ?? "\u2014";
-  const status     = (profile.subscription_status ?? "pending") as string;
-  const statusConf = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
-  const tier       = planTier(profile.plan_amount);
+  
+  const paymentStatus = latestSubmission?.status || "none";
+  let statusKey = "expired";
+  if (paymentStatus === "pending") statusKey = "pending";
+  else if (paymentStatus === "approved") statusKey = "active";
+  else if (paymentStatus === "rejected") statusKey = "rejected";
+  
+  const tierValue  = profile.subscription_tier || "trial";
+  if (tierValue === "trial" || tierValue === "ronin" || tierValue === "shogun") {
+    statusKey = "active";
+  }
+  
+  const statusConf = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.expired;
+  
+  // Expiry is either explicit or trial based
   const joinDate   = formatDate(profile.created_at);
-  const expiry     = formatDate(profile.expiry_date);
+  const expiry     = tierValue === "trial" ? formatDate(profile.trial_expires_at) : formatDate(profile.expiry_date);
   const inits      = initials(name);
 
   // UPI deep-link for re-payment (server-side, used in expired/rejected block)
@@ -137,7 +151,7 @@ export default async function ProfilePage() {
               <CreditCard className="h-4 w-4 text-blood-500" />
               <span className="text-[10px] uppercase tracking-[0.20em] text-white/45">Subscription</span>
             </div>
-            {tier === "free" && (
+            {tierValue === "trial" && (
               <Link
                 href="/upgrade"
                 className="btn-tap inline-flex items-center gap-1.5 rounded-lg bg-blood-500 text-white text-[11px] font-semibold px-3 py-1.5 shadow-[0_0_16px_-4px_rgba(208,0,0,0.55)]"
@@ -151,14 +165,14 @@ export default async function ProfilePage() {
             <ProfileRow
               icon={ShieldCheck}
               label="Plan"
-              value={planLabel(profile.plan_amount)}
+              value={planLabel(tierValue)}
             />
             <ProfileRow
               icon={Calendar}
               label="Member since"
               value={joinDate}
             />
-            {profile.expiry_date && (
+            {(profile.expiry_date || profile.trial_expires_at) && (
               <ProfileRow
                 icon={Clock}
                 label="Access until"

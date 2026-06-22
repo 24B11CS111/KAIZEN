@@ -84,6 +84,7 @@ export const AdminActionSchema = z.object({
 // =============================================================
 
 export const SignupSchema = z.object({
+  full_name: NameSchema,
   email: EmailSchema,
   password: PasswordSchema
 });

@@ -1,8 +1,7 @@
 "use client";
-
 import { useState, useTransition, useEffect } from "react";
+
 import { Check, X, Phone, Hash, IndianRupee, User as UserIcon, Image as ImageIcon, Ban, Edit, Clock, MoreVertical } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export interface PaymentSubmissionRow {
   id: string;
@@ -26,52 +25,29 @@ export function AdminApprovalList({ initialRows }: Props) {
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
-  const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
-    // Real-time subscription to payment_submissions
-    const channel = supabase.channel('realtime_approvals')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'payment_submissions' },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            const newRow = payload.new as PaymentSubmissionRow;
-            // Optimistically we might miss profile details here, so an API refresh or join handling would be better,
-            // but for instant feedback, we append it. In production, we'd trigger a shallow Next.js revalidate.
-            setRows(prev => [newRow, ...prev]);
-          } else if (payload.eventType === 'UPDATE') {
-            const updated = payload.new as PaymentSubmissionRow;
-            setRows(prev => prev.map(r => r.id === updated.id ? { ...r, ...updated } : r));
-          } else if (payload.eventType === 'DELETE') {
-            setRows(prev => prev.filter(r => r.id !== payload.old.id));
-          }
-        }
-      )
-      .subscribe();
+    setRows(initialRows);
+  }, [initialRows]);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase]);
+  // Realtime updates handled globally by AdminRealtime via router.refresh()
 
-  const act = (id: string, kind: string) => {
-    setError(null);
+  const act = (id: string, action: string) => {
+    if (pendingId) return;
     setPendingId(id);
+    setError(null);
     startTransition(async () => {
       try {
-        const res = await fetch("/api/admin/" + kind, {
+        const res = await fetch("/api/admin/payment-action", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ submission_id: id })
+          body: JSON.stringify({ submission_id: id, action })
         });
         const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json.error || "Action failed");
+        if (!res.ok) throw new Error(json.error ?? "Failed");
         
-        // Remove from list if approved/rejected (assuming list only shows pending)
-        if (kind === "approve" || kind === "reject") {
-           setRows((prev) => prev.filter((r) => r.id !== id));
-        }
+        // Remove from list if processed
+        setRows(prev => prev.filter(r => r.id !== id));
       } catch (e: any) {
         setError(e?.message ?? "Action failed");
       } finally {
@@ -198,10 +174,16 @@ export function AdminApprovalList({ initialRows }: Props) {
                           <button onClick={() => act(r.id, "extend")} className="w-full text-left px-4 py-2.5 text-xs text-white/70 hover:bg-white/[0.04] hover:text-white flex items-center gap-2">
                             <Clock className="h-3.5 w-3.5 text-white/40" /> Extend Expiry
                           </button>
-                          <button onClick={() => act(r.id, "edit_plan")} className="w-full text-left px-4 py-2.5 text-xs text-white/70 hover:bg-white/[0.04] hover:text-white flex items-center gap-2">
-                            <Edit className="h-3.5 w-3.5 text-white/40" /> Edit Plan
+                          <button onClick={() => act(r.id, "upgrade_plan")} className="w-full text-left px-4 py-2.5 text-xs text-white/70 hover:bg-white/[0.04] hover:text-white flex items-center gap-2">
+                            <Edit className="h-3.5 w-3.5 text-white/40" /> Upgrade Plan
+                          </button>
+                          <button onClick={() => act(r.id, "downgrade_plan")} className="w-full text-left px-4 py-2.5 text-xs text-white/70 hover:bg-white/[0.04] hover:text-white flex items-center gap-2">
+                            <Edit className="h-3.5 w-3.5 text-white/40" /> Downgrade Plan
                           </button>
                           <div className="h-px bg-white/[0.06] w-full" />
+                          <button onClick={() => act(r.id, "delete")} className="w-full text-left px-4 py-2.5 text-xs text-blood-400 hover:bg-blood-500/10 flex items-center gap-2">
+                            <X className="h-3.5 w-3.5" /> Delete Payment
+                          </button>
                           <button onClick={() => act(r.id, "ban")} className="w-full text-left px-4 py-2.5 text-xs text-blood-400 hover:bg-blood-500/10 flex items-center gap-2">
                             <Ban className="h-3.5 w-3.5" /> Ban User
                           </button>

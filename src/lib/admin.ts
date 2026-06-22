@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/adminEmail";
+import { isSuperAdmin } from "@/lib/superAdmin";
 
 /**
  * Returns { supabase } if the request is from a verified admin;
@@ -20,7 +21,7 @@ export async function requireAdmin() {
     .maybeSingle();
 
   const p: any = profile;
-  const ok = p && (p.is_admin === true || isAdminEmail(user?.email || p?.email));
+  const ok = isSuperAdmin(user?.email || p?.email) || (p && p.is_admin === true) || isAdminEmail(user?.email || p?.email);
   if (!ok) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   return { supabase, user, profile: p };
 }
@@ -39,7 +40,7 @@ export async function requireAdminPage() {
     .maybeSingle();
 
   const p: any = profile;
-  const ok = p && (p.is_admin === true || isAdminEmail(user?.email || p?.email));
+  const ok = isSuperAdmin(user?.email || p?.email) || (p && p.is_admin === true) || isAdminEmail(user?.email || p?.email);
   
   if (!ok) {
     console.log("[requireAdminPage] Admin Gate Failed:", { 

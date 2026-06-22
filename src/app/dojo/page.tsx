@@ -95,18 +95,12 @@ export default async function DojoPage() {
 }
 
 async function DojoStateRouter({ profile }: { profile: any }) {
-  if (profile.subscription_status === "rejected") return <LockedScreen reason="rejected" />;
-  if (profile.subscription_status === "banned")   return <LockedScreen reason="rejected" />;
-  if (profile.subscription_status === "pending") {
-    return <SenseiVerifying name={profile.full_name} initialStatus={profile.subscription_status} />;
-  }
-  
   const subStatus = await getUserSubscriptionStatus();
   if (subStatus.isExpired) {
     redirect("/upgrade");
   }
 
-  // Active user (trial, core, elite, or old active)
+  // Active user (trial, ronin, shogun, or old active)
   if (profile.subscription_status === "active" || !subStatus.isExpired) {
     const supabase = createSupabaseServerClient();
 

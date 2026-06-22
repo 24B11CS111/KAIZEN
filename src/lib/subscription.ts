@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "./supabase/server";
+import { isSuperAdmin } from "./superAdmin";
 
 export type SubscriptionTier = 'trial' | 'ronin' | 'shogun' | 'expired';
 
@@ -14,6 +15,10 @@ export async function getUserSubscriptionStatus(): Promise<SubscriptionStatus> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return { tier: 'expired', isExpired: true, daysRemaining: 0 };
+  }
+
+  if (isSuperAdmin(user.email)) {
+    return { tier: 'shogun', isExpired: false, daysRemaining: 999 };
   }
 
   const { data, error } = await supabase

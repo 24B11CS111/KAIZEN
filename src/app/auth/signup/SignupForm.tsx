@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Mail, KeyRound, ArrowRight, Loader2, AlertTriangle,
+  User, Mail, KeyRound, ArrowRight, Loader2, AlertTriangle,
   Eye, EyeOff, ShieldCheck, MailCheck
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -49,13 +49,13 @@ export function SignupForm() {
   // Sanitize next immediately — prevents open redirects and Next.js "Invalid path" errors
   const next = sanitizeNextPath(search.get("next") || "/onboarding");
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bootChecking, setBootChecking] = useState(true);
-  const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,16 +74,15 @@ export function SignupForm() {
       });
 
     return () => { cancelled = true; };
-  }, [router, next]);
-
-  const emailValid = useMemo(() => EMAIL_RE.test(email.trim()), [email]);
+  }, [router, next]);  const emailValid = useMemo(() => EMAIL_RE.test(email.trim()), [email]);
+  const nameValid  = name.trim().length >= 2;
   const pwMeta     = useMemo(() => passwordStrength(password), [password]);
   const pwValid    =
     password.length >= 8 &&
     /[A-Z]/.test(password) &&
     /[a-z]/.test(password) &&
     /\d/.test(password);
-  const canSubmit = emailValid && pwValid && !loading;
+  const canSubmit = nameValid && emailValid && pwValid && !loading;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,17 +93,10 @@ export function SignupForm() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password })
+        body: JSON.stringify({ full_name: name.trim(), email: email.trim(), password })
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json?.error || "Sign-up failed");
-
-      // Supabase project requires email verification — show confirmation screen.
-      if (json.needs_email_confirmation) {
-        setError(null);
-        setEmailSent(true);
-        return;
-      }
 
       // Establish browser session immediately so /onboarding is accessible.
       const supabase = createSupabaseBrowserClient();
@@ -122,50 +114,6 @@ export function SignupForm() {
       setLoading(false);
     }
   };
-
-  // --- Email confirmation sent screen ---
-  if (emailSent) {
-    return (
-      <main className="min-h-[100svh] grid place-items-center px-6 bg-obsidian">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-[380px] text-center"
-        >
-          <span style={{ filter: "drop-shadow(0 0 20px rgba(208,0,0,0.5))" }} className="inline-block mb-6">
-            <Image src={KAIZEN_LOGO} alt="KAIZEN.SYS" width={56} height={56} className="object-contain mx-auto" priority />
-          </span>
-          <div className="rounded-2xl glass-surface p-8 shadow-[0_32px_80px_-24px_rgba(0,0,0,0.9)]">
-            <div className="flex justify-center mb-4">
-              <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blood-500/10 border border-blood-500/25">
-                <MailCheck className="h-5 w-5 text-blood-500" />
-              </span>
-            </div>
-            <h2 className="text-xl font-semibold mb-2">Check your inbox</h2>
-            <p className="text-sm text-white/55 leading-relaxed mb-1">
-              We sent a confirmation link to
-            </p>
-            <p className="text-sm font-semibold text-white/90 mb-5 break-all">{email.trim()}</p>
-            <p className="text-xs text-white/40 leading-relaxed">
-              Click the link in the email to activate your account, then come back to sign in.
-              Check your spam folder if you don&apos;t see it within a minute.
-            </p>
-          </div>
-          <p className="mt-6 text-xs text-white/40">
-            Wrong email?{" "}
-            <button
-              type="button"
-              onClick={() => { setEmailSent(false); setError(null); }}
-              className="text-blood-500 font-semibold hover:underline"
-            >
-              Try again
-            </button>
-          </p>
-        </motion.div>
-      </main>
-    );
-  }
 
   if (bootChecking) {
     return (
@@ -217,6 +165,12 @@ export function SignupForm() {
           </p>
 
           <form onSubmit={submit} noValidate className="mt-6 space-y-3.5">
+            <Field
+              label="Name" icon={User} type="text" autoComplete="name"
+              value={name} onChange={setName} placeholder="Miyamoto Musashi"
+              valid={name.length === 0 ? null : nameValid}
+            />
+
             <Field
               label="Email" icon={Mail} type="email" autoComplete="email"
               value={email} onChange={setEmail} placeholder="warrior@school.edu"

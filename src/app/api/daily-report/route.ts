@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requirePremiumAccess } from "@/lib/apiPremiumGate";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { generateAdaptiveMissions, DailyReport } from "@/lib/ai/adaptiveEngine";
 import { generateInsights } from "@/lib/ai/insightEngine";
@@ -6,12 +7,10 @@ import { generateInsights } from "@/lib/ai/insightEngine";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  const supabase = createSupabaseServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { error, user } = await requirePremiumAccess();
+  if (error) return error;
 
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const supabase = createSupabaseServerClient();
 
   try {
     const body = await req.json();
@@ -21,7 +20,7 @@ export async function POST(req: Request) {
     const { data: report, error: reportError } = await supabase
       .from("daily_reports")
       .insert({
-        user_id: session.user.id,
+        user_id: user!.id,
         mood,
         energy,
         completion_percentage: Number(completion_percentage),
@@ -36,7 +35,7 @@ export async function POST(req: Request) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("subscription_tier")
-      .eq("id", session.user.id)
+      .eq("id", user!.id)
       .single();
 
     const tier = profile?.subscription_tier || "expired";
@@ -47,7 +46,7 @@ export async function POST(req: Request) {
       const { data: activePlan } = await supabase
         .from("ai_plans")
         .select("*")
-        .eq("user_id", session.user.id)
+        .eq("user_id", user!.id)
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(1)

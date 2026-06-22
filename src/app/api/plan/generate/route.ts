@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requirePremiumAccess } from "@/lib/apiPremiumGate";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { generateInitialPlan } from "@/lib/ai/planGenerator";
 import { generateDeterministicMissions } from "@/lib/ai/missionEngine";
@@ -7,12 +8,10 @@ import { OnboardingSchema } from "@/lib/validation";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  const supabase = createSupabaseServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { error, user } = await requirePremiumAccess();
+  if (error) return error;
 
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const supabase = createSupabaseServerClient();
 
   try {
     const body = await req.json();
@@ -58,7 +57,7 @@ export async function POST(req: Request) {
     const { error: planError } = await supabase
       .from("ai_plans")
       .insert({
-        user_id: session.user.id,
+        user_id: user!.id,
         plan_name: "Master Execution Protocol",
         status: "active",
         generated_plan: generatedPlan,
@@ -83,7 +82,7 @@ export async function POST(req: Request) {
         distractions: aiPayload.distractions,
         skills_to_learn: aiPayload.skills_to_learn,
       })
-      .eq("id", session.user.id);
+      .eq("id", user!.id);
 
     if (profileError) throw profileError;
 

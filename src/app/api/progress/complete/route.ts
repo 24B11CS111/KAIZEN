@@ -2,11 +2,16 @@ import { NextResponse } from "next/server";
 import { isAuthBypassed } from "@/lib/devBypass";
 import { DayCompletionSchema } from "@/lib/validation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requirePremiumAccess } from "@/lib/apiPremiumGate";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   if (isAuthBypassed()) return NextResponse.json({ ok: true, bypassed: true });
+  
+  const { error: premiumError } = await requirePremiumAccess();
+  if (premiumError) return premiumError;
+
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });

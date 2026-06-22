@@ -229,16 +229,11 @@ export async function POST(request: Request) {
     return responseForFailure(error, 500);
   }
 
-  const trialExpiry = new Date();
-  trialExpiry.setDate(trialExpiry.getDate() + 3);
-
   const { error: profileErr } = await admin.from("profiles").upsert(
     {
       id: user.id,
       email: user.email ?? email,
       full_name,
-      subscription_tier: "trial",
-      trial_expires_at: trialExpiry.toISOString()
     },
     { onConflict: "id" }
   );

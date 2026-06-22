@@ -12,16 +12,20 @@ export type Branch = IntermediateBranch | BtechBranch;
 // ─────────────────────────────────────────────────────────────────────────────
 // Plain interfaces used by components / non-Supabase code
 // ─────────────────────────────────────────────────────────────────────────────
+export type SubscriptionTier = "trial" | "ronin" | "shogun" | "expired";
+
 export interface Profile {
   id: string;
   email: string;
   role: UserRole;
   is_admin: boolean;
-          is_suspended: boolean;
+  is_suspended: boolean;
   subscription_status: SubscriptionStatus;
+  subscription_tier: SubscriptionTier;
   plan_amount: number | null;
   start_date: string | null;
   expiry_date: string | null;
+  trial_expires_at: string | null;
   whatsapp: string | null;
   full_name: string | null;
   path_type: PathType | null;

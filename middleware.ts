@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getUserFromRequest } from "@/lib/supabase/middleware";
 import { isAdminEmail } from "@/lib/adminEmail";
+import { isSuperAdmin } from "@/lib/superAdmin";
 
 /**
  * Route protection — defensive, cookie-propagating edition.
@@ -53,8 +54,9 @@ export async function middleware(request: NextRequest) {
   const isOnboarding = pathname.startsWith("/onboarding");
   const isProfile    = pathname.startsWith("/profile");
   const isProgress   = pathname.startsWith("/progress");
+  const isNotifications = pathname.startsWith("/notifications");
 
-  if (!isDojo && !isSensei && !isAdmin && !isOnboarding && !isProfile && !isProgress) {
+  if (!isDojo && !isSensei && !isAdmin && !isOnboarding && !isProfile && !isProgress && !isNotifications) {
     return NextResponse.next();
   }
 
@@ -83,7 +85,7 @@ export async function middleware(request: NextRequest) {
   try {
     const res = await supabase
       .from("profiles")
-      .select("role,is_admin,email,subscription_status,expiry_date,onboarded_at,is_suspended")
+      .select("role,is_admin,email,subscription_status,subscription_tier,expiry_date,onboarded_at,is_suspended")
       .eq("id", user.id)
       .maybeSingle();
     profileRow = res.data;
@@ -92,7 +94,7 @@ export async function middleware(request: NextRequest) {
       // Likely `onboarded_at` column doesn't exist yet — retry without it.
       const fb = await supabase
         .from("profiles")
-        .select("role,is_admin,email,subscription_status,expiry_date,is_suspended")
+        .select("role,is_admin,email,subscription_status,subscription_tier,expiry_date,is_suspended")
         .eq("id", user.id)
         .maybeSingle();
       profileRow = fb.data;
@@ -107,10 +109,11 @@ export async function middleware(request: NextRequest) {
   }
 
   const p: any = profileRow;
+  const isSuper = isSuperAdmin(p.email || user.email);
 
   // --- Admin / Sensei gate ---
   if (isSensei || isAdmin) {
-    const ok = p?.is_admin === true || isAdminEmail(user?.email || p?.email);
+    const ok = isSuper || p?.is_admin === true || isAdminEmail(user?.email || p?.email);
     if (!ok) {
       console.log("[middleware] Admin Gate Failed:", { 
         userEmail: user?.email, 
@@ -125,37 +128,34 @@ export async function middleware(request: NextRequest) {
   }
 
   // --- Onboarding gate ---
-  // Only logged-in users reach here. If already onboarded, send them on.
-  // If the column doesn't exist, treat as "not onboarded" and allow.
   if (isOnboarding) {
     if (p.onboarded_at) {
       const url = request.nextUrl.clone();
-      url.pathname = "/dojo";
+      url.pathname = "/upgrade";
       return withAuthCookies(response, NextResponse.redirect(url));
     }
     return response;
   }
 
-  // --- Onboarding required gate (dojo / profile / progress) ---
-  // Only redirect if the column exists and is null. If it's `undefined`
-  // (not yet migrated), skip so old accounts can reach their dashboard.
+  const isProtectedPremiumRoute = isDojo || isProfile || isProgress || isNotifications;
+
+  // --- Onboarding required gate ---
   const onboardedAtPresent = Object.prototype.hasOwnProperty.call(p, "onboarded_at");
-  if (onboardedAtPresent && !p.onboarded_at) {
+  if (onboardedAtPresent && !p.onboarded_at && isProtectedPremiumRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/onboarding";
     return withAuthCookies(response, NextResponse.redirect(url));
   }
 
-  // --- Dojo ban gate ---
-  if (isDojo) {
-    const blocked =
-      p.subscription_status === "banned" ||
-      p.subscription_status === "rejected" ||
-      p.is_suspended === true;
-    if (blocked) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/";
-      return withAuthCookies(response, NextResponse.redirect(url));
+  // --- Hard Access Premium Gate ---
+  if (isProtectedPremiumRoute && !isSuper) {
+    const allowedTiers = ["ronin", "shogun"];
+    const blockedStatus = p.subscription_status === "banned" || p.is_suspended === true;
+
+    if (!allowedTiers.includes(p.subscription_tier) || blockedStatus) {
+       const url = request.nextUrl.clone();
+       url.pathname = "/upgrade";
+       return withAuthCookies(response, NextResponse.redirect(url));
     }
   }
 
@@ -169,6 +169,7 @@ export const config = {
     "/admin/:path*",
     "/onboarding/:path*",
     "/profile/:path*",
-    "/progress/:path*"
+    "/progress/:path*",
+    "/notifications/:path*"
   ]
 };

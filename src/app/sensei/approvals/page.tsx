@@ -17,13 +17,14 @@ export default async function ApprovalsPage() {
   try {
     const { data, error } = await supabase
       .from("utr_logs")
-      .select("id, user_id, utr_number, plan_amount, created_at, profiles(full_name, whatsapp)")
+      .select("id, user_id, utr_number, plan_amount, created_at, profiles!utr_logs_user_id_fkey(full_name, whatsapp)")
       .eq("status", "pending")
       .order("created_at", { ascending: false });
 
     if (error) {
+      console.error("[sensei approvals]", error);
       logSenseiFetch("approvals/utr_logs", error);
-      fetchError = "Unable to load pending approvals.";
+      fetchError = `Unable to load pending approvals: ${error.message || JSON.stringify(error)}`;
     } else {
       pendingRows = (data ?? []).map((row: Record<string, unknown>) => {
         const profile = row.profiles as { full_name?: string | null; whatsapp?: string | null } | null;
@@ -38,9 +39,10 @@ export default async function ApprovalsPage() {
         };
       });
     }
-  } catch (err) {
+  } catch (err: any) {
+    console.error("[sensei approvals]", err);
     logSenseiFetch("approvals/utr_logs", err);
-    fetchError = "Unable to load pending approvals.";
+    fetchError = `Unable to load pending approvals: ${err.message || String(err)}`;
   }
 
   return (
@@ -49,14 +51,22 @@ export default async function ApprovalsPage() {
       description="Review and approve pending UTR submissions."
     >
       {fetchError && (
-        <div className="rounded-2xl border border-amber-300/20 bg-amber-300/[0.04] p-4 text-sm text-amber-200/80">
+        <div className="rounded-2xl border border-blood-500/20 bg-blood-500/[0.04] p-4 text-sm text-blood-400">
           {fetchError} The dashboard will continue to load with an empty queue.
         </div>
       )}
 
-      <ErrorBoundary name="Approvals">
-        <AdminApprovalList rows={pendingRows} />
-      </ErrorBoundary>
+      {!fetchError && pendingRows.length === 0 && (
+        <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-8 text-center">
+          <p className="text-white/50 text-sm font-medium">All caught up. No pending approvals.</p>
+        </div>
+      )}
+
+      {!fetchError && pendingRows.length > 0 && (
+        <ErrorBoundary name="Approvals">
+          <AdminApprovalList rows={pendingRows} />
+        </ErrorBoundary>
+      )}
     </SenseiPage>
   );
 }

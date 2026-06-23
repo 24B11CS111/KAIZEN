@@ -8,8 +8,7 @@ import Image from "next/image";
  * Raw URL used — the obsidian backdrop behind the image IS the background.
  * Cloudinary on-the-fly: no additional transforms needed for in-app use.
  */
-const KAIZEN_LOGO =
-  "https://res.cloudinary.com/dsvfrlwt1/image/upload/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png";
+import { BRAND } from "@/constants/branding";
 
 type Phase = "brand" | "tagline" | "done";
 
@@ -130,7 +129,7 @@ export function IntroLoader() {
               }}
             >
               <Image
-                src={KAIZEN_LOGO}
+                src={BRAND.logo}
                 alt="KAIZEN.SYS"
                 width={128}
                 height={128}
@@ -203,3 +202,4 @@ export function IntroLoader() {
     </AnimatePresence>
   );
 }
+

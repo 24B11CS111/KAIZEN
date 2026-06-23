@@ -3,7 +3,7 @@
  */
 import Image from "next/image";
 
-const KAIZEN_LOGO = "https://res.cloudinary.com/dsvfrlwt1/image/upload/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png";
+import { BRAND } from "@/constants/branding";
 
 export default function RootLoading() {
   return (
@@ -14,7 +14,7 @@ export default function RootLoading() {
           style={{ filter: "drop-shadow(0 0 24px rgba(208,0,0,0.65))" }}
         >
           <Image
-            src={KAIZEN_LOGO}
+            src={BRAND.logo}
             alt="KAIZEN.SYS"
             width={80}
             height={80}
@@ -29,3 +29,4 @@ export default function RootLoading() {
     </main>
   );
 }
+

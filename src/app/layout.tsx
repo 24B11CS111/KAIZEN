@@ -5,8 +5,8 @@ import { AppShell } from "@/components/AppShell";
 // KAIZEN.SYS brand — new transparent logo served via Cloudinary CDN with
 // on-the-fly resize + obsidian background fills for browser icons/favicons.
 // The raw transparent URL is used for in-app rendering (IntroLoader, auth pages, etc).
-const CDN     = "https://res.cloudinary.com/dsvfrlwt1/image/upload";
-const LOGO_ID = "v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png";
+const CDN     = "https://res.cloudinary.com/dm3ly5gy3/image/upload";
+const LOGO_ID = "v1782206540/64b78c57-c362-44cf-ab86-b7e4ba62ba98.png";
 // Padded on obsidian for crisp favicon & apple-touch-icon at every size
 const ICON_16  = CDN + "/w_16,h_16,c_pad,b_rgb:050505/"   + LOGO_ID;
 const ICON_32  = CDN + "/w_32,h_32,c_pad,b_rgb:050505/"   + LOGO_ID;
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
       { url: ICON_512, sizes: "512x512", type: "image/png" }
     ],
     apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }
+      { url: ICON_180, sizes: "180x180", type: "image/png" }
     ]
   },
   openGraph: {
@@ -60,6 +60,8 @@ export const viewport: Viewport = {
   viewportFit: "cover"
 };
 
+import { Toaster } from "sonner";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -79,7 +81,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="text-white antialiased">
         <AppShell>{children}</AppShell>
+        <Toaster theme="dark" position="bottom-right" />
       </body>
     </html>
   );
 }
+

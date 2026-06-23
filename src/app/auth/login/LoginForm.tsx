@@ -11,7 +11,7 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { sanitizeNextPath } from "@/lib/siteUrl";
 
-const KAIZEN_LOGO = "https://res.cloudinary.com/dsvfrlwt1/image/upload/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png";
+import { BRAND } from "@/constants/branding";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -123,7 +123,7 @@ export function LoginForm() {
             transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
             style={{ filter: "drop-shadow(0 0 18px rgba(208,0,0,0.6))" }}
           >
-            <Image src={KAIZEN_LOGO} alt="KAIZEN.SYS" width={52} height={52} className="object-contain" priority />
+            <Image src={BRAND.logo} alt="KAIZEN.SYS" width={52} height={52} className="object-contain" priority />
           </motion.span>
           <span className="text-[10px] uppercase tracking-[0.32em] text-white/40">
             KAIZEN.SYS
@@ -144,7 +144,7 @@ export function LoginForm() {
         {/* Brand */}
         <div className="flex flex-col items-center gap-3 mb-8">
           <span style={{ filter: "drop-shadow(0 0 20px rgba(208,0,0,0.5))" }}>
-            <Image src={KAIZEN_LOGO} alt="KAIZEN.SYS" width={60} height={60} className="object-contain" priority />
+            <Image src={BRAND.logo} alt="KAIZEN.SYS" width={60} height={60} className="object-contain" priority />
           </span>
           <span className="text-[10px] uppercase tracking-[0.28em] text-white/45">
             KAIZEN<span className="text-blood-500">.</span>SYS

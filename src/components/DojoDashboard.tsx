@@ -1,7 +1,8 @@
 "use client";
 import { memo, useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Check, Lock, Sparkles, Trophy, FlameKindling, ShieldCheck } from "lucide-react";
+import { ArrowRight, Check, Lock, Sparkles, Trophy, FlameKindling, ShieldCheck, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GateOpening } from "./GateOpening";
@@ -79,6 +80,30 @@ export function DojoDashboard({
   const [streakBrokenLocal, setStreakBrokenLocal] = useState<boolean>(streakBroken);
   const [showBurst, setShowBurst] = useState(false);
   const [approvalBanner, setApprovalBanner] = useState(false);
+  const [day1Started, setDay1Started] = useState(false);
+  const [isStartingDay1, setIsStartingDay1] = useState(false);
+
+  const handleBeginDay1 = async () => {
+    setIsStartingDay1(true);
+    try {
+      const res = await fetch("/api/dojo/begin-day", { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to initialize AI Engine");
+      }
+      setDay1Started(true);
+      toast.success("AI Engine Initialized. Welcome to Day 1.");
+      setTimeout(() => {
+        document.getElementById("mission-board")?.scrollIntoView({ behavior: "smooth" });
+      }, 300);
+      router.refresh();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to initialize Day 1");
+    } finally {
+      setIsStartingDay1(false);
+    }
+  };
+
   const currentStreak = streakState.current;
   const longestStreak = streakState.longest;
 
@@ -329,21 +354,26 @@ export function DojoDashboard({
               </motion.div>
             )}
 
-            {noProgress && (
-              <motion.div
+            {noProgress && !day1Started && (
+              <motion.button
+                onClick={handleBeginDay1}
+                disabled={isStartingDay1}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.05 }}
-                className="card p-4 flex items-center gap-3"
+                className="w-full card p-4 flex items-center justify-between gap-3 text-left hover:bg-white/[0.05] transition-colors group cursor-pointer"
               >
-                <span className="grid place-items-center h-9 w-9 rounded-md bg-[var(--bg-surface)] border border-[var(--border)] shrink-0">
-                  <Sparkles className="h-4 w-4 text-[var(--text-muted)]" />
-                </span>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold">Every master was once untrained</div>
-                  <div className="text-xs text-white/60 mt-0.5">Begin Day 1. The path opens with the first step.</div>
+                <div className="flex items-center gap-3">
+                  <span className="grid place-items-center h-9 w-9 rounded-md bg-blood-500/20 border border-blood-500/50 shrink-0 group-hover:scale-110 transition-transform">
+                    {isStartingDay1 ? <RefreshCw className="h-4 w-4 text-blood-500 animate-spin" /> : <Sparkles className="h-4 w-4 text-blood-500" />}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-sm font-bold text-white">Every master was once untrained</div>
+                    <div className="text-xs text-white/60 mt-0.5">Click to initialize AI Engine & Begin Day 1.</div>
+                  </div>
                 </div>
-              </motion.div>
+                <ArrowRight className="h-4 w-4 text-white/30 group-hover:text-blood-500 transition-colors" />
+              </motion.button>
             )}
 
             {!isPaid && !noProgress && (
@@ -358,6 +388,7 @@ export function DojoDashboard({
             )}
 
             <StaggerItem>
+              <div id="mission-board">
               {(() => {
                 const isNewFormat = aiPlanDays && aiPlanDays.length > 0 && "category" in aiPlanDays[0];
                 if (isNewFormat) {
@@ -396,6 +427,7 @@ export function DojoDashboard({
                 }
                 return <DailyMissionBoard mission={dailyMission} />;
               })()}
+              </div>
             </StaggerItem>
 
             {!allDone && !cardLocked && !completed.has(displayDay) && !sealedTodayLocal && (

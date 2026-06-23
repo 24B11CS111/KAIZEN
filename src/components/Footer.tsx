@@ -15,7 +15,7 @@ import {
   Twitter, Github, Linkedin, Instagram, Mail, ArrowUpRight
 } from "lucide-react";
 
-const KAIZEN_LOGO = "https://res.cloudinary.com/dsvfrlwt1/image/upload/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png";
+import { BRAND } from "@/constants/branding";
 
 const PRODUCT = [
   { href: "/dojo",     label: "Dashboard" },
@@ -66,7 +66,7 @@ export function Footer() {
             <Link href="/" className="inline-flex items-center gap-2 group btn-tap">
               <span className="relative grid place-items-center h-8 w-8 transition-all duration-300">
                 <Image
-                  src={KAIZEN_LOGO}
+                  src={BRAND.logo}
                   alt="KAIZEN.SYS"
                   width={32}
                   height={32}
@@ -160,3 +160,4 @@ function Column({
     </div>
   );
 }
+

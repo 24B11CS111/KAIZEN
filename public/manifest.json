@@ -23,61 +23,61 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "https://res.cloudinary.com/dsvfrlwt1/image/upload/w_48,h_48,c_pad,b_rgb:050505/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png",
+      "src": "https://res.cloudinary.com/dm3ly5gy3/image/upload/w_48,h_48,c_pad,b_rgb:050505/v1782206540/64b78c57-c362-44cf-ab86-b7e4ba62ba98.png",
       "sizes": "48x48",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://res.cloudinary.com/dsvfrlwt1/image/upload/w_72,h_72,c_pad,b_rgb:050505/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png",
+      "src": "https://res.cloudinary.com/dm3ly5gy3/image/upload/w_72,h_72,c_pad,b_rgb:050505/v1782206540/64b78c57-c362-44cf-ab86-b7e4ba62ba98.png",
       "sizes": "72x72",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://res.cloudinary.com/dsvfrlwt1/image/upload/w_96,h_96,c_pad,b_rgb:050505/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png",
+      "src": "https://res.cloudinary.com/dm3ly5gy3/image/upload/w_96,h_96,c_pad,b_rgb:050505/v1782206540/64b78c57-c362-44cf-ab86-b7e4ba62ba98.png",
       "sizes": "96x96",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://res.cloudinary.com/dsvfrlwt1/image/upload/w_128,h_128,c_pad,b_rgb:050505/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png",
+      "src": "https://res.cloudinary.com/dm3ly5gy3/image/upload/w_128,h_128,c_pad,b_rgb:050505/v1782206540/64b78c57-c362-44cf-ab86-b7e4ba62ba98.png",
       "sizes": "128x128",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://res.cloudinary.com/dsvfrlwt1/image/upload/w_144,h_144,c_pad,b_rgb:050505/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png",
+      "src": "https://res.cloudinary.com/dm3ly5gy3/image/upload/w_144,h_144,c_pad,b_rgb:050505/v1782206540/64b78c57-c362-44cf-ab86-b7e4ba62ba98.png",
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://res.cloudinary.com/dsvfrlwt1/image/upload/w_192,h_192,c_pad,b_rgb:050505/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png",
+      "src": "https://res.cloudinary.com/dm3ly5gy3/image/upload/w_192,h_192,c_pad,b_rgb:050505/v1782206540/64b78c57-c362-44cf-ab86-b7e4ba62ba98.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://res.cloudinary.com/dsvfrlwt1/image/upload/w_192,h_192,c_pad,b_rgb:050505,ar_1:1/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png",
+      "src": "https://res.cloudinary.com/dm3ly5gy3/image/upload/w_192,h_192,c_pad,b_rgb:050505,ar_1:1/v1782206540/64b78c57-c362-44cf-ab86-b7e4ba62ba98.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "https://res.cloudinary.com/dsvfrlwt1/image/upload/w_384,h_384,c_pad,b_rgb:050505/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png",
+      "src": "https://res.cloudinary.com/dm3ly5gy3/image/upload/w_384,h_384,c_pad,b_rgb:050505/v1782206540/64b78c57-c362-44cf-ab86-b7e4ba62ba98.png",
       "sizes": "384x384",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://res.cloudinary.com/dsvfrlwt1/image/upload/w_512,h_512,c_pad,b_rgb:050505/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png",
+      "src": "https://res.cloudinary.com/dm3ly5gy3/image/upload/w_512,h_512,c_pad,b_rgb:050505/v1782206540/64b78c57-c362-44cf-ab86-b7e4ba62ba98.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://res.cloudinary.com/dsvfrlwt1/image/upload/w_512,h_512,c_pad,b_rgb:050505,ar_1:1/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png",
+      "src": "https://res.cloudinary.com/dm3ly5gy3/image/upload/w_512,h_512,c_pad,b_rgb:050505,ar_1:1/v1782206540/64b78c57-c362-44cf-ab86-b7e4ba62ba98.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -91,7 +91,7 @@
       "url": "/dojo",
       "icons": [
         {
-          "src": "https://res.cloudinary.com/dsvfrlwt1/image/upload/w_192,h_192,c_pad,b_rgb:050505/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png",
+          "src": "https://res.cloudinary.com/dm3ly5gy3/image/upload/w_192,h_192,c_pad,b_rgb:050505/v1782206540/64b78c57-c362-44cf-ab86-b7e4ba62ba98.png",
           "sizes": "192x192"
         }
       ]
@@ -103,7 +103,7 @@
       "url": "/progress",
       "icons": [
         {
-          "src": "https://res.cloudinary.com/dsvfrlwt1/image/upload/w_192,h_192,c_pad,b_rgb:050505/v1780421879/cb8239e9-c357-4ef2-bf15-693a52b91803_vzjrb3.png",
+          "src": "https://res.cloudinary.com/dm3ly5gy3/image/upload/w_192,h_192,c_pad,b_rgb:050505/v1782206540/64b78c57-c362-44cf-ab86-b7e4ba62ba98.png",
           "sizes": "192x192"
         }
       ]

@@ -47,6 +47,7 @@ export function Navbar() {
           ? "bg-surface/90 backdrop-blur-xl border-b border-[var(--border)] shadow-lg"
           : "bg-transparent")
       }
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       {scrolled && (
         <span

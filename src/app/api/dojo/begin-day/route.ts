@@ -11,27 +11,86 @@ export async function POST(req: Request) {
   const supabase = createSupabaseServerClient();
 
   try {
-    // Attempt to upsert user_progress summary to ensure current_day is 1
-    const { error: upsertError } = await supabase
+    const { day_number } = await req.json().catch(() => ({ day_number: 1 }));
+
+    // Upsert user_progress summary
+    const { data: existingProgress } = await supabase
       .from("user_progress")
-      .upsert({
+      .select("*")
+      .eq("user_id", user!.id)
+      .single();
+
+    if (existingProgress) {
+      await supabase.from("user_progress").update({
+        current_day: day_number,
+        updated_at: new Date().toISOString()
+      }).eq("user_id", user!.id);
+    } else {
+      await supabase.from("user_progress").insert({
         user_id: user!.id,
-        current_day: 1,
+        current_day: day_number,
         completed_days: [],
         streak: 0,
         longest_streak: 0,
         updated_at: new Date().toISOString()
-      }, { onConflict: "user_id" });
-
-    if (upsertError) {
-      console.warn("[begin-day] Failed to upsert user_progress:", upsertError);
+      });
     }
 
     // Also update profile current_day just in case
-    await supabase.from("profiles").update({ current_day: 1 }).eq("id", user!.id);
+    await supabase.from("profiles").update({ current_day: day_number }).eq("id", user!.id);
 
-    return NextResponse.json({ success: true });
+    // Create daily_tasks based on ai_plans for this day
+    const { data: plans } = await supabase
+      .from("ai_plans")
+      .select("generated_plan")
+      .eq("user_id", user!.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (plans && plans.generated_plan) {
+      // Check if tasks already exist for this day
+      const { data: existingTasks } = await supabase
+        .from("daily_tasks")
+        .select("id")
+        .eq("user_id", user!.id)
+        .eq("day_number", day_number)
+        .limit(1);
+
+      if (!existingTasks || existingTasks.length === 0) {
+        let tasksToInsert: any[] = [];
+        
+        // generated_plan can be an array of missions or an object
+        const planData = plans.generated_plan;
+        
+        const processMission = (mission: any) => {
+          if (mission && mission.title) {
+            tasksToInsert.push({
+              user_id: user!.id,
+              title: mission.title,
+              notes: mission.description || null,
+              priority: "High",
+              duration: mission.duration || 30,
+              type: "ai",
+              day_number: day_number
+            });
+          }
+        };
+
+        if (Array.isArray(planData)) {
+          planData.forEach(processMission);
+        } else if (planData && typeof planData === "object") {
+          processMission(planData);
+        }
+
+        if (tasksToInsert.length > 0) {
+          await supabase.from("daily_tasks").insert(tasksToInsert);
+        }
+      }
+    }
+
+    return NextResponse.json({ success: true, day_number });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message || "Failed to begin day 1" }, { status: 500 });
+    return NextResponse.json({ error: err.message || `Failed to begin day` }, { status: 500 });
   }
 }

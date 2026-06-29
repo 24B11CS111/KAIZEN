@@ -5,11 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Mail, KeyRound, ArrowRight, Loader2, AlertTriangle,
-  Eye, EyeOff
+  Mail, KeyRound, Loader2, AlertTriangle,
+  Eye, EyeOff, ArrowRight
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { sanitizeNextPath } from "@/lib/siteUrl";
+import { InteractiveButton } from "@/components/InteractiveButton";
 
 import { BRAND } from "@/constants/branding";
 
@@ -163,7 +164,7 @@ export function LoginForm() {
 
           <AnimatePresence mode="wait">
             <Pane key="password">
-              <form onSubmit={submitPassword} className="mt-6 space-y-3.5" noValidate>
+              <div className="mt-6 space-y-3.5">
                 <Field label="Email" icon={Mail} type="email" autoComplete="email"
                   value={email} onChange={setEmail} placeholder="warrior@school.edu"
                   inputMode="email" />
@@ -183,8 +184,8 @@ export function LoginForm() {
                   </button>
                 </div>
                 {error && <ErrBanner msg={error} />}
-                <SubmitBtn loading={loading} disabled={!canPassword}>Sign in</SubmitBtn>
-              </form>
+                <InteractiveButton onClick={submitPassword as any} disabled={!canPassword} className="w-full">Sign in</InteractiveButton>
+              </div>
             </Pane>
           </AnimatePresence>
         </div>
@@ -221,11 +222,13 @@ function Pane({ children }: { children: React.ReactNode }) {
 function SubmitBtn({
   loading, disabled, children
 }: { loading: boolean; disabled: boolean; children: React.ReactNode }) {
+  // We keep this wrapper to maintain the same API in the form, but map it to InteractiveButton visually
+  // In a full refactor, we would pass the promise directly.
   return (
     <button
       type="submit"
-      disabled={disabled}
-      className="btn-tap w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blood-500 text-white py-3.5 text-sm font-semibold shadow-[0_0_24px_-6px_rgba(208,0,0,0.6)] hover:bg-blood-600 hover:shadow-[0_0_32px_-4px_rgba(208,0,0,0.75)] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+      disabled={disabled || loading}
+      className="btn-tap w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blood-500 text-white py-3.5 text-sm font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_12px_rgba(208,0,0,0.2)] hover:bg-blood-600 hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_6px_16px_rgba(208,0,0,0.3)] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
     >
       {loading ? (
         <><Loader2 className="h-4 w-4 animate-spin" /> Working\u2026</>

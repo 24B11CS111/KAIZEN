@@ -246,6 +246,7 @@ async function DojoStateRouter({ profile }: { profile: any }) {
         missedDays={missedDays}
         tier={subStatus.tier}
         aiInsights={aiInsights}
+        userCurrentDay={summary.current_day}
       />
     );
   }

@@ -18,7 +18,7 @@ import { EngagementMount } from "./EngagementMount";
 import type { EngagementInput } from "@/lib/engagement";
 import { WorkoutMissionCard } from "./WorkoutMissionCard";
 import { generateWorkout, workoutInputFromProfile } from "@/lib/workout";
-import { DailyMissionBoard } from "./DailyMissionBoard";
+import { ExecutionBoard } from "./ExecutionBoard";
 import { AIAssistantWidget } from "./AIAssistantWidget";
 import { assembleDailyMission } from "@/lib/missions";
 import type { PlanDay } from "@/lib/ai-plan/types";
@@ -53,6 +53,7 @@ interface Props {
   tier?: string;
   /** AI generated insights */
   aiInsights?: any[];
+  userCurrentDay?: number;
 }
 
 const FREE_LIMIT = 3;
@@ -62,9 +63,10 @@ export function DojoDashboard({
   sealedToday = false, streakBroken = false,
   aiCurriculum = null, aiTrackLabel = null,
   aiPlanDays = null,
-  missedDays = -1,
   tier = "trial",
-  aiInsights = []
+  aiInsights = [],
+  userCurrentDay = 0,
+  missedDays = -1
 }: Props) {
   const [gateDone, setGateDone] = useState(!showGate);
   const [completed, setCompleted] = useState<Set<number>>(
@@ -81,26 +83,30 @@ export function DojoDashboard({
   const [showBurst, setShowBurst] = useState(false);
   const [approvalBanner, setApprovalBanner] = useState(false);
   const [day1Started, setDay1Started] = useState(false);
-  const [isStartingDay1, setIsStartingDay1] = useState(false);
+  const [isStartingDay, setIsStartingDay] = useState(false);
 
-  const handleBeginDay1 = async () => {
-    setIsStartingDay1(true);
+  const handleBeginDay = async (dayToStart: number) => {
+    setIsStartingDay(true);
     try {
-      const res = await fetch("/api/dojo/begin-day", { method: "POST" });
+      const res = await fetch("/api/dojo/begin-day", { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ day_number: dayToStart })
+      });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to initialize AI Engine");
       }
-      setDay1Started(true);
-      toast.success("AI Engine Initialized. Welcome to Day 1.");
+      setDay1Started(true); // Re-use this flag for immediate UI update
+      toast.success(`AI Engine Initialized. Welcome to Day ${dayToStart}.`);
       setTimeout(() => {
         document.getElementById("mission-board")?.scrollIntoView({ behavior: "smooth" });
       }, 300);
       router.refresh();
     } catch (e: any) {
-      toast.error(e.message || "Failed to initialize Day 1");
+      toast.error(e.message || `Failed to initialize Day ${dayToStart}`);
     } finally {
-      setIsStartingDay1(false);
+      setIsStartingDay(false);
     }
   };
 
@@ -354,10 +360,10 @@ export function DojoDashboard({
               </motion.div>
             )}
 
-            {noProgress && !day1Started && (
+            {(userCurrentDay < displayDay) && !day1Started && (
               <motion.button
-                onClick={handleBeginDay1}
-                disabled={isStartingDay1}
+                onClick={() => handleBeginDay(displayDay)}
+                disabled={isStartingDay}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.05 }}
@@ -365,11 +371,11 @@ export function DojoDashboard({
               >
                 <div className="flex items-center gap-3">
                   <span className="grid place-items-center h-9 w-9 rounded-md bg-blood-500/20 border border-blood-500/50 shrink-0 group-hover:scale-110 transition-transform">
-                    {isStartingDay1 ? <RefreshCw className="h-4 w-4 text-blood-500 animate-spin" /> : <Sparkles className="h-4 w-4 text-blood-500" />}
+                    {isStartingDay ? <RefreshCw className="h-4 w-4 text-blood-500 animate-spin" /> : <Sparkles className="h-4 w-4 text-blood-500" />}
                   </span>
                   <div className="min-w-0">
-                    <div className="text-sm font-bold text-white">Every master was once untrained</div>
-                    <div className="text-xs text-white/60 mt-0.5">Click to initialize AI Engine & Begin Day 1.</div>
+                    <div className="text-sm font-bold text-white">Day {displayDay} is locked</div>
+                    <div className="text-xs text-white/60 mt-0.5">Click to Begin Day {displayDay} & Initialize Execution Mode.</div>
                   </div>
                 </div>
                 <ArrowRight className="h-4 w-4 text-white/30 group-hover:text-blood-500 transition-colors" />
@@ -391,9 +397,6 @@ export function DojoDashboard({
               <div id="mission-board">
               {(() => {
                 const isNewFormat = aiPlanDays && aiPlanDays.length > 0 && "category" in aiPlanDays[0];
-                if (isNewFormat) {
-                  return <AIAssistantWidget missions={aiPlanDays as any} insights={aiInsights} />;
-                }
                 if (isRonin) {
                   return (
                     <div className="card p-6 flex flex-col items-center justify-center text-center relative overflow-hidden group">
@@ -410,22 +413,21 @@ export function DojoDashboard({
                     </div>
                   );
                 }
-                if (cardLocked || !dailyMission) {
+                
+                if (cardLocked || userCurrentDay < displayDay && !day1Started) {
                   return (
-                    <>
-                      <MissionCard
-                        day={displayDay}
-                        branch={aiTrackLabel ?? profile.branch}
-                        data={dayData as any}
-                        locked={cardLocked}
-                        lockReason={planLocked ? "plan" : "cycle"}
-                        upgradeHref="/upgrade"
-                      />
-                      {!cardLocked && <WorkoutMissionCard mission={workoutMission} />}
-                    </>
+                    <div className="card p-6 flex flex-col items-center justify-center text-center relative overflow-hidden opacity-50">
+                      <Lock className="h-8 w-8 text-white/30 mb-3" />
+                      <h3 className="text-lg font-bold mb-1">Execution Mode Locked</h3>
+                      <p className="text-sm text-white/50 mb-4 max-w-sm mx-auto">
+                        Begin Day {displayDay} to unlock execution mode.
+                      </p>
+                    </div>
                   );
                 }
-                return <DailyMissionBoard mission={dailyMission} />;
+
+                // If day is started, show the new Execution Board
+                return <ExecutionBoard dayNumber={displayDay} currentStreak={currentStreak} />;
               })()}
               </div>
             </StaggerItem>

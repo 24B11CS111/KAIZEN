@@ -87,6 +87,47 @@ export interface Streak {
 export interface Database {
   public: {
     Tables: {
+      daily_tasks: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          notes: string | null;
+          priority: "Low" | "Medium" | "High";
+          duration: number;
+          completed: boolean;
+          type: "ai" | "manual";
+          day_number: number;
+          created_at: string;
+          completed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          notes?: string | null;
+          priority?: "Low" | "Medium" | "High";
+          duration?: number;
+          completed?: boolean;
+          type: "ai" | "manual";
+          day_number: number;
+          created_at?: string;
+          completed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          notes?: string | null;
+          priority?: "Low" | "Medium" | "High";
+          duration?: number;
+          completed?: boolean;
+          type?: "ai" | "manual";
+          day_number?: number;
+          created_at?: string;
+          completed_at?: string | null;
+        };
+      };
       profiles: {
         Row: {
           id: string;
@@ -113,6 +154,16 @@ export interface Database {
           skill_level: string | null;
           main_goal: string | null;
           main_goal_other: string | null;
+          wake_time: string | null;
+          sleep_time: string | null;
+          available_hours: number | null;
+          discipline_level: string | null;
+          workout_preference: string | null;
+          energy_level: string | null;
+          study_timing: string | null;
+          work_type: string | null;
+          distractions: string | null;
+          skills_to_learn: string | null;
         };
         Insert: {
           id?: string;
@@ -139,6 +190,16 @@ export interface Database {
           skill_level?: string | null;
           main_goal?: string | null;
           main_goal_other?: string | null;
+          wake_time?: string | null;
+          sleep_time?: string | null;
+          available_hours?: number | null;
+          discipline_level?: string | null;
+          workout_preference?: string | null;
+          energy_level?: string | null;
+          study_timing?: string | null;
+          work_type?: string | null;
+          distractions?: string | null;
+          skills_to_learn?: string | null;
         };
         Update: {
           id?: string;
@@ -165,6 +226,16 @@ export interface Database {
           skill_level?: string | null;
           main_goal?: string | null;
           main_goal_other?: string | null;
+          wake_time?: string | null;
+          sleep_time?: string | null;
+          available_hours?: number | null;
+          discipline_level?: string | null;
+          workout_preference?: string | null;
+          energy_level?: string | null;
+          study_timing?: string | null;
+          work_type?: string | null;
+          distractions?: string | null;
+          skills_to_learn?: string | null;
         };
         Relationships: [];
       };
@@ -206,6 +277,53 @@ export interface Database {
           created_at?: string;
         };
         Relationships: [];
+      };
+      payment_submissions: {
+        Row: {
+          id: string;
+          user_id: string;
+          plan: string;
+          amount: number;
+          transaction_id: string | null;
+          payment_screenshot: string | null;
+          status: string;
+          created_at: string;
+          approved_at: string | null;
+          approved_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          plan: string;
+          amount: number;
+          transaction_id?: string | null;
+          payment_screenshot?: string | null;
+          status?: string;
+          created_at?: string;
+          approved_at?: string | null;
+          approved_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          plan?: string;
+          amount?: number;
+          transaction_id?: string | null;
+          payment_screenshot?: string | null;
+          status?: string;
+          created_at?: string;
+          approved_at?: string | null;
+          approved_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payment_submissions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       progress_logs: {
         Row: {
@@ -289,6 +407,9 @@ export interface Database {
           source: unknown;
           version: number;
           created_at: string;
+          prompt_used: string | null;
+          llm_response_raw: unknown;
+          generation_model: string | null;
         };
         Insert: {
           id?: string;
@@ -299,6 +420,9 @@ export interface Database {
           source?: unknown;
           version?: number;
           created_at?: string;
+          prompt_used?: string | null;
+          llm_response_raw?: unknown;
+          generation_model?: string | null;
         };
         Update: {
           id?: string;
@@ -308,6 +432,39 @@ export interface Database {
           generated_plan?: unknown;
           source?: unknown;
           version?: number;
+          created_at?: string;
+          prompt_used?: string | null;
+          llm_response_raw?: unknown;
+          generation_model?: string | null;
+        };
+        Relationships: [];
+      };
+      daily_reports: {
+        Row: {
+          id: string;
+          user_id: string;
+          mood: string;
+          energy: string;
+          completion_percentage: number;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          mood: string;
+          energy: string;
+          completion_percentage: number;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          mood?: string;
+          energy?: string;
+          completion_percentage?: number;
+          notes?: string | null;
           created_at?: string;
         };
         Relationships: [];

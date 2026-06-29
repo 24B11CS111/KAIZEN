@@ -10,10 +10,15 @@ import { motion } from "framer-motion";
 export default function Template({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="flex-1 flex flex-col w-full h-full relative"
+      initial={{ opacity: 0, x: 16, scale: 0.98 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      transition={{ 
+        type: "spring", 
+        stiffness: 400, 
+        damping: 30,
+        mass: 0.8
+      }}
+      className="flex-1 flex flex-col w-full h-full relative origin-center"
     >
       {children}
     </motion.div>

@@ -18,11 +18,11 @@ export default async function AnalyticsPage() {
 
   try {
     const paymentsRes = await supabase
-      .from("utr_logs")
-      .select("id, status, plan_amount, created_at, reviewed_at");
+      .from("payment_submissions")
+      .select("id, status, amount, created_at, approved_at");
 
     if (paymentsRes.error) {
-      logSenseiFetch("analytics/utr_logs", paymentsRes.error);
+      logSenseiFetch("analytics/payment_submissions", paymentsRes.error);
       fetchError = "Revenue analytics are temporarily unavailable.";
     } else {
       payments = (paymentsRes.data ?? []) as Record<string, unknown>[];
@@ -33,7 +33,7 @@ export default async function AnalyticsPage() {
   }
 
   const approvedPayments = payments.filter((p) => p.status === "approved");
-  const totalRevenue = approvedPayments.reduce((sum: number, p) => sum + Number(p.plan_amount || 0), 0);
+  const totalRevenue = approvedPayments.reduce((sum: number, p) => sum + Number(p.amount || 0), 0);
 
   const activeSubscribers = users.filter((u) => u.subscription_status === "active").length;
 
@@ -60,10 +60,10 @@ export default async function AnalyticsPage() {
     const label = month.toLocaleString("en-IN", { month: "short", year: "2-digit" });
     const monthRevenue = approvedPayments
       .filter((p) => {
-        const d = p.reviewed_at ? new Date(String(p.reviewed_at)) : p.created_at ? new Date(String(p.created_at)) : null;
+        const d = p.approved_at ? new Date(String(p.approved_at)) : p.created_at ? new Date(String(p.created_at)) : null;
         return d && d.getMonth() === month.getMonth() && d.getFullYear() === month.getFullYear();
       })
-      .reduce((sum: number, p) => sum + Number(p.plan_amount || 0), 0);
+      .reduce((sum: number, p) => sum + Number(p.amount || 0), 0);
     return { label, value: monthRevenue };
   });
 

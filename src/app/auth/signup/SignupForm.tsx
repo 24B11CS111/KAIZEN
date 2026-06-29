@@ -5,11 +5,12 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  User, Mail, KeyRound, ArrowRight, Loader2, AlertTriangle,
-  Eye, EyeOff, ShieldCheck, MailCheck
+  User, Mail, KeyRound, Loader2, AlertTriangle,
+  Eye, EyeOff, ShieldCheck, MailCheck, ArrowRight
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { sanitizeNextPath } from "@/lib/siteUrl";
+import { InteractiveButton } from "@/components/InteractiveButton";
 
 import { BRAND } from "@/constants/branding";
 
@@ -164,7 +165,7 @@ export function SignupForm() {
             Create your account. No credit card needed.
           </p>
 
-          <form onSubmit={submit} noValidate className="mt-6 space-y-3.5">
+          <div className="mt-6 space-y-3.5">
             <Field
               label="Name" icon={User} type="text" autoComplete="name"
               value={name} onChange={setName} placeholder="Miyamoto Musashi"
@@ -233,23 +234,15 @@ export function SignupForm() {
 
             {error && <ErrBanner msg={error} />}
 
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              className="btn-tap w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blood-500 text-white py-3.5 text-sm font-semibold shadow-[0_0_24px_-6px_rgba(208,0,0,0.6)] hover:bg-blood-600 hover:shadow-[0_0_32px_-4px_rgba(208,0,0,0.75)] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none mt-1"
-            >
-              {loading ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Creating your account\u2026</>
-              ) : (
-                <>Create account <ArrowRight className="h-4 w-4" /></>
-              )}
-            </button>
+            <InteractiveButton onClick={submit as any} disabled={!canSubmit} className="w-full">
+              Create account
+            </InteractiveButton>
 
             <p className="text-[11px] text-white/35 flex items-center justify-center gap-1.5 pt-0.5">
               <ShieldCheck className="h-3 w-3 text-blood-500/60" />
               We never share your email. No spam.
             </p>
-          </form>
+          </div>
         </div>
 
         <p className="mt-6 text-xs text-white/40 text-center">
@@ -318,6 +311,24 @@ function ErrBanner({ msg }: { msg: string }) {
       <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
       <span className="leading-relaxed">{msg}</span>
     </motion.div>
+  );
+}
+
+function SubmitBtn({
+  loading, disabled, children
+}: { loading: boolean; disabled: boolean; children: React.ReactNode }) {
+  return (
+    <button
+      type="submit"
+      disabled={disabled || loading}
+      className="btn-tap w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blood-500 text-white py-3.5 text-sm font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_12px_rgba(208,0,0,0.2)] hover:bg-blood-600 hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_6px_16px_rgba(208,0,0,0.3)] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+    >
+      {loading ? (
+        <><Loader2 className="h-4 w-4 animate-spin" /> Working\u2026</>
+      ) : (
+        <>{children} <ArrowRight className="h-4 w-4" /></>
+      )}
+    </button>
   );
 }
 

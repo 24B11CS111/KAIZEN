@@ -42,6 +42,22 @@ export function SenseiUsersClient({ initialUsers }: { initialUsers: SenseiUserRe
     });
   }, [initialUsers, search, statusFilter]);
 
+  const act = async (target_user_id: string, action: string) => {
+    try {
+      const res = await fetch("/api/admin/user-action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target_user_id, action })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      window.location.reload(); // Refresh data to see updates
+    } catch (e: any) {
+      alert(e.message || "Action failed");
+    }
+  };
+
   return (
     <div className="flex flex-col h-full w-full sensei-panel overflow-hidden">
       {/* Filters Bar */}
@@ -130,10 +146,33 @@ export function SenseiUsersClient({ initialUsers }: { initialUsers: SenseiUserRe
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="p-2 text-white/40 hover:text-white rounded-lg hover:bg-white/10 transition-colors">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
+                  <td className="px-6 py-4 text-right relative">
+                    <div className="relative group/dropdown inline-block">
+                      <button className="p-2 text-white/40 hover:text-white rounded-lg hover:bg-white/10 transition-colors">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+                      <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-white/[0.08] bg-[#0A0A0A] shadow-2xl opacity-0 invisible group-hover/dropdown:opacity-100 group-hover/dropdown:visible transition-all z-50 overflow-hidden text-left">
+                        <button onClick={() => act(user.user_id, "upgrade_plan")} className="w-full text-left px-4 py-2.5 text-xs text-white/70 hover:bg-white/[0.04] hover:text-white flex items-center gap-2">
+                          <Sparkles className="h-3.5 w-3.5 text-white/40" /> Upgrade Plan
+                        </button>
+                        <button onClick={() => act(user.user_id, "downgrade_plan")} className="w-full text-left px-4 py-2.5 text-xs text-white/70 hover:bg-white/[0.04] hover:text-white flex items-center gap-2">
+                          <Sparkles className="h-3.5 w-3.5 text-white/40" /> Downgrade Plan
+                        </button>
+                        <div className="h-px bg-white/[0.06] w-full" />
+                        {user.is_suspended ? (
+                          <button onClick={() => act(user.user_id, "unban")} className="w-full text-left px-4 py-2.5 text-xs text-emerald-400 hover:bg-emerald-500/10 flex items-center gap-2">
+                            <ShieldBan className="h-3.5 w-3.5" /> Unban User
+                          </button>
+                        ) : (
+                          <button onClick={() => act(user.user_id, "ban")} className="w-full text-left px-4 py-2.5 text-xs text-blood-400 hover:bg-blood-500/10 flex items-center gap-2">
+                            <ShieldBan className="h-3.5 w-3.5" /> Ban User
+                          </button>
+                        )}
+                        <button onClick={() => act(user.user_id, "delete")} className="w-full text-left px-4 py-2.5 text-xs text-blood-400 hover:bg-blood-500/10 flex items-center gap-2">
+                          <UserX className="h-3.5 w-3.5" /> Delete User
+                        </button>
+                      </div>
+                    </div>
                   </td>
                 </tr>
               ))

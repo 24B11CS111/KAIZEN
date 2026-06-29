@@ -6,6 +6,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Upload, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { InteractiveButton } from "@/components/InteractiveButton";
 
 export default function SubmitPaymentPage() {
   const router = useRouter();
@@ -106,7 +107,7 @@ export default function SubmitPaymentPage() {
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-6">
               {error && (
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-blood-500/10 border border-blood-500/20 text-blood-400 text-sm">
                   <AlertCircle className="h-5 w-5 shrink-0" />
@@ -176,14 +177,15 @@ export default function SubmitPaymentPage() {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center py-4 rounded-xl font-bold text-white bg-blood-500 hover:bg-blood-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              <InteractiveButton
+                onClick={handleSubmit as any}
+                className="w-full"
+                size="lg"
+                successMessage="Payment submitted successfully!"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Submit for Approval"}
-              </button>
-            </form>
+                Submit for Approval
+              </InteractiveButton>
+            </div>
           )}
         </motion.div>
       </div>

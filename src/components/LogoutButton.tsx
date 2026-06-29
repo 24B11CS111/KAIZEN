@@ -4,29 +4,30 @@ import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
+import { InteractiveButton } from "@/components/InteractiveButton";
+
 export function LogoutButton() {
   const router = useRouter();
-  const [pending, setPending] = useState(false);
 
   const onLogout = async () => {
-    setPending(true);
-    try {
-      const supabase = createSupabaseBrowserClient();
-      await supabase.auth.signOut();
-    } finally {
-      router.replace("/auth/login");
-      router.refresh();
-    }
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    router.replace("/auth/login");
+    router.refresh();
   };
 
   return (
-    <button
+    <InteractiveButton
+      variant="secondary"
       onClick={onLogout}
-      disabled={pending}
-      className="btn-secondary w-full disabled:opacity-50 inline-flex items-center justify-center gap-2"
+      className="w-full flex justify-between px-2 py-3"
+      successMessage="Signed out successfully"
     >
-      <LogOut className="h-4 w-4" />
-      {pending ? "Signing out..." : "Sign out"}
-    </button>
+      <div className="flex items-center gap-3">
+        <LogOut className="h-4 w-4 text-white/50" />
+        <span className="text-sm font-medium">Sign out</span>
+      </div>
+      <div />
+    </InteractiveButton>
   );
 }

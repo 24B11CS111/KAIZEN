@@ -270,12 +270,23 @@ export default async function ProfilePage() {
         {/* Actions */}
         <div className="mt-1 space-y-2">
           <Link
-            href="/dojo"
+            href="/profile/edit"
             className="btn-tap flex items-center justify-between card hover:border-[var(--border-light)] hover:bg-white/[0.04] transition-all px-5 py-4"
           >
             <div className="flex items-center gap-3">
-              <Sword className="h-4 w-4 text-[var(--text-muted)]" />
-              <span className="text-sm font-medium">Go to Dojo</span>
+              <User className="h-4 w-4 text-[var(--text-muted)]" />
+              <span className="text-sm font-medium">Edit Profile</span>
+            </div>
+            <ArrowRight className="h-4 w-4 text-white/30" />
+          </Link>
+          
+          <Link
+            href="/profile/settings"
+            className="btn-tap flex items-center justify-between card hover:border-[var(--border-light)] hover:bg-white/[0.04] transition-all px-5 py-4"
+          >
+            <div className="flex items-center gap-3">
+              <Settings className="h-4 w-4 text-[var(--text-muted)]" />
+              <span className="text-sm font-medium">Preferences</span>
             </div>
             <ArrowRight className="h-4 w-4 text-white/30" />
           </Link>

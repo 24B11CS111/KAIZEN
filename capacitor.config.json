@@ -31,8 +31,8 @@
     },
     "StatusBar": {
       "style": "DARK",
-      "backgroundColor": "#050505",
-      "overlaysWebView": false
+      "backgroundColor": "#05050500",
+      "overlaysWebView": true
     },
     "App": {
       "launchUrl": ""
